@@ -1,0 +1,40 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { Category } from "@/data/categories";
+
+interface CategoryCardProps {
+  category: Category;
+  itemCount?: number;
+}
+
+export default function CategoryCard({ category, itemCount }: CategoryCardProps) {
+  const displayCount = itemCount !== undefined ? itemCount : category.itemCount;
+
+  return (
+    <Link
+      href={`/shop?category=${category.slug}`}
+      className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 transition-all duration-300 hover:-translate-y-1 hover:border-[#E5A842]/50 hover:shadow-lg hover:shadow-[#E5A842]/10"
+    >
+      <div className={`relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl p-2 transition-transform duration-300 group-hover:scale-105 ${category.bgColor}`}>
+        <Image
+          src={category.image}
+          alt={category.name}
+          fill
+          className="object-cover rounded-xl"
+          sizes="64px"
+        />
+      </div>
+
+      <div>
+        <h4 className="text-sm font-bold text-gray-800 transition-colors group-hover:text-[#E5A842]">
+          {category.name}
+        </h4>
+        <span className="text-xs font-semibold text-gray-500">
+          {displayCount} {displayCount === 1 ? "Item" : "Items"}
+        </span>
+      </div>
+    </Link>
+  );
+}

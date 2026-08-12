@@ -1,166 +1,205 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ReactElement } from "react";
+import { useState } from "react";
 import {
-  FaFacebook,
+  FaMapMarkerAlt,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaPaperPlane,
+  FaFacebookF,
   FaInstagram,
-  FaTwitter,
+  FaPinterestP,
   FaYoutube,
-  FaPinterest,
   FaWhatsapp,
-} from "react-icons/fa6";
-import { FaLocationDot, FaPhone } from "react-icons/fa6";
-
-import logos from "@/public/logo/sobpai-nav_logo.svg";
-
-interface NavLink {
-  title: string;
-  url: string;
-}
-
-interface SocialLink {
-  title: string;
-  url: string;
-  icon: ReactElement;
-}
+  FaChevronUp,
+} from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
+import logoImg from "@/public/logo/sobpai-nav_logo.svg";
 
 export default function Footer() {
-  // Separate link lists for each column
-  const services: NavLink[] = [
-    { title: "About ShobPai", url: "/about-us" },
-    { title: "FAQ's", url: "/faq" },
-    { title: "Contact us", url: "/contact" },
-    { title: "News", url: "/news" },
-    { title: "Store location", url: "/store-location" },
+  const [email, setEmail] = useState("");
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email.trim()) {
+      setEmail("");
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const servicesLinks = [
+    { title: "About vegist", url: "/about-us" },
+    { title: "Faq's", url: "/faq" },
+    { title: "Contact us", url: "/contact-us" },
+    { title: "News", url: "/blogs" },
+    { title: "Store location", url: "/shop" },
   ];
 
-  const privacyLinks: NavLink[] = [
-    { title: "Privacy Policy", url: "/privacy" },
-    { title: "Terms of Service", url: "/terms" },
-    { title: "Cookie Policy", url: "/cookies" },
-    { title: "Security", url: "/security" },
+  const privacyLinks = [
+    { title: "Payment policy", url: "/privacy" },
+    { title: "Privacy policy", url: "/privacy" },
+    { title: "Return policy", url: "/privacy" },
+    { title: "Shipping policy", url: "/privacy" },
+    { title: "Terms & conditions", url: "/terms" },
   ];
 
-  const accountLinks: NavLink[] = [
-    { title: "My Account", url: "/account" },
-    { title: "Order History", url: "/orders" },
-    { title: "Wishlist", url: "/wishlist" },
-    { title: "Newsletter", url: "/newsletter" },
+  const accountLinks = [
+    { title: "My account", url: "/account" },
+    { title: "My cart", url: "/shop" },
+    { title: "Order history", url: "/account" },
+    { title: "My wishlist", url: "/wishlist" },
+    { title: "My address", url: "/account" },
   ];
 
-  const socials: SocialLink[] = [
-    { title: "WhatsApp", url: "https://web.facebook.com/", icon: <FaWhatsapp /> },
-    { title: "Facebook", url: "https://web.facebook.com/", icon: <FaFacebook /> },
-    { title: "Instagram", url: "https://web.facebook.com/", icon: <FaInstagram /> },
-    { title: "Twitter", url: "https://web.facebook.com/", icon: <FaTwitter /> },
-    { title: "YouTube", url: "https://web.facebook.com/", icon: <FaYoutube /> },
-    { title: "Pinterest", url: "https://web.facebook.com/", icon: <FaPinterest /> },
+  const socialLinks = [
+    { name: "WhatsApp", icon: <FaWhatsapp />, href: "#" },
+    { name: "Facebook", icon: <FaFacebookF />, href: "#" },
+    { name: "Twitter", icon: <FaXTwitter />, href: "#" },
+    { name: "Instagram", icon: <FaInstagram />, href: "#" },
+    { name: "Pinterest", icon: <FaPinterestP />, href: "#" },
+    { name: "YouTube", icon: <FaYoutube />, href: "#" },
   ];
 
   return (
-    <footer className="border-t ">
-      <div className="container mx-auto px-4 py-10">
-        {/* Top section – grid layout */}
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-6">
-          {/* Brand / About */}
-          <div className="col-span-3 flex flex-col gap-4">
-            <Link href="/">
+    <footer className="bg-[#222222] text-gray-300 relative py-12 md:py-16 border-t border-gray-800">
+      <div className="container mx-auto px-4">
+
+        {/* Main 5-Column Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-10">
+
+          {/* Column 1: Brand Logo & Location Contact */}
+          <div className="space-y-4">
+            <Link href="/" className="inline-block">
               <Image
-                src={logos}
-                alt="ShobPai logo"
-                className="h-12 w-auto"
+                src={logoImg}
+                alt="ShobPai Vegist logo"
+                className="h-10 w-auto brightness-200 contrast-200"
                 priority
               />
             </Link>
-            <p className="text-sm ">
-              {"Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make."}
+
+            <h4 className="text-white font-bold text-sm pt-2">Location</h4>
+
+            <ul className="space-y-3 text-xs text-gray-400">
+              <li className="flex items-start gap-2.5">
+                <FaMapMarkerAlt className="text-[#E5A842] h-4 w-4 shrink-0 mt-0.5" />
+                <span>38 block street arean licard hamonia road sydney, australia</span>
+              </li>
+
+              <li className="flex items-center gap-2.5">
+                <FaPhoneAlt className="text-[#E5A842] h-3.5 w-3.5 shrink-0" />
+                <span>+014-33333-8888-6868</span>
+              </li>
+
+              <li className="flex items-center gap-2.5">
+                <FaEnvelope className="text-[#E5A842] h-3.5 w-3.5 shrink-0" />
+                <a href="mailto:support@demo.com" className="hover:text-white transition-colors">
+                  support@demo.com
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 2: Services */}
+          <div>
+            <h4 className="text-white font-bold text-sm mb-4">Services</h4>
+            <ul className="space-y-2.5 text-xs text-gray-400">
+              {servicesLinks.map((link) => (
+                <li key={link.title}>
+                  <Link href={link.url} className="hover:text-white transition-colors">
+                    {link.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3: Privacy & terms */}
+          <div>
+            <h4 className="text-white font-bold text-sm mb-4">Privacy & terms</h4>
+            <ul className="space-y-2.5 text-xs text-gray-400">
+              {privacyLinks.map((link) => (
+                <li key={link.title}>
+                  <Link href={link.url} className="hover:text-white transition-colors">
+                    {link.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 4: My account */}
+          <div>
+            <h4 className="text-white font-bold text-sm mb-4">My account</h4>
+            <ul className="space-y-2.5 text-xs text-gray-400">
+              {accountLinks.map((link) => (
+                <li key={link.title}>
+                  <Link href={link.url} className="hover:text-white transition-colors">
+                    {link.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 5: Get the latest deal */}
+          <div className="space-y-4">
+            <h4 className="text-white font-bold text-sm">Get the latest deal</h4>
+            <p className="text-xs text-gray-400">
+              And receive $20 coupon for first shopping
             </p>
-            <h3 className="mt-2 font-semibold">Contact us</h3>
-            <div className="flex justify-between gap-2 text-sm">
-              
-              <div className="flex-1 flex-row items-start gap-2">
-                <FaLocationDot className="mb-3 shrink-0" />
-                <p>West 14th Maria Reichenbach, Zürich 8022, Switzerland</p>
-              </div>
-              
-              <div className="flex-1 items-start gap-4">
-                <div><FaPhone className="mb-3 shrink-0" /></div>
-                <div>
-                  <p>+41 44123 4567</p>
-                  <a href="mailto:support@gmail.com" className="">
-                    support@gmail.com
-                  </a>
-                </div>
-              </div>
+
+            {/* Email Form */}
+            <form onSubmit={handleSubscribe} className="flex items-stretch rounded-xs overflow-hidden">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+                className="w-full bg-white text-gray-800 text-xs px-3.5 py-3 outline-hidden placeholder-gray-400"
+              />
+              <button
+                type="submit"
+                className="bg-[#E5A842] hover:bg-[#d49633] text-gray-950 px-4 py-3 text-xs font-bold transition-colors cursor-pointer shrink-0 flex items-center justify-center"
+                title="Subscribe"
+              >
+                <FaPaperPlane className="h-3.5 w-3.5" />
+              </button>
+            </form>
+
+            {/* Social Icons Row */}
+            <div className="flex items-center gap-1.5 pt-2">
+              {socialLinks.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="h-7 w-7 bg-white text-[#E5A842] hover:bg-[#222222] border border-transparent hover:border-[#E5A842] flex items-center justify-center rounded-xs transition-colors"
+                  title={item.name}
+                >
+                  <span className="text-[#E5A842] text-xs">{item.icon}</span>
+                </a>
+              ))}
             </div>
           </div>
 
-          {/* Services */}
-          <div>
-            <h3 className="mb-4 font-bold text-sm">Services</h3>
-            <ul className="space-y-2 text-sm">
-              {services.map((item) => (
-                <li key={item.url}>
-                  <Link href={item.url} className="hover:text-blue-600">
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Privacy & Terms */}
-          <div>
-            <h3 className="mb-4 font-bold text-sm ">Privacy & Terms</h3>
-            <ul className="space-y-2 text-sm">
-              {privacyLinks.map((item) => (
-                <li key={item.url}>
-                  <Link href={item.url} className="hover:text-blue-600">
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* My Account */}
-          <div>
-            <h3 className="mb-4 font-bold text-4xl">My Account</h3>
-            <ul className="space-y-2 text-sm">
-              {accountLinks.map((item) => (
-                <li key={item.url}>
-                  <Link href={item.url} className="hover:text-blue-600">
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
+
       </div>
 
-      {/* Bottom bar */}
-      <div className="border-t">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-4 md:flex-row">
-          <div className="text-sm text-gray-600">
-            Copyright © 2026 by spacingtech
-          </div>
-          <div className="flex flex-wrap gap-4 text-2xl">
-            {socials.map((social) => (
-              <a
-                key={social.title}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-600 transition-colors hover:text-blue-600"
-                aria-label={social.title}
-              >
-                {social.icon}
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Scroll To Top Button (Bottom Right) */}
+      <button
+        onClick={scrollToTop}
+        className="absolute bottom-6 right-6 h-9 w-9 bg-transparent border-2 border-[#E5A842] text-[#E5A842] hover:border-[#d49633] hover:text-[#d49633] flex items-center justify-center rounded-xs text-xs transition-colors cursor-pointer"
+        title="Scroll to Top"
+      >
+        <FaChevronUp className="h-3.5 w-3.5" />
+      </button>
     </footer>
   );
 }
