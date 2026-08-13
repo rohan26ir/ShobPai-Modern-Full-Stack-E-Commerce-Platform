@@ -28,6 +28,8 @@ export default function CategoriesPage() {
       name: newCatName,
       slug: slug,
       description: newCatDesc || "Fresh organic store category",
+      itemCount: 0,
+      bgColor: "bg-gray-50 text-gray-800 border-gray-100",
       image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80",
     };
 

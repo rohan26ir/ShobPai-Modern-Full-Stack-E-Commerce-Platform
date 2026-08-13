@@ -3,6 +3,7 @@ export interface Category {
   name: string;
   slug: string;
   itemCount: number;
+  description?: string;
   image: string;
   bgColor: string;
 }
