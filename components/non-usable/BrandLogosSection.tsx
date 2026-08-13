@@ -5,16 +5,26 @@ import { Autoplay } from "swiper/modules";
 
 import "swiper/css";
 
+import brandlogo1 from '@/public/brand_logos/brand-1.avif'
+import brandlogo2 from '@/public/brand_logos/brand-2.png'
+import brandlogo3 from '@/public/brand_logos/brand-3.png'
+import brandlogo4 from '@/public/brand_logos/brand-4.webp'
+import brandlogo5 from '@/public/brand_logos/brand-5.avif'
+import brandlogo6 from '@/public/brand_logos/brand-6.avif'
+import brandlogo7 from '@/public/brand_logos/brand-7.avif'
+import brandlogo8 from '@/public/brand_logos/brand-8.avif'
+import Image from "next/image";
+
 export default function BrandLogosSection() {
   const brands = [
-    { name: "Organic Farm Co.", logo: "🌿 OrganicFarm" },
-    { name: "Green Harvest", logo: "🥬 GreenHarvest" },
-    { name: "Pure Bio Foods", logo: "🍎 PureBio" },
-    { name: "Eco Fresh Dairy", logo: "🥛 EcoFresh" },
-    { name: "Naturals Choice", logo: "🌻 Naturals" },
-    { name: "Sun Valley Organics", logo: "☀️ SunValley" },
-    { name: "Bio Green Farm", logo: "🌱 BioGreen" },
-    { name: "Fresh Harvest Co", logo: "🍊 FreshHarvest" },
+    { name: "Organic Farm Co.", logo: brandlogo1 },
+    { name: "Green Harvest", logo: brandlogo2 },
+    { name: "Pure Bio Foods", logo: brandlogo3 },
+    { name: "Eco Fresh Dairy", logo: brandlogo4 },
+    { name: "Naturals Choice", logo: brandlogo5 },
+    { name: "Sun Valley Organics", logo: brandlogo6 },
+    { name: "Bio Green Farm", logo: brandlogo7 },
+    { name: "Fresh Harvest Co", logo: brandlogo8 },
   ];
 
   return (
@@ -37,12 +47,12 @@ export default function BrandLogosSection() {
             768: { slidesPerView: 5, spaceBetween: 28 },
             1024: { slidesPerView: 6, spaceBetween: 32 },
           }}
-          className="py-2 opacity-75 grayscale transition-all duration-300 hover:grayscale-0 hover:opacity-100"
+          className="py-8"
         >
           {brands.map((b, idx) => (
             <SwiperSlide key={idx}>
-              <div className="flex items-center justify-center py-3 px-4 text-xs font-extrabold text-gray-700 tracking-wider hover:text-[#E5A842] cursor-pointer transition-colors border border-gray-100 rounded-2xl bg-gray-50/60 hover:bg-amber-50/50 hover:border-[#E5A842]/30">
-                <span>{b.logo}</span>
+              <div className="flex items-center justify-center">
+                <Image src={b.logo} alt={b.name} className="h-20 w-auto object-contain" />
               </div>
             </SwiperSlide>
           ))}

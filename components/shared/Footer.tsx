@@ -18,6 +18,7 @@ import {
 import { FaXTwitter } from "react-icons/fa6";
 import logoImg from "@/public/logo/sobpai-nav_logo.svg";
 
+
 export default function Footer() {
   const [email, setEmail] = useState("");
 
@@ -66,7 +67,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-[#222222] text-gray-300 relative py-12 md:py-16 border-t border-gray-800">
+    <footer className="bg-[#222222] text-gray-300 relative py-12 md:py-16 ">
       <div className="container mx-auto px-4">
 
         {/* Main 5-Column Grid */}

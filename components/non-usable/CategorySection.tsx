@@ -32,25 +32,19 @@ export default function CategorySection() {
         {/* Section Header with Custom Swiper Navigation Controls */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
-            <span className="text-xs font-black tracking-widest uppercase text-[#E5A842]">
+            {/* <span className="text-xs font-black tracking-widest uppercase text-[#E5A842]">
               Browse Categories
-            </span>
+            </span> */}
             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mt-1">
               Shop by Category
             </h2>
           </div>
 
           <div className="flex items-center gap-4">
-            <Link
-              href="/shop"
-              className="hidden sm:inline-flex items-center gap-2 text-xs font-bold text-[#E5A842] hover:text-[#d49633] transition-colors mr-2"
-            >
-              <span>View All Categories</span>
-              <FaArrowRight className="h-3.5 w-3.5" />
-            </Link>
+
 
             {/* Swiper Previous & Next Arrow Buttons for 1 by 1 Loop Scroll */}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <button
                 onClick={() => swiperRef.current?.slidePrev()}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-xs transition-all hover:border-[#E5A842] hover:bg-[#E5A842] hover:text-gray-950 cursor-pointer"
@@ -66,7 +60,9 @@ export default function CategorySection() {
               >
                 <FaArrowRight className="h-3.5 w-3.5" />
               </button>
-            </div>
+            </div> */}
+
+
           </div>
         </div>
 
@@ -80,7 +76,7 @@ export default function CategorySection() {
           slidesPerGroup={1}
           spaceBetween={16}
           autoplay={{
-            delay: 3500,
+            delay: 4000,
             disableOnInteraction: false,
             pauseOnMouseEnter: true,
           }}
@@ -101,14 +97,14 @@ export default function CategorySection() {
               slidesPerView: 4,
               spaceBetween: 16,
             },
-            1024: {
-              slidesPerView: 5,
-              spaceBetween: 20,
-            },
-            1280: {
-              slidesPerView: 6,
-              spaceBetween: 20,
-            },
+            // 1024: {
+            //   slidesPerView: 5,
+            //   spaceBetween: 20,
+            // },
+            // 1280: {
+            //   slidesPerView: 6,
+            //   spaceBetween: 20,
+            // },
           }}
           className="py-2"
         >

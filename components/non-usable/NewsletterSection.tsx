@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import bgFooter from '@/public/bgImage/footer-bg.jpg'
 
 export default function NewsletterSection() {
   const [email, setEmail] = useState("");
@@ -22,7 +23,7 @@ export default function NewsletterSection() {
     <section className="relative py-16 md:py-20 overflow-hidden bg-gray-100 border-t border-gray-200/60">
       {/* Full Width Background Image */}
       <Image
-        src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=1600&auto=format&fit=crop&q=80"
+        src={bgFooter}
         alt="Fresh Bakery Background"
         fill
         className="object-cover"
@@ -30,12 +31,12 @@ export default function NewsletterSection() {
       />
 
       {/* Light Overlay */}
-      <div className="absolute inset-0 bg-white/70 backdrop-xs" />
+      {/* <div className="absolute inset-0 bg-white/70 backdrop-xs" /> */}
 
       {/* Centered Form Content */}
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-xl mx-auto text-center">
-          
+
           {/* Headline */}
           <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 mb-1">
             Get the latest deal

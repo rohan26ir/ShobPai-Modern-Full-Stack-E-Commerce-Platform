@@ -6,6 +6,12 @@ import { FaArrowRight, FaLeaf } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, EffectFade } from "swiper/modules";
 
+import herobig1 from '@/public/sections/hero-big-1.webp'
+import herobig2 from '@/public/sections/hero-big-2.webp'
+
+import herosma1 from '@/public/sections/hero-small-1.webp'
+import herosma2 from '@/public/sections/hero-small-2.webp'
+
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
@@ -19,7 +25,7 @@ export default function HeroBanner() {
       description: "Discover local organic fruits, leafy greens, and artisan groceries delivered straight from farm to your kitchen table.",
       discount: "Up to 40% OFF",
       link: "/shop",
-      image: "https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=1200&auto=format&fit=crop&q=80",
+      image: herobig1,
     },
     {
       id: "slide-2",
@@ -28,7 +34,7 @@ export default function HeroBanner() {
       description: "Chemical-free, rich in essential vitamins & minerals. Get farm freshness delivered same day.",
       discount: "Up to 50% OFF",
       link: "/category/vegetables",
-      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200&auto=format&fit=crop&q=80",
+      image: herobig2,
     },
     {
       id: "slide-3",
@@ -37,7 +43,7 @@ export default function HeroBanner() {
       description: "Naturally ripened berries, crisp apples, and tropical citrus packed with natural goodness.",
       discount: "Up to 35% OFF",
       link: "/category/fresh-fruits",
-      image: "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=1200&auto=format&fit=crop&q=80",
+      image: herobig1,
     },
   ];
 
@@ -45,9 +51,9 @@ export default function HeroBanner() {
     <section className="py-6 bg-gradient-to-b from-amber-50/30 via-white to-white">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+
           {/* Main Hero Slider Card (Spans 2 cols on lg) */}
-          <div className="lg:col-span-2 relative rounded-3xl overflow-hidden shadow-xl bg-gray-950">
+          <div className="lg:col-span-2 relative overflow-hidden bg-gray-950 h-[450px]">
             <Swiper
               modules={[Autoplay, Pagination, EffectFade]}
               effect="fade"
@@ -61,70 +67,70 @@ export default function HeroBanner() {
               }}
               pagination={{
                 clickable: true,
-                bulletActiveClass: "swiper-pagination-bullet-active !bg-[#F0A843] !rounded-full !w-3.5 !h-3.5 !opacity-100",
+                bulletActiveClass: "swiper-pagination-bullet-active !bg-[#F0A843] !rounded-full !w-2.5 !h-2.5 !opacity-100",
               }}
-              className="w-full h-full min-h-[480px] md:min-h-[560px] lg:min-h-[580px] hero-swiper"
+              className="w-full h-full hero-swiper  "
             >
               {slides.map((slide) => (
-                <SwiperSlide key={slide.id} className="relative flex items-center p-8 md:p-14 lg:p-16 min-h-[480px] md:min-h-[560px] lg:min-h-[580px]">
+                <SwiperSlide key={slide.id} className="relative flex items-center py-6 px-3  md:p-6 lg:p-8 h-full">
                   {/* Background Image Overlay */}
                   <Image
                     src={slide.image}
                     alt={slide.title}
                     fill
                     priority
-                    className="object-cover opacity-45 mix-blend-overlay"
+                    className="object-cover "
                     sizes="(max-width: 1024px) 100vw, 66vw"
                   />
 
-                  <div className="relative z-10 max-w-xl text-white my-auto">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F0A843]/20 backdrop-blur-md text-[#F0A843] text-xs font-bold uppercase tracking-wider mb-5 border border-[#F0A843]/40">
-                      <FaLeaf className="h-3.5 w-3.5" />
+                  <div className="relative z-10 max-w-3/6 text-white my-auto top-30 ">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1  text-[#F0A843] text-xs font-bold  mb-3 ">
+                      {/* <FaLeaf className="h-3.5 w-3.5" /> */}
                       <span>{slide.badge}</span>
                     </div>
 
-                    <h1 className="text-4xl md:text-6xl font-black leading-tight mb-5 text-white drop-shadow-md">
+                    <h2 className="text-3xl md:text-5xl font-black leading-tight mb-3 text-black  ">
                       {slide.title}
-                    </h1>
+                    </h2>
 
-                    <p className="text-gray-200 text-base md:text-lg mb-8 leading-relaxed line-clamp-3">
-                      {slide.description}
-                    </p>
 
-                    <div className="flex flex-wrap items-center gap-5">
+
+                    <div className="flex flex-wrap items-center gap-4">
                       <Link
                         href={slide.link}
-                        className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#F0A843] hover:bg-[#e09732] text-gray-950 font-black transition-all shadow-xl shadow-[#F0A843]/30 cursor-pointer text-base"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-black hover:bg-[#e09732] text-gray-950 font-black transition-all cursor-pointer text-sm md:text-base"
                       >
-                        <span>Shop Collection</span>
-                        <FaArrowRight className="h-4 w-4" />
+                        <span>Shop now</span>
+                        {/* <FaArrowRight className="h-4 w-4" /> */}
                       </Link>
 
-                      <span className="text-base font-extrabold text-white bg-black/40 backdrop-blur-md px-5 py-3.5 rounded-2xl border border-white/10">
+                      {/* <span className="text-sm font-extrabold text-white bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10">
                         {slide.discount}
-                      </span>
+                      </span> */}
                     </div>
                   </div>
+
                 </SwiperSlide>
               ))}
             </Swiper>
           </div>
 
           {/* Secondary Side Promo Banners */}
-          <div className="flex flex-col gap-6 justify-between">
+          <div className="flex flex-col gap-4 justify-between h-[450px]">
             {/* Top Side Banner */}
-            <div className="relative flex-1 min-h-[230px] md:min-h-[265px] lg:min-h-[276px] rounded-3xl overflow-hidden bg-gray-900 p-8 flex flex-col justify-center shadow-lg border border-gray-100">
+            <div className="relative flex-1 overflow-hidden bg-gray-900 p-6 flex flex-col justify-center">
               <Image
-                src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80"
+                // src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80"
+                src={herosma1}
                 alt="Organic Fruits"
                 fill
-                className="object-cover opacity-45 mix-blend-overlay"
+                className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 33vw"
               />
               <div className="relative z-10 text-white">
-                <span className="text-[#F0A843] text-xs font-black uppercase tracking-wider">Natural Taste</span>
-                <h3 className="text-2xl font-extrabold mt-1 mb-2 text-white">Organic Fresh Fruits</h3>
-                <p className="text-xs md:text-sm text-gray-300 mb-5">Sweet & ripe orchard fruits harvested daily.</p>
+                <span className="text-black/55 text-xs font-black uppercase tracking-wider">Fresh vegetable</span>
+                <h3 className="text-xl md:text-2xl font-extrabold mt-1 mb-1 text-black">Vege chili</h3>
+                <p className="text-xs text-black/60 mb-4">start from $9</p>
                 <Link href="/category/fresh-fruits" className="text-xs md:text-sm font-bold text-[#F0A843] underline underline-offset-4 hover:text-white inline-flex items-center gap-1">
                   Explore Fruits &rarr;
                 </Link>
@@ -132,18 +138,19 @@ export default function HeroBanner() {
             </div>
 
             {/* Bottom Side Banner */}
-            <div className="relative flex-1 min-h-[230px] md:min-h-[265px] lg:min-h-[276px] rounded-3xl overflow-hidden bg-gray-900 p-8 flex flex-col justify-center shadow-lg border border-gray-100">
+            <div className="relative flex-1 overflow-hidden bg-gray-900 p-6 flex flex-col justify-center">
               <Image
-                src="https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80"
+                // src="https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80"
+                src={herosma2}
                 alt="Healthy Smoothies"
                 fill
-                className="object-cover opacity-45 mix-blend-overlay"
+                className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 33vw"
               />
               <div className="relative z-10 text-white">
-                <span className="text-[#F0A843] text-xs font-black uppercase tracking-wider">Healthy Lifestyle</span>
-                <h3 className="text-2xl font-extrabold mt-1 mb-2 text-white">Pure Cold Juices</h3>
-                <p className="text-xs md:text-sm text-gray-300 mb-5">100% natural, no added sugar juices.</p>
+                <span className="text-white/70 text-xs font-black uppercase tracking-wider">Healthy Lifestyle</span>
+                <h3 className="text-xl md:text-2xl font-extrabold mt-1 mb-1 text-white">Pure Cold Juices</h3>
+                <p className="text-xs text-gray-300 mb-4">Top sellng items</p>
                 <Link href="/category/beverages" className="text-xs md:text-sm font-bold text-[#F0A843] underline underline-offset-4 hover:text-white inline-flex items-center gap-1">
                   Shop Juices &rarr;
                 </Link>

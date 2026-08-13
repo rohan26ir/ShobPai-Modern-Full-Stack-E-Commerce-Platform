@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { FaEnvelope, FaPaperPlane, FaTimes } from "react-icons/fa";
 
+
 export default function Subscriber() {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");

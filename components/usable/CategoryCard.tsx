@@ -15,15 +15,15 @@ export default function CategoryCard({ category, itemCount }: CategoryCardProps)
   return (
     <Link
       href={`/shop?category=${category.slug}`}
-      className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 transition-all duration-300 hover:-translate-y-1 hover:border-[#E5A842]/50 hover:shadow-lg hover:shadow-[#E5A842]/10"
+      className="group relative flex items-center gap-4 overflow-hidden  bg-white p-4 transition-all duration-300  "
     >
-      <div className={`relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl p-2 transition-transform duration-300 group-hover:scale-105 ${category.bgColor}`}>
+      <div className={`relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full   ${category.bgColor}`}>
         <Image
           src={category.image}
           alt={category.name}
           fill
-          className="object-cover rounded-xl"
-          sizes="64px"
+          className="object-cover h-40 w-40 "
+        // sizes="100px"
         />
       </div>
 

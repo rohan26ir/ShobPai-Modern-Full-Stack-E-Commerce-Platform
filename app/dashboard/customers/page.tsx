@@ -101,11 +101,10 @@ export default function CustomersPage() {
                   </td>
                   <td className="py-4 px-5">
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                        cust.status === "VIP Customer"
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${cust.status === "VIP Customer"
                           ? "bg-purple-50 text-purple-700 border border-purple-200"
                           : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                      }`}
+                        }`}
                     >
                       {cust.status === "VIP Customer" && <FaStar className="h-2.5 w-2.5 text-amber-500 fill-current" />}
                       <span>{cust.status}</span>

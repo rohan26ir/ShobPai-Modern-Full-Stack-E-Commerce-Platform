@@ -30,11 +30,13 @@ export default function HomePage() {
       {/* 1. Hero Banner Slider Section */}
       <HeroBanner />
 
+      {/* 3. Shop by Category Section */}
+      <CategorySection />
+
+      
       {/* 2. Features / Value Proposition Section */}
       <FeaturesBanner />
 
-      {/* 3. Shop by Category Section */}
-      <CategorySection />
 
       {/* 4. Promotional 3-Column Banner Grid */}
       <PromoBannersSection />

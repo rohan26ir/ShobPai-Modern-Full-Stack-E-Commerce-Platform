@@ -19,7 +19,7 @@ export default function CustomerReviewsSection() {
   return (
     <section className="py-16 bg-[#FAF6F0] relative overflow-hidden">
       <div className="container mx-auto px-4">
-        
+
         {/* Centered Section Title */}
         <div className="text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">
@@ -28,22 +28,22 @@ export default function CustomerReviewsSection() {
         </div>
 
         {/* Swiper Review Carousel with Side Arrows */}
-        <div className="relative max-w-6xl mx-auto px-4 md:px-12">
+        <div className="relative group  max-w-6xl mx-auto px-4 md:px-12">
           {/* Side Navigation Arrow Buttons */}
           <button
             onClick={() => swiperRef.current?.slidePrev()}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-sm bg-[#F0A843] hover:bg-[#e09732] text-gray-950 shadow-md transition-all cursor-pointer"
+            className="hidden group-hover:block absolute left-0 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-sm bg-[#F0A843] hover:bg-[#e09732] text-gray-950 shadow-md transition-all cursor-pointer"
             title="Previous Review"
           >
-            <FaAngleLeft className="h-5 w-5" />
+            <FaAngleLeft className="h-5 w-5 m-auto " />
           </button>
 
           <button
             onClick={() => swiperRef.current?.slideNext()}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-sm bg-[#F0A843] hover:bg-[#e09732] text-gray-950 shadow-md transition-all cursor-pointer"
+            className="hidden group-hover:block absolute right-0 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-sm bg-[#F0A843] hover:bg-[#e09732] text-gray-950 shadow-md transition-all cursor-pointer"
             title="Next Review"
           >
-            <FaAngleRight className="h-5 w-5" />
+            <FaAngleRight className="h-5 w-5 m-auto" />
           </button>
 
           <Swiper
