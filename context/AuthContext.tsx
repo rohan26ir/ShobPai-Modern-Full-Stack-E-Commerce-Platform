@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   User as FirebaseUser,
   onAuthStateChanged,
+  getRedirectResult,
   ConfirmationResult,
   RecaptchaVerifier,
 } from "firebase/auth";
@@ -66,8 +67,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<Role>("GUEST");
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Sync state when Firebase auth state changes
+  // Handle redirect sign-in results and listen to auth state changes
   useEffect(() => {
+    getRedirectResult(auth).catch((err) => {
+      // Ignore null or uninitialized redirect states
+      if (err?.code && err?.code !== "auth/null-user") {
+        console.warn("Redirect result notice:", err);
+      }
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setLoading(true);
       if (fbUser) {

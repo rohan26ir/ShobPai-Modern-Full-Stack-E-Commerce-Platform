@@ -4,6 +4,8 @@ import {
   GoogleAuthProvider,
   FacebookAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -108,15 +110,39 @@ export const registerWithEmail = async (
   return userCredential;
 };
 
-// 3. Google Sign-In
+// 3. Google Sign-In with automatic redirect fallback for browsers blocking popups
 export const loginWithGoogle = async () => {
-  return await signInWithPopup(auth, googleProvider);
+  try {
+    return await signInWithPopup(auth, googleProvider);
+  } catch (err: any) {
+    if (
+      err?.code === "auth/popup-blocked" ||
+      err?.code === "auth/cancelled-popup-request"
+    ) {
+      console.warn("Popup blocked by browser. Using redirect fallback for Google Sign-In...");
+      return await signInWithRedirect(auth, googleProvider);
+    }
+    throw err;
+  }
 };
 
-// 4. Facebook Sign-In
+// 4. Facebook Sign-In with automatic redirect fallback for browsers blocking popups
 export const loginWithFacebook = async () => {
-  return await signInWithPopup(auth, facebookProvider);
+  try {
+    return await signInWithPopup(auth, facebookProvider);
+  } catch (err: any) {
+    if (
+      err?.code === "auth/popup-blocked" ||
+      err?.code === "auth/cancelled-popup-request"
+    ) {
+      console.warn("Popup blocked by browser. Using redirect fallback for Facebook Sign-In...");
+      return await signInWithRedirect(auth, facebookProvider);
+    }
+    throw err;
+  }
 };
+
+export { getRedirectResult };
 
 // 5. Phone Authentication (SMS OTP)
 export const sendPhoneOtp = async (
