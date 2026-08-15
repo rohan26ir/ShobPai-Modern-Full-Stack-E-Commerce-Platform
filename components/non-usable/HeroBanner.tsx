@@ -53,7 +53,8 @@ export default function HeroBanner() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Main Hero Slider Card (Spans 2 cols on lg) */}
-          <div className="lg:col-span-2 relative overflow-hidden bg-gray-950 h-[450px]">
+          <div className="lg:col-span-2 relative overflow-hidden 
+                         h-[450px]">
             <Swiper
               modules={[Autoplay, Pagination, EffectFade]}
               effect="fade"
@@ -118,7 +119,7 @@ export default function HeroBanner() {
           {/* Secondary Side Promo Banners */}
           <div className="flex flex-col gap-4 justify-between h-[450px]">
             {/* Top Side Banner */}
-            <div className="relative flex-1 overflow-hidden bg-gray-900 p-6 flex flex-col justify-center">
+            <div className="relative flex-1 overflow-hidden  p-6 flex flex-col justify-center">
               <Image
                 // src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80"
                 src={herosma1}
@@ -138,7 +139,7 @@ export default function HeroBanner() {
             </div>
 
             {/* Bottom Side Banner */}
-            <div className="relative flex-1 overflow-hidden bg-gray-900 p-6 flex flex-col justify-center">
+            <div className="relative flex-1 overflow-hidden  p-6 flex flex-col justify-center">
               <Image
                 // src="https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80"
                 src={herosma2}

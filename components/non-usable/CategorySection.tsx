@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef } from "react";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+// import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import type { Swiper as SwiperClass } from "swiper";
@@ -82,11 +82,11 @@ export default function CategorySection() {
           }}
           breakpoints={{
             320: {
-              slidesPerView: 1.2,
+              slidesPerView: 3.0,
               spaceBetween: 12,
             },
             480: {
-              slidesPerView: 2.2,
+              slidesPerView: 3.0,
               spaceBetween: 14,
             },
             640: {

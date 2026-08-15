@@ -99,8 +99,8 @@ export default function Footer() {
 
               <li className="flex items-center gap-2.5">
                 <FaEnvelope className="text-[#E5A842] h-3.5 w-3.5 shrink-0" />
-                <a href="mailto:support@demo.com" className="hover:text-white transition-colors">
-                  support@demo.com
+                <a href="mailto:support@shobpai.com" className="hover:text-white transition-colors">
+                  support@shobpai.com
                 </a>
               </li>
             </ul>

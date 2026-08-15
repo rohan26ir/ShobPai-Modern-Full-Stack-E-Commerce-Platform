@@ -1,19 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { FaBox, FaMapMarkerAlt, FaUser, FaSave, FaCheckCircle } from "react-icons/fa";
-import { useCart } from "@/context/CartContext";
+import { useState, useEffect } from "react";
+import { FaBox, FaMapMarkerAlt, FaUser, FaSave, FaCheckCircle, FaShieldAlt } from "react-icons/fa";
+import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 
 export default function AccountPage() {
-  const { user } = useCart();
+  const { user, isAdmin } = useAuth();
   const [profile, setProfile] = useState({
-    name: user ? user.name : "Admin User",
-    email: user ? user.email : "admin@shobpai.com",
-    phone: "+1 (555) 234-5678",
-    address: "West 14th Maria Reichenbach, Zürich 8022, Switzerland",
+    name: user?.displayName || user?.email?.split("@")[0] || "Admin User",
+    email: user?.email || "test@gmail.com",
+    phone: user?.phoneNumber || "N/A",
+    address: "Dhaka, Bangladesh",
   });
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setProfile((prev) => ({
+        ...prev,
+        name: user.displayName || user.email?.split("@")[0] || prev.name,
+        email: user.email || prev.email,
+        phone: user.phoneNumber || prev.phone,
+      }));
+    }
+  }, [user]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +37,16 @@ export default function AccountPage() {
     <div className="space-y-8 max-w-4xl">
       {/* Header */}
       <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-[#222222] text-white rounded-3xl p-6 md:p-8 shadow-xl border-b-4 border-[#E5A842]">
-        <span className="text-xs font-black uppercase tracking-widest text-[#E5A842]">
-          Profile Settings
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-black uppercase tracking-widest text-[#E5A842]">
+            Profile Settings
+          </span>
+          {isAdmin && (
+            <span className="px-2 py-0.5 bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-black rounded-md uppercase">
+              👑 Administrator
+            </span>
+          )}
+        </div>
         <h1 className="text-2xl md:text-3xl font-extrabold text-white mt-1">
           Account & Personal Details
         </h1>
@@ -39,11 +58,27 @@ export default function AccountPage() {
       {/* Account Info Form */}
       <form onSubmit={handleSave} className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xs space-y-6">
         <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
-          <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-[#E5A842] to-amber-300 text-gray-950 font-black text-xl flex items-center justify-center shadow-md">
-            {profile.name.slice(0, 2).toUpperCase()}
+          <div className="relative h-14 w-14 rounded-full bg-gradient-to-tr from-[#E5A842] to-amber-300 text-gray-950 font-black text-xl flex items-center justify-center shadow-md overflow-hidden shrink-0">
+            {user?.photoURL ? (
+              <Image
+                src={user.photoURL}
+                alt={profile.name}
+                fill
+                className="rounded-full object-cover"
+              />
+            ) : (
+              (profile.name || "U").slice(0, 2).toUpperCase()
+            )}
           </div>
           <div>
-            <h3 className="text-base font-bold text-gray-900">{profile.name}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-gray-900">{profile.name}</h3>
+              {isAdmin && (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded bg-gray-900 text-amber-400">
+                  ADMIN
+                </span>
+              )}
+            </div>
             <span className="text-xs text-gray-400">{profile.email}</span>
           </div>
         </div>
@@ -98,7 +133,7 @@ export default function AccountPage() {
               <FaCheckCircle className="h-4 w-4" /> Profile updated successfully!
             </span>
           ) : (
-            <span className="text-xs text-gray-400">Member since August 2026</span>
+            <span className="text-xs text-gray-400">Authenticated Member</span>
           )}
 
           <button

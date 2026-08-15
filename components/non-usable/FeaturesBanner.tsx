@@ -16,7 +16,7 @@ export default function FeaturesBanner() {
           <h2>Exquisite Service</h2>
         </div>
 
-        <div className="grid grid-cols-3 items-center ">
+        <div className="grid grid-cols-1 lg:grid-cols-3 items-center ">
           
           
           {/* 1st */}
@@ -48,7 +48,7 @@ export default function FeaturesBanner() {
           </div>
 
           {/* 3rd */}
-          <div className="flex flex-col gap-2 justify-between h-full ml-28">
+          <div className="flex flex-col gap-2 justify-between h-full lg:ml-28">
           <div className="flex gap-2 items-end ">
             <div className=" rounded-full border">
               <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" className="text-xl h-25 w-25 p-8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>

@@ -36,10 +36,13 @@ import CartDrawer from "@/components/usable/CartDrawer";
 import { categories } from "@/data/categories";
 import logoImg from "@/public/logo/sobpai-nav_logo.svg";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const router = useRouter();
-  const { cartCount, wishlistCount, isLoggedIn } = useCart();
+  const { cartCount, wishlistCount } = useCart();
+  const { user, role, isAdmin } = useAuth();
+  const userIsLoggedIn = !!user && role !== "GUEST";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -124,6 +127,27 @@ export default function Navbar() {
     router.push(queryStr ? `/shop?${queryStr}` : "/shop");
   };
 
+  const collectionMegaCards = [
+    {
+      id: "fruits",
+      title: "Fresh Fruits",
+      image: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600&auto=format&fit=crop&q=80",
+      href: "/shop?category=fresh-fruits",
+    },
+    {
+      id: "veggies",
+      title: "Fresh Vegetables",
+      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80",
+      href: "/shop?category=vegetables",
+    },
+    {
+      id: "dairy",
+      title: "Dairy & Cheese",
+      image: "https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=600&auto=format&fit=crop&q=80",
+      href: "/shop?category=dairy",
+    },
+  ];
+
   return (
     <header className="sticky top-0 z-50 bg-white">
       {/* Top Announcement Bar (Instantly hidden on scroll) */}
@@ -170,11 +194,16 @@ export default function Navbar() {
             <div className="flex items-center gap-5 sm:gap-6">
               {/* Account / Login Icon */}
               <Link
-                href={isLoggedIn ? "/dashboard" : "/login"}
-                className="text-gray-900 hover:text-[#E5A842] transition-colors p-1"
-                title={isLoggedIn ? "My Dashboard" : "Sign In / Login"}
+                href={userIsLoggedIn ? "/dashboard" : "/login"}
+                className="text-gray-900 hover:text-[#E5A842] transition-colors p-1 flex items-center gap-1.5"
+                title={userIsLoggedIn ? `My Dashboard (${user?.displayName || user?.email || "User"})` : "Sign In / Login"}
               >
                 <FiUser className="h-6 w-6 stroke-[1.75]" />
+                {userIsLoggedIn && isAdmin && (
+                  <span className="hidden xl:inline-block px-1.5 py-0.5 bg-[#E5A842] text-gray-950 text-[9px] font-black rounded uppercase">
+                    Admin
+                  </span>
+                )}
               </Link>
 
               {/* Wishlist Icon with Golden Badge */}
@@ -234,7 +263,7 @@ export default function Navbar() {
       {/* Bottom Main Navigation Bar (Instantly hidden on scroll) */}
       {!isScrolled && (
         <nav className="border-t border-gray-100 bg-[#222222] hidden md:block">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 relative">
             <div className="flex items-center justify-between">
 
               {/* Category Dropdown button with Unique Colored React Icons */}
@@ -253,7 +282,7 @@ export default function Navbar() {
                     <Link
                       key={cat.id}
                       href={`/shop?category=${cat.slug}`}
-                      className="flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-white hover:bg-amber-50/80 hover:text-[#F0A843] transition-colors border-b border-gray-50/60 last:border-0"
+                      className="flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-gray-800 hover:bg-amber-50/80 hover:text-[#F0A843] transition-colors border-b border-gray-50/60 last:border-0"
                     >
                       <div className="flex items-center gap-3">
                         {renderCategoryIcon(cat.slug)}
@@ -265,18 +294,68 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {/* Links */}
-              <ul className="flex items-center gap-8 text-xs font-bold text-white ">
-                {navLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="py-3 inline-block hover:text-[#F0A843] transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
+              {/* Navigation Links with Collections 3-Card Mega Dropdown */}
+              <ul className="flex items-center gap-8 text-xs font-bold text-white">
+                {navLinks.map((link) => {
+                  if (link.name === "Collections") {
+                    return (
+                      <li key={link.name} className="static group/collections py-3">
+                        <Link
+                          href={link.href}
+                          className="inline-flex items-center gap-1.5 hover:text-[#F0A843] transition-colors cursor-pointer"
+                        >
+                          <span>{link.name}</span>
+                          <FaChevronDown className="h-2.5 w-2.5 text-gray-400 group-hover/collections:text-[#F0A843] transition-transform duration-200 group-hover/collections:rotate-180" />
+                        </Link>
+
+                        {/* Mega Menu Dropdown with 3 Full-Width Cards */}
+                        <div className="absolute top-full left-0 w-full pt-1 invisible opacity-0 translate-y-1 group-hover/collections:visible group-hover/collections:opacity-100 group-hover/collections:translate-y-0 transition-all duration-200 z-50 pointer-events-none group-hover/collections:pointer-events-auto">
+                          <div className="w-full bg-white rounded-2xl p-6 shadow-2xl border border-gray-100">
+                            {/* 3 Cards Grid */}
+                            <div className="grid grid-cols-3 gap-6">
+                              {collectionMegaCards.map((card) => (
+                                <Link
+                                  key={card.id}
+                                  href={card.href}
+                                  className="group/card relative rounded-2xl overflow-hidden bg-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 block"
+                                >
+                                  {/* Card Image */}
+                                  <div className="relative h-44 w-full overflow-hidden">
+                                    <Image
+                                      src={card.image}
+                                      alt={card.title}
+                                      fill
+                                      className="object-cover group-hover/card:scale-108 transition-transform duration-500"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+                                    {/* Category Title Only */}
+                                    <div className="absolute bottom-4 left-0 right-0 text-center px-4">
+                                      <h4 className="text-base font-extrabold text-white group-hover/card:text-[#F0A843] transition-colors drop-shadow-md tracking-wide">
+                                        {card.title}
+                                      </h4>
+                                    </div>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  }
+
+                  return (
+                    <li key={link.name}>
+                      <Link
+                        href={link.href}
+                        className="py-3 inline-block hover:text-[#F0A843] transition-colors"
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
 
               {/* Right promotion text */}

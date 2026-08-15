@@ -5,6 +5,7 @@ import "./typo.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -40,9 +41,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         className="min-h-full flex flex-col font-sans"
         suppressHydrationWarning
       >
-        <CartProvider>
-          {children}
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            {children}
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
