@@ -37,8 +37,14 @@ function formatAuthError(error: any): string {
   if (code === "auth/weak-password") {
     return "Password is too weak. Please use at least 6 characters with a combination of letters and numbers.";
   }
-  if (code === "auth/popup-closed-by-user") {
-    return "Authentication popup was closed before completing.";
+  if (code === "auth/unauthorized-domain") {
+    return "Unauthorized Domain: Please add your exact Vercel domain to Firebase Console > Authentication > Settings > Authorized domains.";
+  }
+  if (code === "auth/operation-not-allowed") {
+    return "Provider Disabled: Please enable Google / Facebook in Firebase Console > Authentication > Sign-in method.";
+  }
+  if (code === "auth/popup-blocked") {
+    return "The sign-in popup was blocked by your browser. Please allow popups for this site.";
   }
 
   return msg.replace("Firebase: ", "").replace(/\(auth\/[^)]+\)\.?/, "").trim() || "Failed to create account. Please try again.";
@@ -88,6 +94,7 @@ export default function RegisterPage() {
         router.push("/dashboard");
       }, 700);
     } catch (err: any) {
+      console.error("Register error:", err);
       setError(formatAuthError(err));
     } finally {
       setLoading(false);
@@ -104,9 +111,8 @@ export default function RegisterPage() {
         router.push("/dashboard");
       }, 700);
     } catch (err: any) {
-      if (err?.code !== "auth/popup-closed-by-user") {
-        setError(formatAuthError(err));
-      }
+      console.error("Google sign up error:", err);
+      setError(formatAuthError(err));
     } finally {
       setSocialLoading(null);
     }
@@ -122,9 +128,8 @@ export default function RegisterPage() {
         router.push("/dashboard");
       }, 700);
     } catch (err: any) {
-      if (err?.code !== "auth/popup-closed-by-user") {
-        setError(formatAuthError(err));
-      }
+      console.error("Facebook sign up error:", err);
+      setError(formatAuthError(err));
     } finally {
       setSocialLoading(null);
     }
