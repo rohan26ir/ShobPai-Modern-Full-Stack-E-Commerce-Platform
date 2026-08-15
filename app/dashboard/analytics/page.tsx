@@ -227,7 +227,10 @@ export default function AnalyticsPage() {
                 titleFont: { weight: "bold" },
                 padding: 12,
                 callbacks: {
-                  label: (context) => `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`,
+                  label: (context) => {
+                    const val = context.parsed.y !== null && context.parsed.y !== undefined ? context.parsed.y : 0;
+                    return `${context.dataset.label}: $${val.toLocaleString()}`;
+                  },
                 },
               },
             },
@@ -310,7 +313,10 @@ export default function AnalyticsPage() {
               tooltip: {
                 backgroundColor: "#111827",
                 callbacks: {
-                  label: (ctx) => ` ${ctx.parsed.y} orders fulfilled`,
+                  label: (ctx) => {
+                    const val = ctx.parsed.y !== null && ctx.parsed.y !== undefined ? ctx.parsed.y : 0;
+                    return ` ${val} orders fulfilled`;
+                  },
                 },
               },
             },
