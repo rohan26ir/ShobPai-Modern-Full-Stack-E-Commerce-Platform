@@ -2,12 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
-  FaGoogle,
-  FaFacebookF,
   FaEnvelope,
   FaLock,
   FaSpinner,
@@ -16,7 +14,6 @@ import {
   FaEyeSlash,
   FaArrowRight,
   FaShieldAlt,
-  FaLeaf,
 } from "react-icons/fa";
 import logoImg from "@/public/logo/sobpai-nav_logo.svg";
 import signinImg from "@/public/sections/sign-01.webp";
@@ -36,15 +33,6 @@ function formatAuthError(error: any): string {
   if (code === "auth/email-already-in-use") {
     return "An account with this email address already exists.";
   }
-  if (code === "auth/unauthorized-domain") {
-    return "Unauthorized Domain: Please add your exact Vercel domain to Firebase Console > Authentication > Settings > Authorized domains.";
-  }
-  if (code === "auth/operation-not-allowed") {
-    return "Provider Disabled: Please enable Google / Facebook in Firebase Console > Authentication > Sign-in method.";
-  }
-  if (code === "auth/popup-blocked") {
-    return "The sign-in popup was blocked by your browser. Please allow popups for this site.";
-  }
   if (code === "auth/too-many-requests") {
     return "Too many attempts. Access is temporarily restricted. Please try again in a few minutes.";
   }
@@ -62,7 +50,7 @@ function formatAuthError(error: any): string {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginWithEmail, loginWithGoogle, loginWithFacebook } = useAuth();
+  const { user, loginWithEmail } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,9 +58,15 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
 
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<"google" | "facebook" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Automatically redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.push("/dashboard");
+    }
+  }, [user, router]);
 
   // Email / Password Login
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -93,42 +87,6 @@ export default function LoginPage() {
     }
   };
 
-  // Google Login
-  const handleGoogleLogin = async () => {
-    setError(null);
-    setSocialLoading("google");
-    try {
-      await loginWithGoogle();
-      setSuccessMsg("Google sign-in verified. Redirecting...");
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 500);
-    } catch (err: any) {
-      console.error("Google sign in error:", err);
-      setError(formatAuthError(err));
-    } finally {
-      setSocialLoading(null);
-    }
-  };
-
-  // Facebook Login
-  const handleFacebookLogin = async () => {
-    setError(null);
-    setSocialLoading("facebook");
-    try {
-      await loginWithFacebook();
-      setSuccessMsg("Facebook sign-in verified. Redirecting...");
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 500);
-    } catch (err: any) {
-      console.error("Facebook sign in error:", err);
-      setError(formatAuthError(err));
-    } finally {
-      setSocialLoading(null);
-    }
-  };
-
   return (
     <div className="relative min-h-screen bg-[#faf8f5] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-12 overflow-hidden">
       {/* Background Graphic matching sign-01 organic fruits */}
@@ -146,7 +104,7 @@ export default function LoginPage() {
 
       {/* Main Container Layout */}
       <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16">
-
+        
         {/* Form Card Column */}
         <div className="w-full max-w-md lg:max-w-lg">
           {/* Logo & Header */}
@@ -188,46 +146,6 @@ export default function LoginPage() {
                 <span className="flex-1">{successMsg}</span>
               </div>
             )}
-
-            {/* Social Sign In Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={loading || !!socialLoading}
-                className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-60"
-              >
-                {socialLoading === "google" ? (
-                  <FaSpinner className="animate-spin h-4 w-4 text-slate-600" />
-                ) : (
-                  <FaGoogle className="text-red-500 h-4 w-4 shrink-0" />
-                )}
-                <span>Google</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleFacebookLogin}
-                disabled={loading || !!socialLoading}
-                className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-2xl border border-[#1877F2] bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-60"
-              >
-                {socialLoading === "facebook" ? (
-                  <FaSpinner className="animate-spin h-4 w-4 text-white" />
-                ) : (
-                  <FaFacebookF className="text-white h-4 w-4 shrink-0" />
-                )}
-                <span>Facebook</span>
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div className="relative flex items-center">
-              <div className="flex-grow border-t border-slate-200"></div>
-              <span className="shrink mx-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                Or continue with email
-              </span>
-              <div className="flex-grow border-t border-slate-200"></div>
-            </div>
 
             {/* Email / Password Form */}
             <form onSubmit={handleEmailLogin} className="space-y-4">
@@ -303,7 +221,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={loading || !!socialLoading}
+                disabled={loading}
                 className="w-full rounded-2xl bg-[#E5A842] py-3 text-xs font-black text-slate-950 shadow-md shadow-[#E5A842]/20 hover:bg-[#d49633] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loading ? (

@@ -33,6 +33,9 @@ import { categories } from "@/data/categories";
 import ProductCard from "@/components/usable/ProductCard";
 import ProductCardList from "@/components/usable/ProductCardList";
 import ProductQuickViewModal from "@/components/usable/ProductQuickViewModal";
+import Image from "next/image";
+
+import bannerBg from '@/public/sections/product-collection-banner.webp';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -176,8 +179,20 @@ function ShopContent() {
       <div className="container mx-auto px-4">
         
         {/* Page Header */}
-        <div className="mb-8 bg-gradient-to-r from-gray-900 via-gray-800 to-[#222222] text-white rounded-3xl p-8 shadow-lg border-b-4 border-[#E5A842]">
-          <span className="text-xs font-black uppercase tracking-widest text-[#E5A842]">
+        <div className="relative mb-8  text-white p-8 ">
+          
+          {/* bg image */}
+          <div className="absolute inset-0 overflow-hidden ">
+            <Image 
+            src={bannerBg}
+            alt="bg product banner"
+            fill
+            className="object-cover  "
+            />
+          </div>
+          
+          <div className="relative -z-10">
+            <span className="text-xs font-black uppercase tracking-widest text-[#E5A842]">
             Organic Grocery Store
           </span>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mt-1">
@@ -186,6 +201,9 @@ function ShopContent() {
           <p className="text-sm text-gray-300 mt-2 max-w-xl">
             Browse our complete selection of farm-fresh fruits, organic vegetables, dairy, bakery, and healthy beverages.
           </p>
+          </div>
+
+
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

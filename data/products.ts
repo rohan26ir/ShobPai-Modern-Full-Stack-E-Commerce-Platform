@@ -38,7 +38,7 @@ export const products: Product[] = [
     discount: 27,
     images: [
       "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1546470427-e26264be0b11?w=600&auto=format&fit=crop&q=80"
+      "https://images.unsplash.com/photo-1518977822534-7049a61ee0c2?q=80&w=1170&auto=format&fit=crop&q=80"
     ],
     category: "vegetables",
     categoryName: "Fresh Vegetables",
@@ -87,7 +87,8 @@ export const products: Product[] = [
     originalPrice: 15.00,
     discount: 14,
     images: [
-      "https://images.unsplash.com/photo-1587049352847-4a222e784d38?w=600&auto=format&fit=crop&q=80"
+      "https://images.unsplash.com/photo-1603445215995-fb465c635535?q=80&w=1631&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1622006979077-afc14f833d4e?q=80&w=880&auto=format&fit=crop&q=80"
     ],
     category: "honey-jams",
     categoryName: "Honey & Jams",
@@ -157,7 +158,8 @@ export const products: Product[] = [
     originalPrice: 6.00,
     discount: 20,
     images: [
-      "https://images.unsplash.com/photo-1585478259715-876acc5be8eb?w=600&auto=format&fit=crop&q=80"
+      "https://images.unsplash.com/photo-1771160962771-00186d83364e?q=80&w=1074&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1785502108690-52e3dc5e918b?q=80&w=880&auto=format&fit=crop&q=80"
     ],
     category: "bakery",
     categoryName: "Bakery & Breads",

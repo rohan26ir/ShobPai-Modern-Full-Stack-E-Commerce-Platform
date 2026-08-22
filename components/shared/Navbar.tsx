@@ -75,9 +75,9 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Shop", href: "/shop" },
-    // { name: "Categories", href: "/categories" },
+    { name: "Categories", href: "/categories" },
     { name: "Collections", href: "/collections" },
-    { name: "About Us", href: "/about-us" },
+    { name: "Offers", href: "/offers" },
     { name: "Contact", href: "/contact-us" },
   ];
 
@@ -268,7 +268,7 @@ export default function Navbar() {
 
               {/* Category Dropdown button with Unique Colored React Icons */}
               <div className="relative group">
-                <button className="flex items-center gap-3 bg-[#F0A843] hover:bg-[#e09732] text-gray-950 font-black text-xs px-5 py-3 rounded-t-xl transition-colors cursor-pointer min-w-[240px] justify-between">
+                <button className="flex items-center gap-3 bg-white hover:bg-white text-gray-950 font-black text-xs px-5 py-3  transition-colors cursor-pointer min-w-[240px] justify-between">
                   <div className="flex items-center gap-2">
                     <FaBars className="h-3.5 w-3.5" />
                     <span>ALL CATEGORIES</span>
@@ -277,7 +277,7 @@ export default function Navbar() {
                 </button>
 
                 {/* Hover Dropdown Menu with Distinct Icons */}
-                <div className="absolute top-full left-0 hidden group-hover:block w-60 bg-white border border-gray-100 shadow-2xl rounded-b-2xl py-2 z-50">
+                <div className="absolute top-full left-0 hidden group-hover:block w-60 bg-white border border-gray-100 shadow-2xl py-2 z-50">
                   {categories.map((cat) => (
                     <Link
                       key={cat.id}
@@ -310,17 +310,17 @@ export default function Navbar() {
 
                         {/* Mega Menu Dropdown with 3 Full-Width Cards */}
                         <div className="absolute top-full left-0 w-full pt-1 invisible opacity-0 translate-y-1 group-hover/collections:visible group-hover/collections:opacity-100 group-hover/collections:translate-y-0 transition-all duration-200 z-50 pointer-events-none group-hover/collections:pointer-events-auto">
-                          <div className="w-full bg-white rounded-2xl p-6 shadow-2xl border border-gray-100">
+                          <div className="w-full bg-white rounded-sm p-4 shadow-2xl border border-gray-100">
                             {/* 3 Cards Grid */}
                             <div className="grid grid-cols-3 gap-6">
                               {collectionMegaCards.map((card) => (
                                 <Link
                                   key={card.id}
                                   href={card.href}
-                                  className="group/card relative rounded-2xl overflow-hidden bg-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 block"
+                                  className="group/card relative  overflow-hidden bg-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 block"
                                 >
                                   {/* Card Image */}
-                                  <div className="relative h-44 w-full overflow-hidden">
+                                  <div className="relative h-60 w-full overflow-hidden">
                                     <Image
                                       src={card.image}
                                       alt={card.title}

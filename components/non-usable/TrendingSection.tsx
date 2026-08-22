@@ -46,7 +46,7 @@ export default function TrendingSection({ onQuickView }: TrendingSectionProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                   activeTab === tab.id
-                    ? "bg-[#F0A843] text-gray-950 shadow-xs"
+                    ? "bg-black text-white shadow-xs"
                     : "text-gray-600 hover:text-[#F0A843] hover:bg-amber-50/50"
                 }`}
               >
