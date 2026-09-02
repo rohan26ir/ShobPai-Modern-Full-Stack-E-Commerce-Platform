@@ -15,7 +15,7 @@ export const categories: Category[] = [
     slug: "fresh-fruits",
     itemCount: 48,
     description: "Farm-fresh organic fruits and seasonal picks",
-    image: "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=400&auto=format&fit=crop&q=80",
+    image: "/category/fresh_fruits.jpg",
     bgColor: "bg-emerald-50 text-emerald-800 border-emerald-100",
   },
   {
@@ -24,7 +24,7 @@ export const categories: Category[] = [
     slug: "fast-food",
     itemCount: 35,
     description: "Burgers, pizzas, tacos, and quick bites",
-    image: "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=400&auto=format&fit=crop&q=80",
+    image: "/category/fast_food.jpg",
     bgColor: "bg-amber-50 text-amber-800 border-amber-100",
   },
   {
@@ -33,7 +33,7 @@ export const categories: Category[] = [
     slug: "gadgets",
     itemCount: 52,
     description: "Smartphones, accessories, and modern electronics",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&auto=format&fit=crop&q=80",
+    image: "/category/gadgets_tech.jpg",
     bgColor: "bg-indigo-50 text-indigo-800 border-indigo-100",
   },
   {
@@ -42,7 +42,7 @@ export const categories: Category[] = [
     slug: "clothing",
     itemCount: 84,
     description: "Men's, women's, and kids' trendy everyday fashion",
-    image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400&auto=format&fit=crop&q=80",
+    image: "/category/clothing_apparel.jpg",
     bgColor: "bg-violet-50 text-violet-800 border-violet-100",
   },
   {
@@ -51,7 +51,7 @@ export const categories: Category[] = [
     slug: "beauty-care",
     itemCount: 29,
     description: "Skincare, cosmetics, and self-care essentials",
-    image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&auto=format&fit=crop&q=80",
+    image: "/category/beauty_personal_care.jpg",
     bgColor: "bg-rose-50 text-rose-800 border-rose-100",
   },
   {
@@ -60,7 +60,7 @@ export const categories: Category[] = [
     slug: "home-living",
     itemCount: 41,
     description: "Home decor, kitchenware, and furniture pieces",
-    image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&auto=format&fit=crop&q=80",
+    image: "/category/home-living.avif",
     bgColor: "bg-teal-50 text-teal-800 border-teal-100",
   },
   {
@@ -69,7 +69,7 @@ export const categories: Category[] = [
     slug: "sports-fitness",
     itemCount: 23,
     description: "Workout gear, equipment, and sportswear",
-    image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400&auto=format&fit=crop&q=80",
+    image: "/category/sports_fitness.jpg",
     bgColor: "bg-sky-50 text-sky-800 border-sky-100",
   },
   {
@@ -78,7 +78,7 @@ export const categories: Category[] = [
     slug: "books-stationery",
     itemCount: 38,
     description: "Best-selling novels, journals, and office supplies",
-    image: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&auto=format&fit=crop&q=80",
+    image: "/category/books_stationery.jpg",
     bgColor: "bg-amber-100/60 text-amber-900 border-amber-200",
   },
 ];

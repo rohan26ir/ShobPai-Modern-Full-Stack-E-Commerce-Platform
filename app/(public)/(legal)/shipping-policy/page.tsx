@@ -1,28 +1,35 @@
 export default function ShippingPolicyPage() {
   return (
-    <div className="py-12 bg-white min-h-screen">
-      <div className="container mx-auto px-4 max-w-3xl space-y-6 text-xs text-gray-600 leading-relaxed">
-        <h1 className="text-3xl font-black text-gray-900 border-b border-gray-100 pb-4">
-          Shipping & Delivery Policy
-        </h1>
+    <div className="container mx-auto px-4 py-12 md:py-16 max-w-4xl">
+      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">Shipping Policy</h1>
+      
+      <div className="prose prose-lg text-gray-700 space-y-6">
         <p>
-          At <strong>Vegist / ShobPai</strong>, we take pride in delivering farm-fresh organic produce directly from certified local farms to your home in temperature-controlled packaging.
+          We are committed to delivering your orders as quickly and freshly as possible. Please read our shipping policy to understand our processes and delivery times.
         </p>
 
-        <h3 className="text-sm font-bold text-gray-900 mt-4">1. Delivery Zones & Timelines</h3>
+        <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Processing Time</h2>
         <p>
-          Orders placed before 10:00 AM are eligible for Same-Day Express Delivery. Orders placed after 10:00 AM will be delivered the following morning between 8:00 AM and 1:00 PM.
+          All orders are processed within 1 to 2 business days (excluding weekends and holidays) after receiving your order confirmation email. You will receive another notification when your order has shipped.
         </p>
 
-        <h3 className="text-sm font-bold text-gray-900 mt-4">2. Shipping Charges</h3>
-        <ul className="list-disc pl-5 space-y-1">
-          <li><strong>Free Express Shipping:</strong> Available on all orders of $50.00 or more.</li>
-          <li><strong>Standard Flat Rate:</strong> $4.99 flat shipping fee for orders under $50.00.</li>
-        </ul>
-
-        <h3 className="text-sm font-bold text-gray-900 mt-4">3. Freshness Packaging Guarantee</h3>
+        <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Local Delivery (Perishables)</h2>
         <p>
-          Perishable items like organic milk, fresh berries, and leafy greens are packed in biodegradable insulated liners with non-toxic gel ice packs to ensure optimal cold chain maintenance.
+          For fresh produce and perishable goods, we offer same-day or next-day local delivery within our designated service areas. Deliveries are made between 9:00 AM and 6:00 PM. We recommend someone being home to receive perishable items to ensure freshness.
+        </p>
+
+        <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Standard Shipping (Non-Perishables)</h2>
+        <p>
+          For non-perishable goods, we offer standard shipping nationwide. Shipping charges for your order will be calculated and displayed at checkout. Standard shipping typically takes 3-5 business days.
+        </p>
+
+        <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Free Shipping</h2>
+        <p>
+          We offer free standard shipping and local delivery on all orders over $50. For orders under $50, a flat rate shipping fee will apply.
+        </p>
+
+        <p className="mt-8 text-sm text-gray-500">
+          Last updated: September 1, 2026
         </p>
       </div>
     </div>

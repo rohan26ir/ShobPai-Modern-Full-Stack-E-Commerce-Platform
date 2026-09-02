@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FaPlus, FaSearch, FaEdit, FaTrashAlt, FaFolder, FaBoxOpen, FaCheckCircle } from "react-icons/fa";
+import Image from "next/image";
+import { FaPlus, FaSearch, FaEdit, FaTrashAlt, FaFolder, FaBoxOpen, FaCheckCircle, FaChevronRight, FaExclamationTriangle } from "react-icons/fa";
 import { categories as initialCategories, Category } from "@/data/categories";
 import { products } from "@/data/products";
 
@@ -12,6 +13,7 @@ export default function CategoriesPage() {
   const [newCatSlug, setNewCatSlug] = useState("");
   const [newCatDesc, setNewCatDesc] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filteredCategories = categoriesList.filter((cat) =>
     cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,89 +42,104 @@ export default function CategoriesPage() {
     setIsAdding(false);
   };
 
-  const handleDeleteCategory = (id: string) => {
+  const confirmDelete = (id: string) => {
     setCategoriesList((prev) => prev.filter((c) => c.id !== id));
+    setDeletingId(null);
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Page Header */}
-      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-[#222222] text-white rounded-3xl p-6 md:p-8 shadow-xl border-b-4 border-[#E5A842] flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <span className="text-xs font-black uppercase tracking-widest text-[#E5A842]">
+      <div className="relative overflow-hidden rounded-3xl p-8 shadow-2xl border-b-4 border-[#E5A842] flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-gray-900 via-[#1a1a1a] to-[#222222]">
+        {/* Decorative Background Elements */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#E5A842] opacity-10 rounded-full blur-3xl mix-blend-screen pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500 opacity-10 rounded-full blur-3xl mix-blend-screen pointer-events-none" />
+        
+        <div className="relative z-10">
+          <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#E5A842] bg-[#E5A842]/10 px-3 py-1 rounded-full mb-3">
+            <FaFolder className="h-3 w-3" />
             Inventory Management
           </span>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white mt-1">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
             Category Management
           </h1>
-          <p className="text-xs md:text-sm text-gray-300 mt-1 max-w-xl">
+          <p className="text-sm text-gray-300 mt-2 max-w-xl font-medium leading-relaxed">
             Create, edit, and organize product categories, icon badges, and catalog groupings.
           </p>
         </div>
 
         <button
           onClick={() => setIsAdding(!isAdding)}
-          className="flex items-center gap-2 rounded-xl bg-[#E5A842] hover:bg-[#d49633] px-5 py-3 text-xs font-black text-gray-950 transition-colors shadow-md cursor-pointer self-start md:self-auto"
+          className={`relative z-10 flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-black transition-all duration-300 shadow-xl cursor-pointer hover:-translate-y-1 ${
+            isAdding 
+              ? "bg-gray-100 text-gray-900 hover:bg-gray-200 hover:shadow-gray-200/50" 
+              : "bg-gradient-to-r from-[#E5A842] to-[#f3bc58] text-gray-950 hover:shadow-[#E5A842]/30"
+          }`}
         >
-          <FaPlus className="h-3.5 w-3.5" />
-          <span>{isAdding ? "Cancel" : "Add New Category"}</span>
+          <FaPlus className={`h-4 w-4 transition-transform duration-300 ${isAdding ? "rotate-45" : ""}`} />
+          <span>{isAdding ? "Cancel Adding" : "Add New Category"}</span>
         </button>
       </div>
 
       {/* Add New Category Form */}
       {isAdding && (
-        <form onSubmit={handleAddCategory} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-md space-y-4">
-          <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-3">
-            Add New Product Category
-          </h3>
+        <form onSubmit={handleAddCategory} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/40 space-y-6 animate-in zoom-in-95 duration-300">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="h-10 w-10 rounded-xl bg-amber-50 text-[#E5A842] flex items-center justify-center">
+              <FaFolder className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-extrabold text-gray-900">
+              New Product Category
+            </h3>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label className="block font-bold text-gray-700 mb-1">Category Name *</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+            <div className="space-y-1.5">
+              <label className="block font-bold text-gray-700">Category Name *</label>
               <input
                 type="text"
                 required
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
                 placeholder="e.g. Organic Dairy & Eggs"
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 outline-hidden focus:border-[#E5A842]"
+                className="w-full rounded-xl border-2 border-gray-100 bg-gray-50/50 px-4 py-3 outline-hidden focus:border-[#E5A842] focus:bg-white transition-all shadow-xs"
               />
             </div>
 
-            <div>
-              <label className="block font-bold text-gray-700 mb-1">URL Slug (Optional)</label>
+            <div className="space-y-1.5">
+              <label className="block font-bold text-gray-700">URL Slug (Optional)</label>
               <input
                 type="text"
                 value={newCatSlug}
                 onChange={(e) => setNewCatSlug(e.target.value)}
                 placeholder="e.g. organic-dairy"
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 outline-hidden focus:border-[#E5A842]"
+                className="w-full rounded-xl border-2 border-gray-100 bg-gray-50/50 px-4 py-3 outline-hidden focus:border-[#E5A842] focus:bg-white transition-all shadow-xs"
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block font-bold text-gray-700 mb-1">Description</label>
+            <div className="md:col-span-2 space-y-1.5">
+              <label className="block font-bold text-gray-700">Description</label>
               <input
                 type="text"
                 value={newCatDesc}
                 onChange={(e) => setNewCatDesc(e.target.value)}
                 placeholder="Short summary of items in this category"
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 outline-hidden focus:border-[#E5A842]"
+                className="w-full rounded-xl border-2 border-gray-100 bg-gray-50/50 px-4 py-3 outline-hidden focus:border-[#E5A842] focus:bg-white transition-all shadow-xs"
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100"
+              className="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-black bg-[#E5A842] text-gray-950 hover:bg-[#d49633]"
+              className="px-6 py-2.5 rounded-xl text-sm font-black bg-[#E5A842] text-gray-950 hover:bg-[#d49633] transition-colors shadow-md shadow-[#E5A842]/20"
             >
               Save Category
             </button>
@@ -131,71 +148,116 @@ export default function CategoriesPage() {
       )}
 
       {/* Search & Filter Toolbar */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-md group">
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#E5A842] transition-colors" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search categories by name or slug..."
-            className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-4 py-2 text-xs text-gray-800 outline-hidden focus:border-[#E5A842]"
+            className="w-full rounded-xl border-2 border-gray-100 bg-gray-50/50 pl-11 pr-4 py-3 text-sm text-gray-800 outline-hidden focus:border-[#E5A842] focus:bg-white transition-all"
           />
         </div>
 
-        <p className="text-xs font-bold text-gray-500">
-          Showing <span className="text-gray-900 font-black">{filteredCategories.length}</span> categories
-        </p>
+        <div className="flex items-center gap-2 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <p className="text-xs font-bold text-gray-500">
+            <span className="text-gray-900 font-black">{filteredCategories.length}</span> Active Categories
+          </p>
+        </div>
       </div>
 
       {/* Categories Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredCategories.map((cat) => {
           const itemCount = products.filter((p) => p.category === cat.slug).length;
+          const isDeleting = deletingId === cat.id;
+
           return (
             <div
               key={cat.id}
-              className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
+              className={`group relative bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-amber-200 transition-all duration-300 overflow-hidden flex flex-col justify-between hover:-translate-y-1 ${isDeleting ? "ring-2 ring-red-500 border-transparent shadow-red-100" : ""}`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-2xl bg-amber-50 text-[#E5A842] flex items-center justify-center font-bold text-lg border border-amber-100">
-                    <FaFolder className="h-6 w-6" />
+              {/* Delete Confirmation Overlay */}
+              {isDeleting && (
+                <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center animate-in zoom-in duration-200">
+                  <div className="h-12 w-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-4">
+                    <FaExclamationTriangle className="h-5 w-5" />
                   </div>
-                  <div>
-                    <h3 className="text-base font-extrabold text-gray-900 leading-tight">
-                      {cat.name}
-                    </h3>
-                    <span className="text-[11px] font-semibold text-gray-400">
-                      /{cat.slug}
-                    </span>
+                  <h4 className="text-lg font-bold text-gray-900 mb-1">Delete Category?</h4>
+                  <p className="text-sm text-gray-500 mb-6">
+                    This action cannot be undone and may affect {itemCount} items.
+                  </p>
+                  <div className="flex items-center gap-3 w-full">
+                    <button
+                      onClick={() => setDeletingId(null)}
+                      className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => confirmDelete(cat.id)}
+                      className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 shadow-md shadow-red-500/20 transition-colors"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
+              )}
 
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleDeleteCategory(cat.id)}
-                    className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                    title="Delete Category"
-                  >
-                    <FaTrashAlt className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+              {/* Image Header Background */}
+              <div className="h-28 w-full relative overflow-hidden bg-gray-100">
+                <Image 
+                  src={cat.image || "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80"}
+                  alt={cat.name}
+                  fill
+                  className="object-cover opacity-70 group-hover:scale-110 group-hover:opacity-90 transition-all duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/60 to-transparent" />
               </div>
 
-              <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                {cat.description || "Farm fresh organic selection."}
-              </p>
-
-              <div className="flex items-center justify-between border-t border-gray-100 pt-4 text-xs font-semibold text-gray-600">
-                <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full font-bold text-[11px]">
-                  <FaCheckCircle className="h-3 w-3" />
-                  <span>Active</span>
+              <div className="p-6 pt-0 relative z-10 flex-1 flex flex-col">
+                <div className="flex items-start justify-between -mt-10 mb-5">
+                  <div className={`h-20 w-20 rounded-2xl shadow-xl flex items-center justify-center text-3xl border-4 border-white transform group-hover:scale-105 transition-transform duration-300 ${cat.bgColor || "bg-amber-50 text-amber-600"}`}>
+                    <FaFolder className="h-8 w-8" />
+                  </div>
+                  
+                  <button
+                    onClick={() => setDeletingId(cat.id)}
+                    className="p-3 mt-10 text-gray-400 hover:text-white hover:bg-red-500 rounded-xl transition-all cursor-pointer opacity-0 group-hover:opacity-100 shadow-sm hover:shadow-red-500/30"
+                    title="Delete Category"
+                  >
+                    <FaTrashAlt className="h-4 w-4" />
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-1 text-gray-800 font-bold">
-                  <FaBoxOpen className="h-3.5 w-3.5 text-[#E5A842]" />
-                  <span>{itemCount} Products</span>
+                <div className="mb-4">
+                  <h3 className="text-xl font-extrabold text-gray-900 leading-tight group-hover:text-[#E5A842] transition-colors">
+                    {cat.name}
+                  </h3>
+                  <p className="text-xs font-semibold text-gray-400 mt-1 uppercase tracking-wider">
+                    /{cat.slug}
+                  </p>
+                </div>
+
+                <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed mb-6 flex-1">
+                  {cat.description || "Farm fresh organic selection."}
+                </p>
+
+                <div className="flex items-center justify-between border-t border-gray-100 pt-5 mt-auto">
+                  <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-3.5 py-1.5 rounded-full font-bold text-xs border border-emerald-100">
+                    <FaCheckCircle className="h-3.5 w-3.5" />
+                    <span>Active</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-gray-800 font-bold text-sm bg-gray-50 px-4 py-1.5 rounded-xl border border-gray-100 group-hover:bg-amber-50 group-hover:border-amber-100 transition-colors">
+                    <FaBoxOpen className="h-4 w-4 text-[#E5A842]" />
+                    <span>{itemCount} Items</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -205,3 +267,4 @@ export default function CategoriesPage() {
     </div>
   );
 }
+

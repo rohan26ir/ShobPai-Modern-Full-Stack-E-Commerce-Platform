@@ -15,7 +15,7 @@ import {
   FaArrowRight,
   FaShieldAlt,
 } from "react-icons/fa";
-import logoImg from "@/public/logo/sobpai-nav_logo.svg";
+import logoImg from "@/public/logo/logo_shobpai.webp";
 import signinImg from "@/public/sections/sign-01.webp";
 
 // Helper to format Firebase error codes into clean user-friendly messages
@@ -104,7 +104,7 @@ export default function LoginPage() {
 
       {/* Main Container Layout */}
       <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16">
-        
+
         {/* Form Card Column */}
         <div className="w-full max-w-md lg:max-w-lg">
           {/* Logo & Header */}

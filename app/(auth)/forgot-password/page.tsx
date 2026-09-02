@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { FaEnvelope, FaKey, FaArrowLeft, FaSpinner, FaCheckCircle, FaShieldAlt, FaArrowRight } from "react-icons/fa";
-import logoImg from "@/public/logo/sobpai-nav_logo.svg";
+import logoImg from "@/public/logo/logo_shobpai.webp";
 
 function formatAuthError(error: any): string {
   if (!error) return "An unexpected error occurred. Please try again.";

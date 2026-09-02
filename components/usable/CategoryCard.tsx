@@ -23,7 +23,7 @@ export default function CategoryCard({ category, itemCount }: CategoryCardProps)
           alt={category.name}
           fill
           className="object-cover h-20 md:h-40 w-20 md:w-40 "
-        sizes="100px"
+          sizes="500px"
         />
       </div>
 

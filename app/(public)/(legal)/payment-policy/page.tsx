@@ -1,22 +1,33 @@
 export default function PaymentPolicyPage() {
   return (
-    <div className="py-12 bg-white min-h-screen">
-      <div className="container mx-auto px-4 max-w-3xl space-y-6 text-xs text-gray-600 leading-relaxed">
-        <h1 className="text-3xl font-black text-gray-900 border-b border-gray-100 pb-4">
-          Payment Methods & Policy
-        </h1>
+    <div className="container mx-auto px-4 py-12 md:py-16 max-w-4xl">
+      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">Payment Policy</h1>
+      
+      <div className="prose prose-lg text-gray-700 space-y-6">
         <p>
-          Vegist offers flexible payment options to ensure a smooth shopping experience.
+          At ShobPai, we strive to make your shopping experience as seamless as possible. We accept a variety of payment methods to ensure convenience and security.
         </p>
 
-        <h3 className="text-sm font-bold text-gray-900 mt-4">1. Cash on Delivery (COD)</h3>
+        <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Accepted Payment Methods</h2>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>Credit and Debit Cards (Visa, MasterCard, American Express)</li>
+          <li>Digital Wallets (Apple Pay, Google Pay, PayPal)</li>
+          <li>Bank Transfers</li>
+          <li>Cash on Delivery (Available in select regions)</li>
+        </ul>
+
+        <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Payment Security</h2>
         <p>
-          Pay cash directly to our delivery executive when your organic produce box arrives at your doorstep.
+          All transactions are encrypted and processed through secure gateways. We do not store your credit card information on our servers. Your financial data is handled directly by our PCI-compliant payment processors.
         </p>
 
-        <h3 className="text-sm font-bold text-gray-900 mt-4">2. Online Payment Gateway</h3>
+        <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Currency</h2>
         <p>
-          We accept major debit and credit cards (Visa, MasterCard, American Express). All transactions are encrypted with 256-bit SSL technology.
+          All prices listed on our website are in US Dollars (USD) unless otherwise stated. If you are shopping internationally, your bank may apply a conversion rate.
+        </p>
+
+        <p className="mt-8 text-sm text-gray-500">
+          Last updated: September 1, 2026
         </p>
       </div>
     </div>

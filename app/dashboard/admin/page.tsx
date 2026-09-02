@@ -57,6 +57,62 @@ export default function AdminProductsPage() {
   const [editProd, setEditProd] = useState<Partial<Product>>({});
   const [editProdNutritionalText, setEditProdNutritionalText] = useState("");
 
+  // Image Upload Logic
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEditMode = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+    if (!apiKey) {
+      alert("Please add NEXT_PUBLIC_IMGBB_API_KEY to your .env.local file");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        const url = data.data.url;
+        if (isEditMode) {
+          setEditProd(prev => ({ ...prev, images: [...(prev.images || []), url] }));
+        } else {
+          setNewProd(prev => ({ ...prev, images: [...(prev.images || []), url] }));
+        }
+      } else {
+        alert("Failed to upload image.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred during upload.");
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleRemoveImage = (index: number, isEditMode = false) => {
+    if (isEditMode) {
+      setEditProd(prev => ({
+        ...prev,
+        images: prev.images?.filter((_, i) => i !== index)
+      }));
+    } else {
+      setNewProd(prev => ({
+        ...prev,
+        images: prev.images?.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
   // Low stock products filter (stock <= 40)
   const lowStockProducts = productList.filter((p) => p.stock <= 40);
 
@@ -80,9 +136,9 @@ export default function AdminProductsPage() {
     const matchedCat = categories.find((c) => c.slug === editProd.category);
     const catName = matchedCat ? matchedCat.name : (editProd.category || "").toUpperCase();
 
-    const price = Number(editProd.price) || 0;
-    const origPrice = Number(editProd.originalPrice) || price;
-    const discount = origPrice > price ? Math.round(((origPrice - price) / origPrice) * 100) : 0;
+    const origPrice = Number(editProd.originalPrice) || 0;
+    const discount = Number(editProd.discount) || 0;
+    const price = discount > 0 ? Number((origPrice - (origPrice * discount / 100)).toFixed(2)) : origPrice;
     const benefits = editProdNutritionalText
       .split("\n")
       .map((b) => b.trim())
@@ -107,8 +163,15 @@ export default function AdminProductsPage() {
               shortDescription: editProd.shortDescription || p.shortDescription,
               description: editProd.description || p.description,
               nutritionalBenefits: benefits.length > 0 ? benefits : p.nutritionalBenefits,
-              isFeatured: editProd.isFeatured,
-              isTrending: editProd.isTrending,
+              isFeatured: editProd.isFeatured ?? p.isFeatured,
+              isTrending: editProd.isTrending ?? p.isTrending,
+              isDealOfDay: editProd.isDealOfDay ?? p.isDealOfDay,
+              rating: editProd.rating !== undefined ? Number(editProd.rating) : p.rating,
+              reviewsCount: editProd.reviewsCount !== undefined ? Number(editProd.reviewsCount) : p.reviewsCount,
+              sold: editProd.sold !== undefined ? Number(editProd.sold) : p.sold,
+              storage: editProd.storage,
+              shelfLife: editProd.shelfLife,
+              certifications: editProd.certifications,
             }
           : p
       )
@@ -118,14 +181,14 @@ export default function AdminProductsPage() {
 
   const handleAddProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProd.name || !newProd.price) return;
+    if (!newProd.name || !newProd.originalPrice) return;
 
     const matchedCat = categories.find((c) => c.slug === newProd.category);
     const catName = matchedCat ? matchedCat.name : (newProd.category || "VEGETABLES").toUpperCase();
 
-    const price = Number(newProd.price) || 0;
-    const origPrice = Number(newProd.originalPrice) || price;
-    const discount = origPrice > price ? Math.round(((origPrice - price) / origPrice) * 100) : 0;
+    const origPrice = Number(newProd.originalPrice) || 0;
+    const discount = Number(newProd.discount) || 0;
+    const price = discount > 0 ? Number((origPrice - (origPrice * discount / 100)).toFixed(2)) : origPrice;
 
     const benefits = newProdNutritionalText
       .split("\n")
@@ -139,11 +202,12 @@ export default function AdminProductsPage() {
       price: price,
       originalPrice: origPrice,
       discount: discount,
-      images: newProd.images && newProd.images[0] ? [newProd.images[0]] : ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80"],
+      images: newProd.images && newProd.images.length > 0 ? newProd.images : ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80"],
       category: newProd.category || "vegetables",
       categoryName: catName,
-      rating: 5.0,
-      reviewsCount: 1,
+      rating: newProd.rating !== undefined ? Number(newProd.rating) : 5.0,
+      reviewsCount: newProd.reviewsCount !== undefined ? Number(newProd.reviewsCount) : 1,
+      sold: newProd.sold !== undefined ? Number(newProd.sold) : 120,
       stock: Number(newProd.stock) || 50,
       unit: newProd.unit || "1 kg",
       badge: newProd.badge || "NEW",
@@ -152,6 +216,10 @@ export default function AdminProductsPage() {
       nutritionalBenefits: benefits,
       isFeatured: newProd.isFeatured ?? true,
       isTrending: newProd.isTrending ?? false,
+      isDealOfDay: newProd.isDealOfDay ?? false,
+      storage: newProd.storage,
+      shelfLife: newProd.shelfLife,
+      certifications: newProd.certifications,
     };
 
     setProductList([createdProd, ...productList]);
@@ -283,26 +351,27 @@ export default function AdminProductsPage() {
             </div>
 
             <div>
-              <label className="block font-bold text-gray-700 mb-1">Selling Price ($) *</label>
+              <label className="block font-bold text-gray-700 mb-1">Original Price ($) *</label>
               <input
                 type="number"
                 step="0.01"
                 required
-                value={newProd.price || ""}
-                onChange={(e) => setNewProd({ ...newProd, price: Number(e.target.value) })}
+                value={newProd.originalPrice || ""}
+                onChange={(e) => setNewProd({ ...newProd, originalPrice: Number(e.target.value) })}
                 placeholder="4.99"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 outline-hidden focus:border-[#E5A842] font-semibold"
               />
             </div>
 
             <div>
-              <label className="block font-bold text-gray-700 mb-1">Original Price ($)</label>
+              <label className="block font-bold text-gray-700 mb-1">Discount Offer (%)</label>
               <input
                 type="number"
-                step="0.01"
-                value={newProd.originalPrice || ""}
-                onChange={(e) => setNewProd({ ...newProd, originalPrice: Number(e.target.value) })}
-                placeholder="6.50"
+                min="0"
+                max="100"
+                value={newProd.discount || ""}
+                onChange={(e) => setNewProd({ ...newProd, discount: Number(e.target.value) })}
+                placeholder="10"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 outline-hidden focus:border-[#E5A842] font-semibold"
               />
             </div>
@@ -332,24 +401,117 @@ export default function AdminProductsPage() {
 
             <div>
               <label className="block font-bold text-gray-700 mb-1">Badge Tag</label>
-              <input
-                type="text"
+              <select
                 value={newProd.badge || ""}
                 onChange={(e) => setNewProd({ ...newProd, badge: e.target.value })}
-                placeholder="e.g. NEW, HOT, ORGANIC"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 outline-hidden focus:border-[#E5A842] font-semibold"
+              >
+                <option value="">None</option>
+                <option value="NEW">NEW</option>
+                <option value="HOT">HOT</option>
+                <option value="SALE">SALE</option>
+                <option value="ORGANIC">ORGANIC</option>
+                <option value="BESTSELLER">BESTSELLER</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-1">
+              <label className="block font-bold text-gray-700 mb-1">Storage</label>
+              <input
+                type="text"
+                value={newProd.storage || ""}
+                onChange={(e) => setNewProd({ ...newProd, storage: e.target.value })}
+                placeholder="e.g. Refrigerate at 4°C"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 outline-hidden focus:border-[#E5A842] font-semibold"
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block font-bold text-gray-700 mb-1">Product Image URL</label>
+            <div className="md:col-span-1">
+              <label className="block font-bold text-gray-700 mb-1">Shelf Life</label>
               <input
                 type="text"
-                value={newProd.images?.[0] || ""}
-                onChange={(e) => setNewProd({ ...newProd, images: [e.target.value] })}
-                placeholder="https://images.unsplash.com/..."
+                value={newProd.shelfLife || ""}
+                onChange={(e) => setNewProd({ ...newProd, shelfLife: e.target.value })}
+                placeholder="e.g. 5 - 7 Days"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 outline-hidden focus:border-[#E5A842] font-semibold"
               />
+            </div>
+
+            <div className="md:col-span-1">
+              <label className="block font-bold text-gray-700 mb-1">Certifications</label>
+              <input
+                type="text"
+                value={newProd.certifications || ""}
+                onChange={(e) => setNewProd({ ...newProd, certifications: e.target.value })}
+                placeholder="e.g. 100% USDA Organic"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 outline-hidden focus:border-[#E5A842] font-semibold"
+              />
+            </div>
+
+            <div className="md:col-span-3">
+              <label className="block font-bold text-gray-700 mb-1">Product Images</label>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold cursor-pointer hover:bg-gray-200 transition-colors">
+                    {isUploadingImage ? "Uploading..." : "Upload Image"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleImageUpload(e, false)}
+                      disabled={isUploadingImage}
+                    />
+                  </label>
+                  <span className="text-xs text-gray-500">Upload via ImgBB</span>
+                </div>
+                
+                {newProd.images && newProd.images.length > 0 && (
+                  <div className="flex flex-wrap gap-3 mt-2">
+                    {newProd.images.map((url, idx) => (
+                      <div key={idx} className="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-200 group">
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx, false)}
+                          className="absolute top-1 right-1 h-5 w-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          <FaTimes className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="md:col-span-1 flex items-center gap-2 mt-6">
+              <input
+                type="checkbox"
+                checked={newProd.isFeatured ?? true}
+                onChange={(e) => setNewProd({ ...newProd, isFeatured: e.target.checked })}
+                className="h-5 w-5 text-[#E5A842] rounded-md border-gray-300"
+              />
+              <label className="font-bold text-gray-700">Featured</label>
+            </div>
+
+            <div className="md:col-span-1 flex items-center gap-2 mt-6">
+              <input
+                type="checkbox"
+                checked={newProd.isTrending ?? false}
+                onChange={(e) => setNewProd({ ...newProd, isTrending: e.target.checked })}
+                className="h-5 w-5 text-[#E5A842] rounded-md border-gray-300"
+              />
+              <label className="font-bold text-gray-700">Trending</label>
+            </div>
+
+            <div className="md:col-span-1 flex items-center gap-2 mt-6">
+              <input
+                type="checkbox"
+                checked={newProd.isDealOfDay ?? false}
+                onChange={(e) => setNewProd({ ...newProd, isDealOfDay: e.target.checked })}
+                className="h-5 w-5 text-[#E5A842] rounded-md border-gray-300"
+              />
+              <label className="font-bold text-gray-700">Deal of the Day</label>
             </div>
 
             <div className="md:col-span-3">
@@ -446,24 +608,25 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Selling Price ($)</label>
+                  <label className="block font-bold text-gray-700 mb-1">Original Price ($) *</label>
                   <input
                     type="number"
                     step="0.01"
                     required
-                    value={editProd.price || ""}
-                    onChange={(e) => setEditProd({ ...editProd, price: Number(e.target.value) })}
+                    value={editProd.originalPrice || ""}
+                    onChange={(e) => setEditProd({ ...editProd, originalPrice: Number(e.target.value) })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold outline-hidden focus:border-[#E5A842]"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Original Price ($)</label>
+                  <label className="block font-bold text-gray-700 mb-1">Discount Offer (%)</label>
                   <input
                     type="number"
-                    step="0.01"
-                    value={editProd.originalPrice || ""}
-                    onChange={(e) => setEditProd({ ...editProd, originalPrice: Number(e.target.value) })}
+                    min="0"
+                    max="100"
+                    value={editProd.discount || ""}
+                    onChange={(e) => setEditProd({ ...editProd, discount: Number(e.target.value) })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold outline-hidden focus:border-[#E5A842]"
                   />
                 </div>
@@ -491,22 +654,84 @@ export default function AdminProductsPage() {
 
                 <div>
                   <label className="block font-bold text-gray-700 mb-1">Badge Tag</label>
-                  <input
-                    type="text"
+                  <select
                     value={editProd.badge || ""}
                     onChange={(e) => setEditProd({ ...editProd, badge: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold outline-hidden focus:border-[#E5A842]"
+                  >
+                    <option value="">None</option>
+                    <option value="NEW">NEW</option>
+                    <option value="HOT">HOT</option>
+                    <option value="SALE">SALE</option>
+                    <option value="ORGANIC">ORGANIC</option>
+                    <option value="BESTSELLER">BESTSELLER</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="block font-bold text-gray-700 mb-1">Storage</label>
+                  <input
+                    type="text"
+                    value={editProd.storage || ""}
+                    onChange={(e) => setEditProd({ ...editProd, storage: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold outline-hidden focus:border-[#E5A842]"
+                  />
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="block font-bold text-gray-700 mb-1">Shelf Life</label>
+                  <input
+                    type="text"
+                    value={editProd.shelfLife || ""}
+                    onChange={(e) => setEditProd({ ...editProd, shelfLife: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold outline-hidden focus:border-[#E5A842]"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block font-bold text-gray-700 mb-1">Image URL</label>
+                  <label className="block font-bold text-gray-700 mb-1">Certifications</label>
                   <input
                     type="text"
-                    value={editProd.images?.[0] || ""}
-                    onChange={(e) => setEditProd({ ...editProd, images: [e.target.value] })}
+                    value={editProd.certifications || ""}
+                    onChange={(e) => setEditProd({ ...editProd, certifications: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold outline-hidden focus:border-[#E5A842]"
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block font-bold text-gray-700 mb-1">Product Images</label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold cursor-pointer hover:bg-gray-200 transition-colors">
+                        {isUploadingImage ? "Uploading..." : "Upload Image"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleImageUpload(e, true)}
+                          disabled={isUploadingImage}
+                        />
+                      </label>
+                      <span className="text-xs text-gray-500">Upload via ImgBB</span>
+                    </div>
+                    
+                    {editProd.images && editProd.images.length > 0 && (
+                      <div className="flex flex-wrap gap-3 mt-2">
+                        {editProd.images.map((url, idx) => (
+                          <div key={idx} className="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-200 group">
+                            <img src={url} alt="" className="h-full w-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(idx, true)}
+                              className="absolute top-1 right-1 h-5 w-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            >
+                              <FaTimes className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="md:col-span-2">
@@ -517,6 +742,36 @@ export default function AdminProductsPage() {
                     onChange={(e) => setEditProd({ ...editProd, description: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold outline-hidden focus:border-[#E5A842]"
                   />
+                </div>
+
+                <div className="md:col-span-1 flex items-center gap-2 mt-6">
+                  <input
+                    type="checkbox"
+                    checked={editProd.isFeatured ?? true}
+                    onChange={(e) => setEditProd({ ...editProd, isFeatured: e.target.checked })}
+                    className="h-5 w-5 text-[#E5A842] rounded-md border-gray-300"
+                  />
+                  <label className="font-bold text-gray-700">Featured</label>
+                </div>
+
+                <div className="md:col-span-1 flex items-center gap-2 mt-6">
+                  <input
+                    type="checkbox"
+                    checked={editProd.isTrending ?? false}
+                    onChange={(e) => setEditProd({ ...editProd, isTrending: e.target.checked })}
+                    className="h-5 w-5 text-[#E5A842] rounded-md border-gray-300"
+                  />
+                  <label className="font-bold text-gray-700">Trending</label>
+                </div>
+
+                <div className="md:col-span-2 flex items-center gap-2 mt-6">
+                  <input
+                    type="checkbox"
+                    checked={editProd.isDealOfDay ?? false}
+                    onChange={(e) => setEditProd({ ...editProd, isDealOfDay: e.target.checked })}
+                    className="h-5 w-5 text-[#E5A842] rounded-md border-gray-300"
+                  />
+                  <label className="font-bold text-gray-700">Deal of the Day</label>
                 </div>
 
                 <div className="md:col-span-2">

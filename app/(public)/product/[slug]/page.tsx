@@ -402,15 +402,15 @@ export default function ProductDetailsPage() {
               </div>
               <div className="p-3 bg-gray-50 rounded-xl flex justify-between">
                 <span>Storage</span>
-                <span className="text-gray-900 font-bold">Refrigerate at 4°C - 8°C</span>
+                <span className="text-gray-900 font-bold">{product.storage || "Refrigerate at 4°C - 8°C"}</span>
               </div>
               <div className="p-3 bg-gray-50 rounded-xl flex justify-between">
                 <span>Shelf Life</span>
-                <span className="text-gray-900 font-bold">5 - 7 Days</span>
+                <span className="text-gray-900 font-bold">{product.shelfLife || "5 - 7 Days"}</span>
               </div>
               <div className="p-3 bg-gray-50 rounded-xl flex justify-between">
                 <span>Certifications</span>
-                <span className="text-[#F0A843] font-black">100% USDA Organic</span>
+                <span className="text-[#F0A843] font-black">{product.certifications || "100% USDA Organic"}</span>
               </div>
             </div>
           )}

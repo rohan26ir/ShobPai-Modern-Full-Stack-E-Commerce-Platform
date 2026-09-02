@@ -29,8 +29,9 @@ import {
   FaSpinner,
   FaUserCheck,
 } from "react-icons/fa";
-import logoImg from "@/public/logo/sobpai-nav_logo.svg";
+import logoImg from "@/public/logo/logo_shobpai.webp";
 import { useAuth } from "@/context/AuthContext";
+import LoadingCredentials from "@/components/LoadingCredentials";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -46,18 +47,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Customers", href: "/dashboard/customers", icon: FaUsers },
     { name: "Analytics", href: "/dashboard/analytics", icon: FaChartLine },
     { name: "Account Profile", href: "/dashboard/account", icon: FaUserCircle },
-    { name: "Settings", href: "/dashboard/settings", icon: FaCog },
   ];
 
   // Customer Portal routes definition
   const userItems = [
     { name: "My Orders", href: "/dashboard/orders", icon: FaBox },
     { name: "My Wishlist", href: "/dashboard/wishlist", icon: FaHeart },
+    { name: "My Store", href: "/dashboard/my-store", icon: FaStore },
     { name: "Shopping Cart", href: "/cart", icon: FaShoppingBag },
     { name: "Saved Payments", href: "/dashboard/payments", icon: FaCreditCard },
     { name: "My Reviews", href: "/dashboard/reviews", icon: FaStar },
     { name: "Account Profile", href: "/dashboard/account", icon: FaUserCircle },
-    { name: "Settings", href: "/dashboard/settings", icon: FaCog },
   ];
 
   // Determine if current route is an admin-only path
@@ -70,16 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // If loading authentication state
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <FaSpinner className="animate-spin h-8 w-8 text-[#E5A842]" />
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-            Verifying Security Credentials...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingCredentials />;
   }
 
   // If unauthenticated (Guest)
@@ -132,9 +123,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar Panel */}
       <aside
-        className={`fixed md:sticky top-0 z-50 h-screen w-64 bg-gray-900 text-white flex flex-col justify-between transition-transform duration-300 ease-in-out shrink-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
+        className={`fixed md:sticky top-0 z-50 h-screen w-64 bg-gray-900 text-white flex flex-col justify-between transition-transform duration-300 ease-in-out shrink-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Top Logo */}
@@ -146,11 +136,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="h-8 w-auto object-contain brightness-0 invert"
               />
               <span
-                className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${
-                  isAdmin
-                    ? "bg-[#E5A842] text-gray-950"
-                    : "bg-[#5FA800] text-white"
-                }`}
+                className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${isAdmin
+                  ? "bg-[#E5A842] text-gray-950"
+                  : "bg-[#5FA800] text-white"
+                  }`}
               >
                 {isAdmin ? "Admin" : "Customer"}
               </span>
@@ -181,24 +170,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <Link
                           href={item.href}
                           onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
-                            isActive
-                              ? "bg-[#E5A842] text-gray-950 font-black shadow-md"
-                              : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                          }`}
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${isActive
+                            ? "bg-[#E5A842] text-gray-950 font-black shadow-md"
+                            : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                            }`}
                         >
                           <div className="flex items-center gap-3">
                             <Icon
-                              className={`h-4 w-4 ${
-                                isActive ? "text-gray-950" : "text-[#E5A842]"
-                              }`}
+                              className={`h-4 w-4 ${isActive ? "text-gray-950" : "text-[#E5A842]"
+                                }`}
                             />
                             <span>{item.name}</span>
                           </div>
                           <FaChevronRight
-                            className={`h-2.5 w-2.5 opacity-60 ${
-                              isActive ? "text-gray-950" : "text-gray-500"
-                            }`}
+                            className={`h-2.5 w-2.5 opacity-60 ${isActive ? "text-gray-950" : "text-gray-500"
+                              }`}
                           />
                         </Link>
                       </li>
@@ -223,24 +209,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <Link
                           href={item.href}
                           onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
-                            isActive
-                              ? "bg-[#5FA800] text-white font-black shadow-md"
-                              : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                          }`}
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${isActive
+                            ? "bg-[#5FA800] text-white font-black shadow-md"
+                            : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                            }`}
                         >
                           <div className="flex items-center gap-3">
                             <Icon
-                              className={`h-4 w-4 ${
-                                isActive ? "text-white" : "text-[#5FA800]"
-                              }`}
+                              className={`h-4 w-4 ${isActive ? "text-white" : "text-[#5FA800]"
+                                }`}
                             />
                             <span>{item.name}</span>
                           </div>
                           <FaChevronRight
-                            className={`h-2.5 w-2.5 opacity-60 ${
-                              isActive ? "text-white" : "text-gray-500"
-                            }`}
+                            className={`h-2.5 w-2.5 opacity-60 ${isActive ? "text-white" : "text-gray-500"
+                              }`}
                           />
                         </Link>
                       </li>
@@ -273,17 +256,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="p-4 border-t border-gray-800 bg-gray-950/60 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
               <div
-                className={`h-9 w-9 rounded-full font-black text-xs flex items-center justify-center shrink-0 shadow-xs ${
-                  isAdmin
-                    ? "bg-[#E5A842] text-gray-950"
-                    : "bg-[#5FA800] text-white"
-                }`}
+                className={`h-9 w-9 rounded-full font-black text-xs flex items-center justify-center shrink-0 shadow-xs ${isAdmin
+                  ? "bg-[#E5A842] text-gray-950"
+                  : "bg-[#5FA800] text-white"
+                  }`}
               >
                 {user?.displayName
                   ? user.displayName.slice(0, 2).toUpperCase()
                   : user?.email
-                  ? user.email.slice(0, 2).toUpperCase()
-                  : "US"}
+                    ? user.email.slice(0, 2).toUpperCase()
+                    : "US"}
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-xs font-bold text-white leading-tight truncate">
@@ -322,31 +304,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <FaBars className="h-4 w-4" />
             </button>
 
-            {/* Dashboard Search */}
-            <div className="relative flex-1 hidden sm:block">
-              <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search orders, products, customers..."
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-4 py-2 text-xs text-gray-800 placeholder-gray-400 outline-hidden focus:border-[#E5A842] focus:ring-2 focus:ring-[#E5A842]/30 transition-all"
-              />
-            </div>
+            {/* Search bar removed per user request */}
           </div>
 
           {/* Right Header Quick Actions */}
           <div className="flex items-center gap-3">
             {/* Status Pill */}
             <div
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
-                isAdmin
-                  ? "bg-amber-50 text-amber-900 border-amber-200"
-                  : "bg-emerald-50 text-emerald-900 border-emerald-200"
-              }`}
+              className={`hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${isAdmin
+                ? "bg-amber-50 text-amber-900 border-amber-200"
+                : "bg-emerald-50 text-emerald-900 border-emerald-200"
+                }`}
             >
               <span
-                className={`h-2 w-2 rounded-full ${
-                  isAdmin ? "bg-[#E5A842]" : "bg-[#5FA800]"
-                }`}
+                className={`h-2 w-2 rounded-full ${isAdmin ? "bg-[#E5A842]" : "bg-[#5FA800]"
+                  }`}
               />
               <span>{isAdmin ? "Admin Console" : "Customer Portal"}</span>
             </div>
@@ -368,11 +340,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Avatar & User Profile */}
             <div className="flex items-center gap-2.5">
               <div
-                className={`relative h-9 w-9 rounded-full font-black text-xs flex items-center justify-center shadow-xs overflow-hidden shrink-0 ${
-                  isAdmin
-                    ? "bg-gradient-to-tr from-[#E5A842] to-amber-300 text-gray-950"
-                    : "bg-gradient-to-tr from-[#5FA800] to-emerald-300 text-white"
-                }`}
+                className={`relative h-9 w-9 rounded-full font-black text-xs flex items-center justify-center shadow-xs overflow-hidden shrink-0 ${isAdmin
+                  ? "bg-gradient-to-tr from-[#E5A842] to-amber-300 text-gray-950"
+                  : "bg-gradient-to-tr from-[#5FA800] to-emerald-300 text-white"
+                  }`}
               >
                 {user?.photoURL ? (
                   <Image
@@ -394,9 +365,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   {user?.displayName || (isAdmin ? "Admin User" : "Customer")}
                 </span>
                 <span
-                  className={`text-[10px] font-bold ${
-                    isAdmin ? "text-[#E5A842]" : "text-[#5FA800]"
-                  }`}
+                  className={`text-[10px] font-bold ${isAdmin ? "text-[#E5A842]" : "text-[#5FA800]"
+                    }`}
                 >
                   {isAdmin ? "System Administrator" : "Verified Customer"}
                 </span>

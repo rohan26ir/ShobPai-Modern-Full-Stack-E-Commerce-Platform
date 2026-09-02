@@ -16,7 +16,7 @@ import {
   FaChevronUp,
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-import logoImg from "@/public/logo/sobpai-nav_logo.svg";
+import logoImg from "@/public/logo/logo_shobpai.webp";
 
 
 export default function Footer() {
@@ -42,11 +42,11 @@ export default function Footer() {
   ];
 
   const privacyLinks = [
-    { title: "Payment policy", url: "/privacy" },
-    { title: "Privacy policy", url: "/privacy" },
-    { title: "Return policy", url: "/privacy" },
-    { title: "Shipping policy", url: "/privacy" },
-    { title: "Terms & conditions", url: "/terms" },
+    { title: "Payment policy", url: "/payment-policy" },
+    { title: "Privacy policy", url: "/privacy-policy" },
+    { title: "Return policy", url: "/return-policy" },
+    { title: "Shipping policy", url: "/shipping-policy" },
+    { title: "Terms & conditions", url: "/terms-conditions" },
   ];
 
   const accountLinks = [
@@ -79,7 +79,7 @@ export default function Footer() {
               <Image
                 src={logoImg}
                 alt="ShobPai Vegist logo"
-                className="h-10 w-auto brightness-200 contrast-200"
+                className="h-10 w-auto  brightness-0 invert "
                 priority
               />
             </Link>

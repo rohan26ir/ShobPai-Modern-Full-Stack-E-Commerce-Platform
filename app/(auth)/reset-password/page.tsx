@@ -6,7 +6,7 @@ import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { FaLock, FaCheckCircle, FaSpinner, FaArrowLeft, FaEye, FaEyeSlash, FaArrowRight, FaShieldAlt } from "react-icons/fa";
-import logoImg from "@/public/logo/sobpai-nav_logo.svg";
+import logoImg from "@/public/logo/logo_shobpai.webp";
 
 function formatAuthError(error: any): string {
   if (!error) return "An unexpected error occurred. Please try again.";

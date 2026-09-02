@@ -34,7 +34,8 @@ import { FiUser, FiHeart, FiShoppingBag } from "react-icons/fi";
 import AnnouncementBar from "@/components/non-usable/AnnouncementBar";
 import CartDrawer from "@/components/usable/CartDrawer";
 import { categories } from "@/data/categories";
-import logoImg from "@/public/logo/sobpai-nav_logo.svg";
+import { products } from "@/data/products";
+import logoImg from "@/public/logo/logo_shobpai.webp";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -48,6 +49,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // Listen to window scroll position (triggers instantly on any scroll > 0)
   useEffect(() => {
@@ -124,8 +126,13 @@ export default function Navbar() {
       params.set("category", selectedCategory);
     }
     const queryStr = params.toString();
+    setIsSearchFocused(false);
     router.push(queryStr ? `/shop?${queryStr}` : "/shop");
   };
+
+  const suggestedProducts = searchQuery.trim()
+    ? products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5)
+    : [];
 
   const collectionMegaCards = [
     {
@@ -169,26 +176,51 @@ export default function Navbar() {
             </Link>
 
             {/* Search Bar Form (Simple & Clean) */}
-            <form
-              onSubmit={handleSearchSubmit}
-              className="hidden md:flex flex-1 max-w-xl items-center rounded-sm border border-gray-300 bg-white overflow-hidden focus-within:border-gray-500 transition-colors"
-            >
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search our store"
-                className="w-full bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-hidden"
-              />
-
-              <button
-                type="submit"
-                className="bg-transparent text-gray-700 hover:text-gray-950 px-4 py-2.5 text-sm flex items-center justify-center transition-colors cursor-pointer"
-                title="Search"
+            <div className="hidden md:block flex-1 max-w-xl relative">
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex items-center rounded-sm border border-gray-300 bg-white overflow-hidden focus-within:border-gray-500 transition-colors w-full"
               >
-                <FaSearch className="h-4 w-4" />
-              </button>
-            </form>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                  placeholder="Search our store"
+                  className="w-full bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-hidden"
+                />
+
+                <button
+                  type="submit"
+                  className="bg-transparent text-gray-700 hover:text-gray-950 px-4 py-2.5 text-sm flex items-center justify-center transition-colors cursor-pointer"
+                  title="Search"
+                >
+                  <FaSearch className="h-4 w-4" />
+                </button>
+              </form>
+
+              {isSearchFocused && suggestedProducts.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-md z-50 max-h-96 overflow-y-auto">
+                  {suggestedProducts.map((product) => (
+                    <Link
+                      key={product.id}
+                      href={`/product/${product.slug}`}
+                      className="flex items-center gap-3 p-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
+                      onClick={() => setSearchQuery("")}
+                    >
+                      <div className="relative h-12 w-12 rounded-sm overflow-hidden shrink-0">
+                        <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-gray-800 line-clamp-1">{product.name}</span>
+                        <span className="text-xs text-[#5FA800] font-bold">${product.price.toFixed(2)}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Action Controls (Account, Wishlist, Cart matching reference screenshot 1-to-1) */}
             <div className="flex items-center gap-5 sm:gap-6">
@@ -243,20 +275,45 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Search input form */}
-          <form onSubmit={handleSearchSubmit} className="mt-3 md:hidden">
-            <div className="flex items-center rounded-sm border border-gray-300 bg-white overflow-hidden">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search our store"
-                className="w-full bg-transparent px-3 py-2 text-xs text-gray-800 placeholder-gray-400 outline-hidden"
-              />
-              <button type="submit" className="bg-transparent text-gray-700 p-2.5">
-                <FaSearch className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </form>
+          <div className="mt-3 md:hidden relative">
+            <form onSubmit={handleSearchSubmit}>
+              <div className="flex items-center rounded-sm border border-gray-300 bg-white overflow-hidden">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                  placeholder="Search our store"
+                  className="w-full bg-transparent px-3 py-2 text-xs text-gray-800 placeholder-gray-400 outline-hidden"
+                />
+                <button type="submit" className="bg-transparent text-gray-700 p-2.5">
+                  <FaSearch className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </form>
+
+            {isSearchFocused && suggestedProducts.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-md z-50 max-h-80 overflow-y-auto">
+                {suggestedProducts.map((product) => (
+                  <Link
+                    key={product.id}
+                    href={`/product/${product.slug}`}
+                    className="flex items-center gap-3 p-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
+                    onClick={() => setSearchQuery("")}
+                  >
+                    <div className="relative h-10 w-10 rounded-sm overflow-hidden shrink-0">
+                      <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-gray-800 line-clamp-1">{product.name}</span>
+                      <span className="text-[10px] text-[#5FA800] font-bold">${product.price.toFixed(2)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

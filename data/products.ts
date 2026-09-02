@@ -16,6 +16,9 @@ export interface Product {
   description: string;
   shortDescription: string;
   nutritionalBenefits?: string[];
+  storage?: string;
+  shelfLife?: string;
+  certifications?: string;
   isTrending?: boolean;
   isFeatured?: boolean;
   isDealOfDay?: boolean;

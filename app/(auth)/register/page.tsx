@@ -17,7 +17,7 @@ import {
   FaArrowRight,
   FaShieldAlt,
 } from "react-icons/fa";
-import logoImg from "@/public/logo/sobpai-nav_logo.svg";
+import logoImg from "@/public/logo/logo_shobpai.webp";
 import signupImg from "@/public/sections/sign-02.webp";
 import sign from "@/public/sections/sign.webp";
 

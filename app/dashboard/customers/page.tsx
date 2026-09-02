@@ -112,11 +112,10 @@ export default function CustomersPage() {
                   <td className="py-4 px-5">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`h-10 w-10 rounded-full font-black text-xs flex items-center justify-center shadow-xs ${
-                          cust.role === "ADMIN"
+                        className={`h-10 w-10 rounded-full font-black text-xs flex items-center justify-center shadow-xs ${cust.role === "ADMIN"
                             ? "bg-[#E5A842] text-gray-950"
                             : "bg-[#5FA800] text-white"
-                        }`}
+                          }`}
                       >
                         {cust.avatar}
                       </div>
@@ -138,11 +137,10 @@ export default function CustomersPage() {
                   </td>
                   <td className="py-4 px-5">
                     <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                        cust.role === "ADMIN"
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${cust.role === "ADMIN"
                           ? "bg-amber-100 text-amber-900 border border-amber-300"
                           : "bg-gray-100 text-gray-800 border border-gray-200"
-                      }`}
+                        }`}
                     >
                       {cust.role === "ADMIN" && <FaUserShield className="h-3 w-3 text-[#E5A842]" />}
                       <span>{cust.role}</span>
@@ -161,11 +159,10 @@ export default function CustomersPage() {
                     <button
                       type="button"
                       onClick={() => toggleRole(cust.id)}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-black cursor-pointer transition-all ${
-                        cust.role === "ADMIN"
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-black cursor-pointer transition-all ${cust.role === "ADMIN"
                           ? "bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600"
                           : "bg-amber-50 text-amber-800 hover:bg-[#E5A842] hover:text-gray-950 border border-amber-200"
-                      }`}
+                        }`}
                     >
                       {cust.role === "ADMIN" ? "Demote to User" : "Promote to Admin"}
                     </button>

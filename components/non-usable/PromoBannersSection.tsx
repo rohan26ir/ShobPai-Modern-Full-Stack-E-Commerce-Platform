@@ -47,7 +47,7 @@ export default function PromoBannersSection() {
             <Link
               key={b.id}
               href={b.link}
-              className="group relative min-h-[220px]  overflow-hidden  flex items-center p-6 block cursor-pointer"
+              className="group relative min-h-55  overflow-hidden  flex items-center p-6 cursor-pointer"
             >
               <div>
                 {/* image */}
