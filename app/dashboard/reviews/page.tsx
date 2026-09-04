@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { FaStar, FaRegStar, FaCheckCircle, FaTrashAlt, FaCommentAlt, FaSyncAlt } from "react-icons/fa";
+import { FaStar, FaRegStar, FaCheckCircle, FaTrashAlt, FaCommentAlt, FaSyncAlt, FaShieldAlt, FaReply } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 
@@ -12,6 +12,9 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [replyingId, setReplyingId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [savingReply, setSavingReply] = useState(false);
 
   const fetchReviews = async () => {
     setLoading(true);
@@ -37,6 +40,29 @@ export default function ReviewsPage() {
   useEffect(() => {
     fetchReviews();
   }, [isAdmin, token]);
+
+  const handleAdminReplySubmit = async (reviewId: string) => {
+    if (!token || !replyText.trim()) return;
+    setSavingReply(true);
+    try {
+      const updated = await api.replyReview(reviewId, replyText.trim(), token);
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === reviewId
+            ? { ...r, adminReply: updated.adminReply, adminReplyAt: updated.adminReplyAt }
+            : r
+        )
+      );
+      setReplyingId(null);
+      setReplyText("");
+    } catch (err) {
+      console.error("Failed to submit admin reply:", err);
+      alert("Failed to submit reply. Only administrators can reply.");
+    } finally {
+      setSavingReply(false);
+    }
+  };
+
 
   const handleDeleteReview = async (id: string) => {
     if (!token) return;
@@ -147,21 +173,91 @@ export default function ReviewsPage() {
                   <p className="text-xs text-gray-600 leading-relaxed max-w-xl">
                     "{rev.comment}"
                   </p>
+
+                  {/* Admin Reply Block */}
+                  {rev.adminReply && (
+                    <div className="mt-3 pl-3.5 py-2.5 pr-3 bg-amber-50/70 border-l-4 border-[#E5A842] rounded-r-xl space-y-1 max-w-xl">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#b47a1d]">
+                        <FaShieldAlt className="h-3 w-3" />
+                        <span>Store Admin Reply</span>
+                        {rev.adminReplyAt && (
+                          <span className="text-[10px] text-gray-400 font-normal">
+                            • {new Date(rev.adminReplyAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-700 italic leading-relaxed">
+                        {rev.adminReply}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Inline Admin Reply Box */}
+                  {isAdmin && replyingId === rev.id && (
+                    <div className="mt-3 p-3 bg-amber-50/40 border border-amber-200 rounded-2xl space-y-2 max-w-xl">
+                      <label className="block text-[11px] font-bold text-[#b47a1d]">
+                        {rev.adminReply ? "Edit Admin Reply" : "Reply to Customer Review"}
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        placeholder="Type official store reply..."
+                        className="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white outline-hidden focus:border-[#E5A842]"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReplyingId(null);
+                            setReplyText("");
+                          }}
+                          className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={savingReply || !replyText.trim()}
+                          onClick={() => handleAdminReplySubmit(rev.id)}
+                          className="text-xs font-bold bg-[#E5A842] hover:bg-[#d49633] text-gray-950 px-4 py-1.5 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {savingReply ? "Saving..." : rev.adminReply ? "Update Reply" : "Post Reply"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Delete / Actions */}
-              {(isAdmin || (user && rev.userId === user.id)) && (
-                <button
-                  onClick={() => handleDeleteReview(rev.id)}
-                  disabled={deletingId === rev.id}
-                  className="self-end md:self-auto flex items-center gap-1.5 text-gray-400 hover:text-red-500 text-xs font-semibold p-2 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
-                  title="Delete review"
-                >
-                  <FaTrashAlt className="h-3.5 w-3.5" />
-                  <span>{deletingId === rev.id ? "Deleting..." : "Delete"}</span>
-                </button>
-              )}
+              {/* Actions */}
+              <div className="flex items-center gap-2 self-end md:self-auto">
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setReplyingId(replyingId === rev.id ? null : rev.id);
+                      setReplyText(rev.adminReply || "");
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-50 text-[#b47a1d] hover:bg-amber-100 transition-colors cursor-pointer"
+                    title="Reply to review"
+                  >
+                    <FaReply className="h-3 w-3" />
+                    <span>{rev.adminReply ? "Edit Reply" : "Reply"}</span>
+                  </button>
+                )}
+
+                {(isAdmin || (user && rev.userId === user.id)) && (
+                  <button
+                    onClick={() => handleDeleteReview(rev.id)}
+                    disabled={deletingId === rev.id}
+                    className="flex items-center gap-1.5 text-gray-400 hover:text-red-500 text-xs font-semibold p-2 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
+                    title="Delete review"
+                  >
+                    <FaTrashAlt className="h-3.5 w-3.5" />
+                    <span>{deletingId === rev.id ? "Deleting..." : "Delete"}</span>
+                  </button>
+                )}
+              </div>
             </div>
           ))
         )}

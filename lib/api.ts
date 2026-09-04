@@ -303,6 +303,10 @@ export const api = {
     return fetchWithAuth("/reviews/my", { method: "GET" }, token);
   },
 
+  canReview: async (productId: string, token?: string | null): Promise<{ canReview: boolean; reason?: string }> => {
+    return fetchWithAuth(`/reviews/can-review/${productId}`, { method: "GET" }, token);
+  },
+
   createReview: async (reviewData: any, token?: string | null) => {
     return fetchWithAuth(
       "/reviews",
@@ -314,7 +318,19 @@ export const api = {
     );
   },
 
+  replyReview: async (reviewId: string, reply: string, token?: string | null) => {
+    return fetchWithAuth(
+      `/reviews/${reviewId}/reply`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ reply }),
+      },
+      token
+    );
+  },
+
   deleteReview: async (reviewId: string, token?: string | null) => {
     return fetchWithAuth(`/reviews/${reviewId}`, { method: "DELETE" }, token);
   },
 };
+

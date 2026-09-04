@@ -182,8 +182,7 @@ export default function ProductQuickViewModal({
 
               {/* Short Description */}
               <p className="mt-3 text-xs md:text-sm text-gray-500 leading-relaxed line-clamp-3">
-                {product.shortDescription ||
-                  "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s."}
+                {product.shortDescription || product.description || "Fresh and sustainably sourced organic produce delivered straight from certified farms to your table."}
               </p>
             </div>
 
