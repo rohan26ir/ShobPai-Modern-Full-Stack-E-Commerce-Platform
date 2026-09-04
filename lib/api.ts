@@ -1,17 +1,45 @@
+import axios from "axios";
 import { Product } from "@/data/products";
 import { Category } from "@/data/categories";
 import { Coupon } from "@/data/coupons";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "https://shobpai-api.vercel.app/api"
+    : "http://localhost:5000/api");
+
+// Axios client configured with live backend URL
+export const apiClient = axios.create({
+  baseURL: API_URL,
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 export async function fetchWithAuth(
   endpoint: string,
   options: RequestInit = {},
   token?: string | null,
-  timeoutMs = 8000
+  timeoutMs = 10000
 ) {
+  const method = (options.method || "GET").toUpperCase();
+  let data: any = undefined;
+
+  if (options.body) {
+    if (typeof options.body === "string") {
+      try {
+        data = JSON.parse(options.body);
+      } catch {
+        data = options.body;
+      }
+    } else {
+      data = options.body;
+    }
+  }
+
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
 
@@ -19,28 +47,24 @@ export async function fetchWithAuth(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
+    const res = await apiClient.request({
+      url: endpoint,
+      method,
+      data,
       headers,
-      signal: controller.signal,
+      timeout: timeoutMs,
     });
-    clearTimeout(timeoutId);
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      const message = errorData.message || errorData.detail || `Request failed with status ${res.status}`;
-      throw new Error(Array.isArray(message) ? message.join(', ') : message);
-    }
-
-    return await res.json();
+    return res.data;
   } catch (error: any) {
-    clearTimeout(timeoutId);
-    console.error(`[API Error] (${endpoint}):`, error?.message || error);
-    throw error;
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.detail ||
+      error.message ||
+      `Request failed (${endpoint})`;
+    const formatted = Array.isArray(message) ? message.join(", ") : message;
+    console.error(`[Axios API Error] (${endpoint}):`, formatted);
+    throw new Error(formatted);
   }
 }
 
