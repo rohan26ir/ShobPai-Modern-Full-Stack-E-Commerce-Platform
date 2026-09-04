@@ -3,16 +3,25 @@ import { Product } from "@/data/products";
 import { Category } from "@/data/categories";
 import { Coupon } from "@/data/coupons";
 
+export const DEPLOYED_API_URL = "https://shobpai-api.vercel.app/api";
+export const LOCAL_API_URL = "http://localhost:5000/api";
+
+// Determine preferred initial API URL from env or environment
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (process.env.NODE_ENV === "production"
-    ? "https://shobpai-api.vercel.app/api"
-    : "http://localhost:5000/api");
+    ? DEPLOYED_API_URL
+    : LOCAL_API_URL);
 
-// Axios client configured with live backend URL
+// Dynamic active API URL that auto-switches to working server (deploy <-> local)
+let activeApiUrl = API_URL;
+
+export function getActiveApiUrl() {
+  return activeApiUrl;
+}
+
 export const apiClient = axios.create({
-  baseURL: API_URL,
-  timeout: 10000,
+  timeout: 8000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -22,7 +31,7 @@ export async function fetchWithAuth(
   endpoint: string,
   options: RequestInit = {},
   token?: string | null,
-  timeoutMs = 10000
+  timeoutMs = 8000
 ) {
   const method = (options.method || "GET").toUpperCase();
   let data: any = undefined;
@@ -47,25 +56,57 @@ export async function fetchWithAuth(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  try {
-    const res = await apiClient.request({
-      url: endpoint,
-      method,
-      data,
-      headers,
-      timeout: timeoutMs,
-    });
-    return res.data;
-  } catch (error: any) {
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.detail ||
-      error.message ||
-      `Request failed (${endpoint})`;
-    const formatted = Array.isArray(message) ? message.join(", ") : message;
-    console.error(`[Axios API Error] (${endpoint}):`, formatted);
-    throw new Error(formatted);
+  // Ordered candidate URLs: try current active first, then fallback to alternate
+  const candidateUrls = [
+    activeApiUrl,
+    activeApiUrl.includes("localhost") ? DEPLOYED_API_URL : LOCAL_API_URL,
+  ];
+
+  let lastError: any = null;
+
+  for (const candidateBase of candidateUrls) {
+    try {
+      const res = await axios.request({
+        url: `${candidateBase}${endpoint}`,
+        method,
+        data,
+        headers,
+        timeout: timeoutMs,
+      });
+
+      // Switch active URL if alternate candidate succeeded
+      if (candidateBase !== activeApiUrl) {
+        console.warn(`[API Failover] Switched active backend to: ${candidateBase}`);
+        activeApiUrl = candidateBase;
+      }
+
+      return res.data;
+    } catch (error: any) {
+      lastError = error;
+      const status = error.response?.status;
+      // Valid client-level status codes (400, 401, 403, 404, 409, 422) don't need server failover
+      if (status && status < 500) {
+        const msg =
+          error.response?.data?.message ||
+          error.response?.data?.detail ||
+          error.message;
+        throw new Error(Array.isArray(msg) ? msg.join(", ") : msg);
+      }
+      // If 5xx error or connection refusal, continue loop to try fallback URL
+      console.warn(
+        `[API] Attempt on ${candidateBase}${endpoint} failed (${status || error.code || 'Network'}), checking fallback...`
+      );
+    }
   }
+
+  const message =
+    lastError?.response?.data?.message ||
+    lastError?.response?.data?.detail ||
+    lastError?.message ||
+    `Request failed (${endpoint})`;
+  const formatted = Array.isArray(message) ? message.join(", ") : message;
+  console.error(`[API Failover Exhausted] (${endpoint}):`, formatted);
+  throw new Error(formatted);
 }
 
 // Live API Service Methods (Connected directly to Neon PostgreSQL Backend)
