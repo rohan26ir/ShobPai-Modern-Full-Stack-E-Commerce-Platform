@@ -18,7 +18,8 @@ import {
   FaChevronDown,
   FaCamera,
 } from "react-icons/fa";
-import { products, Product } from "@/data/products";
+import { Product } from "@/data/products";
+import { api } from "@/lib/api";
 import RelatedProductsSlider from "@/components/usable/RelatedProductsSlider";
 import ProductQuickViewModal from "@/components/usable/ProductQuickViewModal";
 import { useCart } from "@/context/CartContext";
@@ -27,7 +28,23 @@ export default function ProductDetailsPage() {
   const params = useParams();
   const slug = params?.slug as string;
 
-  const product = products.find((p) => p.slug === slug) || products[0];
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loadingProduct, setLoadingProduct] = useState(true);
+
+  useEffect(() => {
+    if (!slug) return;
+    let isMounted = true;
+    setLoadingProduct(true);
+    api.getProduct(slug).then((data) => {
+      if (isMounted) {
+        setProduct(data);
+        setLoadingProduct(false);
+      }
+    }).catch(() => {
+      if (isMounted) setLoadingProduct(false);
+    });
+    return () => { isMounted = false; };
+  }, [slug]);
 
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -70,27 +87,29 @@ export default function ProductDetailsPage() {
     },
   ]);
 
-  const isWishlisted = isInWishlist(product.id);
+  const isWishlisted = product ? isInWishlist(product.id) : false;
 
   // Auto-rotate product images every 4 seconds unless hovered/interacting
   useEffect(() => {
-    if (!autoRotate || product.images.length <= 1) return;
+    if (!autoRotate || !product?.images || product.images.length <= 1) return;
     const interval = setInterval(() => {
       setActiveImageIndex((prev) => (prev + 1) % product.images.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [autoRotate, product.images.length]);
+  }, [autoRotate, product?.images]);
 
   const handleDecrease = () => setQuantity((prev) => Math.max(1, prev - 1));
-  const handleIncrease = () => setQuantity((prev) => Math.min(product.stock, prev + 1));
+  const handleIncrease = () => setQuantity((prev) => Math.min(product?.stock || 50, prev + 1));
 
   const handleAddToCart = () => {
+    if (!product) return;
     addToCart(product, quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleToggleWishlist = () => {
+    if (!product) return;
     if (isWishlisted) {
       removeFromWishlist(product.id);
     } else {
@@ -121,10 +140,27 @@ export default function ProductDetailsPage() {
     setNewReview({ author: "", email: "", rating: 5, title: "", comment: "", image: "" });
   };
 
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .concat(products.filter((p) => p.id !== product.id))
-    .slice(0, 6);
+  if (loadingProduct) {
+    return (
+      <div className="py-24 text-center min-h-[50vh] flex items-center justify-center">
+        <p className="text-gray-500 font-medium">Loading product details from database...</p>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="py-24 text-center min-h-[50vh] flex flex-col items-center justify-center gap-4">
+        <h2 className="text-2xl font-bold text-gray-900">Product Not Found</h2>
+        <p className="text-sm text-gray-500">The product you are looking for does not exist.</p>
+        <Link href="/shop" className="rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-emerald-700">
+          Back to Shop
+        </Link>
+      </div>
+    );
+  }
+
+  const relatedProducts = [] as Product[];
 
   return (
     <div className="py-8 bg-white">

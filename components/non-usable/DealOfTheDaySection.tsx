@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useState } from "react";
 import { FaFire, FaShoppingBag, FaStar } from "react-icons/fa";
-import { Product, products } from "@/data/products";
+import { Product } from "@/data/products";
+import { useShopData } from "@/context/ShopDataContext";
 import CountdownTimer from "@/components/usable/CountdownTimer";
 
 interface DealOfTheDaySectionProps {
@@ -11,11 +12,16 @@ interface DealOfTheDaySectionProps {
 }
 
 export default function DealOfTheDaySection({ onQuickView }: DealOfTheDaySectionProps) {
+  const { products } = useShopData();
   const dealProduct = products.find((p) => p.isDealOfDay) || products[0];
   const [isAdded, setIsAdded] = useState(false);
 
+  if (!dealProduct) {
+    return null;
+  }
+
   const soldCount = dealProduct.sold || 45;
-  const totalStock = dealProduct.stock + soldCount;
+  const totalStock = (dealProduct.stock || 50) + soldCount;
   const percentageSold = Math.round((soldCount / totalStock) * 100);
 
   const handleAddToCart = () => {

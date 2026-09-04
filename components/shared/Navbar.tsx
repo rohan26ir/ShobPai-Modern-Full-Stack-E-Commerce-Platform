@@ -33,14 +33,14 @@ import { FiUser, FiHeart, FiShoppingBag } from "react-icons/fi";
 
 import AnnouncementBar from "@/components/non-usable/AnnouncementBar";
 import CartDrawer from "@/components/usable/CartDrawer";
-import { categories } from "@/data/categories";
-import { products } from "@/data/products";
 import logoImg from "@/public/logo/logo_shobpai.webp";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useShopData } from "@/context/ShopDataContext";
 
 export default function Navbar() {
   const router = useRouter();
+  const { products, categories } = useShopData();
   const { cartCount, wishlistCount } = useCart();
   const { user, role, isAdmin } = useAuth();
   const userIsLoggedIn = !!user && role !== "GUEST";

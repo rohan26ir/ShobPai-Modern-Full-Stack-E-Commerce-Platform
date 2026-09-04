@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Product, products } from "@/data/products";
+import { Product } from "@/data/products";
+import { useShopData } from "@/context/ShopDataContext";
 import ProductGrid from "@/components/usable/ProductGrid";
 
 interface TrendingSectionProps {
@@ -9,6 +10,7 @@ interface TrendingSectionProps {
 }
 
 export default function TrendingSection({ onQuickView }: TrendingSectionProps) {
+  const { products } = useShopData();
   const [activeTab, setActiveTab] = useState<string>("all");
 
   const filterTabs = [

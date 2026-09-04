@@ -1,54 +1,142 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
   FaBoxOpen,
   FaChartLine,
   FaShoppingBag,
   FaUsers,
-  FaArrowUp,
-  FaArrowDown,
   FaPlus,
   FaHeart,
   FaTruck,
   FaCheckCircle,
-  FaMapMarkerAlt,
-  FaUserShield,
 } from "react-icons/fa";
-import { products } from "@/data/products";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useShopData } from "@/context/ShopDataContext";
+import { api } from "@/lib/api";
 
 export default function DashboardOverviewPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, token } = useAuth();
   const { cartCount, wishlistCount } = useCart();
+  const { products } = useShopData();
+
+  const [loading, setLoading] = useState(true);
+  const [adminOverview, setAdminOverview] = useState<{
+    totalUsers: number;
+    totalProducts: number;
+    totalOrders: number;
+    totalRevenue: number;
+    pendingOrders: number;
+    deliveredOrders: number;
+    recentOrders: any[];
+  } | null>(null);
+
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+
+    if (isAdmin && token) {
+      api.getAdminOverview(token)
+        .then((data) => {
+          if (isMounted && data) setAdminOverview(data);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else if (token) {
+      api.getMyOrders(token)
+        .then((data) => {
+          if (isMounted && Array.isArray(data)) setUserOrders(data);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAdmin, token]);
 
   const adminStats = [
-    { title: "Total Revenue", value: "$14,850.50", change: "+12.5%", isUp: true, icon: FaChartLine, color: "bg-emerald-50 text-emerald-600" },
-    { title: "Total Orders", value: "384", change: "+8.2%", isUp: true, icon: FaBoxOpen, color: "bg-amber-50 text-[#E5A842]" },
-    { title: "Active Products", value: products.length, change: "Live", isUp: true, icon: FaShoppingBag, color: "bg-blue-50 text-blue-600" },
-    { title: "Total Customers", value: "1,240", change: "+15.4%", isUp: true, icon: FaUsers, color: "bg-purple-50 text-purple-600" },
+    {
+      title: "Total Revenue",
+      value: adminOverview ? `$${adminOverview.totalRevenue.toFixed(2)}` : "$0.00",
+      change: "Live Database",
+      isUp: true,
+      icon: FaChartLine,
+      color: "bg-emerald-50 text-emerald-600",
+    },
+    {
+      title: "Total Orders",
+      value: adminOverview ? String(adminOverview.totalOrders) : "0",
+      change: adminOverview ? `${adminOverview.pendingOrders} Pending` : "0 Pending",
+      isUp: true,
+      icon: FaBoxOpen,
+      color: "bg-amber-50 text-[#E5A842]",
+    },
+    {
+      title: "Active Products",
+      value: adminOverview ? String(adminOverview.totalProducts) : String(products.length),
+      change: "In Catalog",
+      isUp: true,
+      icon: FaShoppingBag,
+      color: "bg-blue-50 text-blue-600",
+    },
+    {
+      title: "Registered Users",
+      value: adminOverview ? String(adminOverview.totalUsers) : "0",
+      change: "Accounts",
+      isUp: true,
+      icon: FaUsers,
+      color: "bg-purple-50 text-purple-600",
+    },
   ];
 
   const userStats = [
-    { title: "My Total Orders", value: "4 Orders", change: "1 In Transit", isUp: true, icon: FaTruck, color: "bg-emerald-50 text-[#5FA800]" },
-    { title: "Wishlist Items", value: `${wishlistCount} Saved`, change: "In Stock", isUp: true, icon: FaHeart, color: "bg-red-50 text-red-500" },
-    { title: "Active Cart", value: `${cartCount} Items`, change: "Ready to order", isUp: true, icon: FaShoppingBag, color: "bg-amber-50 text-[#E5A842]" },
-    { title: "Reward Points", value: "320 Pts", change: "$3.20 value", isUp: true, icon: FaCheckCircle, color: "bg-purple-50 text-purple-600" },
+    {
+      title: "My Total Orders",
+      value: `${userOrders.length} Orders`,
+      change: userOrders.length > 0 ? "Active Account" : "No orders yet",
+      isUp: true,
+      icon: FaTruck,
+      color: "bg-emerald-50 text-[#5FA800]",
+    },
+    {
+      title: "Wishlist Items",
+      value: `${wishlistCount} Saved`,
+      change: "In Stock",
+      isUp: true,
+      icon: FaHeart,
+      color: "bg-red-50 text-red-500",
+    },
+    {
+      title: "Active Cart",
+      value: `${cartCount} Items`,
+      change: "Ready to checkout",
+      isUp: true,
+      icon: FaShoppingBag,
+      color: "bg-amber-50 text-[#E5A842]",
+    },
+    {
+      title: "Account Status",
+      value: user ? "Verified" : "Guest",
+      change: user?.email || "Signed In",
+      isUp: true,
+      icon: FaCheckCircle,
+      color: "bg-purple-50 text-purple-600",
+    },
   ];
 
-  const recentOrders = [
-    { id: "ORD-9482", customer: "Sophia Martinez", date: "Today, 11:42 AM", amount: "$84.50", status: "Completed", items: 4 },
-    { id: "ORD-9481", customer: "Liam Johnson", date: "Today, 09:15 AM", amount: "$32.00", status: "Processing", items: 2 },
-    { id: "ORD-9480", customer: "Emma Williams", date: "Yesterday, 04:30 PM", amount: "$124.90", status: "Completed", items: 7 },
-    { id: "ORD-9479", customer: "Noah Brown", date: "Yesterday, 02:10 PM", amount: "$56.20", status: "Shipped", items: 3 },
-  ];
-
-  const myOrders = [
-    { id: "SHP-84920", date: "Yesterday", status: "Out for Delivery", amount: "$42.50", items: "Fresh Organic Spinach, Red Apple" },
-    { id: "SHP-78391", date: "Aug 10, 2026", status: "Delivered", amount: "$89.00", items: "Dragon Fruit, Broccoli, Pure Honey" },
-    { id: "SHP-62849", date: "Jul 28, 2026", status: "Delivered", amount: "$31.20", items: "Organic Strawberries, Fresh Milk" },
-  ];
+  const recentAdminOrders = adminOverview?.recentOrders || [];
 
   return (
     <div className="space-y-8">
@@ -69,7 +157,7 @@ export default function DashboardOverviewPage() {
             {isAdmin ? "👑 Admin Management Console" : "🛒 Customer Account Overview"}
           </span>
           <h1 className="text-2xl md:text-3xl font-extrabold text-white mt-1">
-            Welcome Back, {user?.displayName || (isAdmin ? "Admin" : "Customer")} 👋
+            Welcome Back, {user?.displayName || user?.email?.split("@")[0] || (isAdmin ? "Admin" : "Customer")} 👋
           </h1>
           <p className="text-xs md:text-sm text-gray-300 mt-1 max-w-xl">
             {isAdmin
@@ -80,69 +168,42 @@ export default function DashboardOverviewPage() {
 
         <div className="flex items-center gap-3">
           {isAdmin ? (
-            <>
-              <Link
-                href="/dashboard/admin"
-                className="flex items-center gap-2 rounded-xl bg-[#E5A842] hover:bg-[#d49633] px-5 py-3 text-xs font-black text-gray-950 transition-colors shadow-md cursor-pointer"
-              >
-                <FaPlus className="h-3.5 w-3.5" />
-                <span>Add Product</span>
-              </Link>
-              <Link
-                href="/dashboard/customers"
-                className="flex items-center gap-2 rounded-xl border border-gray-700 bg-gray-800 hover:bg-gray-700 px-5 py-3 text-xs font-bold text-white transition-colors cursor-pointer"
-              >
-                <FaUsers className="h-3.5 w-3.5" />
-                <span>Customers</span>
-              </Link>
-            </>
+            <Link
+              href="/dashboard/admin"
+              className="flex items-center gap-2 rounded-xl bg-[#E5A842] hover:bg-[#d49633] px-5 py-3 text-xs font-black text-gray-950 transition-colors shadow-md cursor-pointer"
+            >
+              <FaPlus className="h-3.5 w-3.5" />
+              <span>Add Product</span>
+            </Link>
           ) : (
-            <>
-              <Link
-                href="/"
-                className="flex items-center gap-2 rounded-xl bg-[#5FA800] hover:bg-[#528f00] px-5 py-3 text-xs font-black text-white transition-colors shadow-md cursor-pointer"
-              >
-                <FaShoppingBag className="h-3.5 w-3.5" />
-                <span>Shop Fresh Groceries</span>
-              </Link>
-              <Link
-                href="/dashboard/orders"
-                className="flex items-center gap-2 rounded-xl border border-gray-700 bg-gray-800 hover:bg-gray-700 px-5 py-3 text-xs font-bold text-white transition-colors cursor-pointer"
-              >
-                <FaTruck className="h-3.5 w-3.5" />
-                <span>Track Orders</span>
-              </Link>
-            </>
+            <Link
+              href="/shop"
+              className="flex items-center gap-2 rounded-xl bg-[#5FA800] hover:bg-[#528f00] px-5 py-3 text-xs font-black text-white transition-colors shadow-md cursor-pointer"
+            >
+              <FaShoppingBag className="h-3.5 w-3.5" />
+              <span>Shop Produce</span>
+            </Link>
           )}
         </div>
       </div>
 
-      {/* KPI Stats Cards */}
+      {/* KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {(isAdmin ? adminStats : userStats).map((stat, idx) => {
           const Icon = stat.icon;
           return (
             <div
               key={idx}
-              className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center justify-between"
+              className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs flex items-center justify-between hover:shadow-md transition-shadow"
             >
               <div>
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">
                   {stat.title}
                 </span>
-                <h3 className="text-2xl font-black text-gray-900">{stat.value}</h3>
-                <div className="flex items-center gap-1 mt-2 text-xs font-bold">
-                  {stat.isUp ? (
-                    <span className="text-emerald-600 flex items-center gap-0.5">
-                      <FaArrowUp className="h-3 w-3" /> {stat.change}
-                    </span>
-                  ) : (
-                    <span className="text-red-500 flex items-center gap-0.5">
-                      <FaArrowDown className="h-3 w-3" /> {stat.change}
-                    </span>
-                  )}
-                  <span className="text-gray-400 font-normal">status</span>
-                </div>
+                <h3 className="text-2xl md:text-3xl font-black text-gray-900">{stat.value}</h3>
+                <span className="text-[11px] font-semibold text-gray-500 mt-1 block">
+                  {stat.change}
+                </span>
               </div>
 
               <div className={`p-4 rounded-2xl ${stat.color}`}>
@@ -153,19 +214,19 @@ export default function DashboardOverviewPage() {
         })}
       </div>
 
-      {/* Main Content Grid */}
+      {/* Main Grid: Orders & Inventory */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column (Spans 2) */}
+        {/* Left Column (Spans 2) - Orders Table */}
         <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-gray-100 shadow-xs space-y-6">
           <div className="flex items-center justify-between border-b border-gray-100 pb-4">
             <div>
               <h3 className="text-base font-bold text-gray-900">
-                {isAdmin ? "Recent Customer Orders" : "My Recent Purchases"}
+                {isAdmin ? "Recent Platform Orders" : "My Recent Orders"}
               </h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-400">
                 {isAdmin
-                  ? "Live order statuses and payment receipts"
-                  : "Track package status and download receipt invoices"}
+                  ? "Real-time orders placed across the store"
+                  : "Track the status of your recent deliveries"}
               </p>
             </div>
             <Link
@@ -180,59 +241,73 @@ export default function DashboardOverviewPage() {
 
           <div className="overflow-x-auto">
             {isAdmin ? (
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-gray-100 text-gray-400 font-bold uppercase text-[10px] tracking-wider">
-                  <tr>
-                    <th className="py-3 px-3">Order ID</th>
-                    <th className="py-3 px-3">Customer</th>
-                    <th className="py-3 px-3">Amount</th>
-                    <th className="py-3 px-3">Status</th>
-                    <th className="py-3 px-3 text-right">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 font-semibold text-gray-700">
-                  {recentOrders.map((ord) => (
-                    <tr key={ord.id} className="hover:bg-gray-50/80 transition-colors">
-                      <td className="py-3.5 px-3 font-bold text-gray-900">{ord.id}</td>
-                      <td className="py-3.5 px-3">{ord.customer}</td>
-                      <td className="py-3.5 px-3 font-extrabold text-gray-900">{ord.amount}</td>
-                      <td className="py-3.5 px-3">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            ord.status === "Completed"
-                              ? "bg-emerald-50 text-emerald-600"
-                              : ord.status === "Processing"
-                              ? "bg-amber-50 text-[#E5A842]"
-                              : "bg-blue-50 text-blue-600"
-                          }`}
-                        >
-                          {ord.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-3 text-right text-gray-400">{ord.date}</td>
+              recentAdminOrders.length === 0 ? (
+                <div className="py-12 text-center text-xs text-gray-400">
+                  {loading ? "Loading orders from database..." : "No orders found in database yet."}
+                </div>
+              ) : (
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-gray-100 text-gray-400 font-bold uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="py-3 px-3">Order Number</th>
+                      <th className="py-3 px-3">Customer</th>
+                      <th className="py-3 px-3">Amount</th>
+                      <th className="py-3 px-3">Status</th>
+                      <th className="py-3 px-3 text-right">Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 font-semibold text-gray-700">
+                    {recentAdminOrders.map((ord: any) => (
+                      <tr key={ord.id} className="hover:bg-gray-50/80 transition-colors">
+                        <td className="py-3.5 px-3 font-bold text-gray-900">{ord.orderNumber}</td>
+                        <td className="py-3.5 px-3">{ord.user?.displayName || ord.guestName || ord.user?.email || "Guest"}</td>
+                        <td className="py-3.5 px-3 font-extrabold text-gray-900">${ord.totalAmount?.toFixed(2)}</td>
+                        <td className="py-3.5 px-3">
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              ord.status === "DELIVERED"
+                                ? "bg-emerald-50 text-emerald-600"
+                                : ord.status === "PENDING"
+                                ? "bg-amber-50 text-[#E5A842]"
+                                : "bg-blue-50 text-blue-600"
+                            }`}
+                          >
+                            {ord.status}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-3 text-right text-gray-400">
+                          {new Date(ord.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )
+            ) : userOrders.length === 0 ? (
+              <div className="py-12 text-center text-xs text-gray-400">
+                {loading ? "Loading your orders..." : "You have not placed any orders yet."}
+              </div>
             ) : (
               <div className="space-y-3">
-                {myOrders.map((ord) => (
+                {userOrders.slice(0, 5).map((ord: any) => (
                   <div
                     key={ord.id}
                     className="p-4 rounded-2xl border border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-gray-900 text-xs">{ord.id}</span>
+                        <span className="font-extrabold text-gray-900 text-xs">{ord.orderNumber}</span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
                           {ord.status}
                         </span>
                       </div>
-                      <p className="text-[11px] text-gray-500 mt-1">{ord.items}</p>
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        {ord.items?.map((i: any) => `${i.product?.name || i.productId} (x${i.quantity})`).join(", ") || `${ord.items?.length || 1} items`}
+                      </p>
                     </div>
 
                     <div className="flex items-center gap-4 self-end sm:self-auto">
-                      <span className="font-black text-gray-900 text-sm">{ord.amount}</span>
+                      <span className="font-black text-gray-900 text-sm">${ord.totalAmount?.toFixed(2)}</span>
                       <Link
                         href="/dashboard/orders"
                         className="text-xs font-bold text-[#5FA800] hover:underline"
@@ -247,47 +322,57 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
 
-        {/* Right Column */}
+        {/* Right Column - Inventory Status / Store Products */}
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs space-y-6">
           <div className="flex items-center justify-between border-b border-gray-100 pb-4">
             <h3 className="text-base font-bold text-gray-900">
-              {isAdmin ? "Inventory Status" : "Featured Organic Deals"}
+              {isAdmin ? "Catalog Inventory" : "Featured Organic Deals"}
             </h3>
             <span className="text-xs font-bold text-gray-400">
-              {isAdmin ? `Total ${products.length} Products` : "Hand-picked for you"}
+              {products.length} Products
             </span>
           </div>
 
           <div className="space-y-4">
-            {products.slice(0, 4).map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between p-3 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-gray-100/60 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-xl bg-gray-200 overflow-hidden relative shrink-0">
-                    <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" />
+            {products.length === 0 ? (
+              <div className="py-8 text-center text-xs text-gray-400">No products available in catalog.</div>
+            ) : (
+              products.slice(0, 4).map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between p-3 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-gray-100/60 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-xl bg-gray-200 overflow-hidden relative shrink-0">
+                      {p.images?.[0] ? (
+                        <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full bg-gray-100 flex items-center justify-center text-gray-400">
+                          <FaShoppingBag className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-gray-800 line-clamp-1">{p.name}</h4>
+                      <span className="text-[11px] text-gray-500">${p.price?.toFixed(2)}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-800 line-clamp-1">{p.name}</h4>
-                    <span className="text-[11px] text-gray-500">${p.price.toFixed(2)}</span>
-                  </div>
-                </div>
 
-                {isAdmin ? (
-                  <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
-                    {p.stock} left
-                  </span>
-                ) : (
-                  <Link
-                    href={`/product/${p.slug}`}
-                    className="text-[11px] font-black text-white bg-[#5FA800] px-3 py-1.5 rounded-xl hover:bg-[#528f00] transition-colors"
-                  >
-                    Buy Now
-                  </Link>
-                )}
-              </div>
-            ))}
+                  {isAdmin ? (
+                    <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                      {p.stock} left
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/product/${p.slug}`}
+                      className="text-[11px] font-black text-white bg-[#5FA800] px-3 py-1.5 rounded-xl hover:bg-[#528f00] transition-colors"
+                    >
+                      Buy Now
+                    </Link>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

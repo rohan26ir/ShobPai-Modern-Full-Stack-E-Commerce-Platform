@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { FaPlus, FaSearch, FaEdit, FaTrashAlt, FaFolder, FaBoxOpen, FaCheckCircle, FaChevronRight, FaExclamationTriangle } from "react-icons/fa";
-import { categories as initialCategories, Category } from "@/data/categories";
-import { products } from "@/data/products";
+import { Category } from "@/data/categories";
+import { api } from "@/lib/api";
 
 export default function CategoriesPage() {
-  const [categoriesList, setCategoriesList] = useState<Category[]>(initialCategories);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    api.getCategories().then((data) => {
+      if (isMounted && data) setCategoriesList(data);
+    }).catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
   const [searchTerm, setSearchTerm] = useState("");
   const [newCatName, setNewCatName] = useState("");
   const [newCatSlug, setNewCatSlug] = useState("");
@@ -174,7 +182,7 @@ export default function CategoriesPage() {
       {/* Categories Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredCategories.map((cat) => {
-          const itemCount = products.filter((p) => p.category === cat.slug).length;
+          const itemCount = cat.itemCount || 0;
           const isDeleting = deletingId === cat.id;
 
           return (

@@ -10,19 +10,19 @@ import type { Swiper as SwiperClass } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
 
-import { categories } from "@/data/categories";
-import { products } from "@/data/products";
+import { useShopData } from "@/context/ShopDataContext";
 import CategoryCard from "@/components/usable/CategoryCard";
 
 export default function CategorySection() {
   const swiperRef = useRef<SwiperClass | null>(null);
+  const { categories, products } = useShopData();
 
   // Derive dynamic category item counts directly from products catalog
   const categoriesWithCounts = categories.map((cat) => {
     const count = products.filter((p) => p.category === cat.slug).length;
     return {
       ...cat,
-      itemCount: count > 0 ? count : cat.itemCount,
+      itemCount: count > 0 ? count : (cat.itemCount || 0),
     };
   });
 

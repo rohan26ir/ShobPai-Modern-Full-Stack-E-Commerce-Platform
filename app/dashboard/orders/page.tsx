@@ -1,73 +1,62 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   FaBox,
   FaCheckCircle,
   FaFileInvoiceDollar,
+  FaSyncAlt,
 } from "react-icons/fa";
 import jsPDF from "jspdf";
-
-export interface OrderItem {
-  id: string;
-  date: string;
-  total: number;
-  itemsCount: number;
-  status: string;
-  paymentMethod: string;
-  items: string;
-  customerName?: string;
-  customerEmail?: string;
-}
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 
 export default function OrdersPage() {
-  const orders: OrderItem[] = [
-    {
-      id: "ORD-9482",
-      date: "August 10, 2026",
-      total: 84.50,
-      itemsCount: 4,
-      status: "Delivered",
-      paymentMethod: "Visa •••• 4242",
-      items: "Organic Red Tomatoes (2 kg), Fresh Honeycrisp Apples (1 kg), Bio Creamy Cheese (500 g)",
-      customerName: "Sophia Martinez",
-      customerEmail: "sophia.m@example.com",
-    },
-    {
-      id: "ORD-9481",
-      date: "August 02, 2026",
-      total: 32.00,
-      itemsCount: 2,
-      status: "Processing",
-      paymentMethod: "Mastercard •••• 8812",
-      items: "Organic Cold Pressed Juices (2 L), Fresh Strawberries (500 g)",
-      customerName: "Liam Johnson",
-      customerEmail: "liam.j@example.com",
-    },
-    {
-      id: "ORD-9480",
-      date: "July 24, 2026",
-      total: 124.90,
-      itemsCount: 7,
-      status: "Delivered",
-      paymentMethod: "PayPal",
-      items: "Organic Carrots (3 kg), Mixed Dry Fruits & Nuts (1 kg), Fresh Wholewheat Bakery Bread (2 loaves)",
-      customerName: "Emma Williams",
-      customerEmail: "emma.w@example.com",
-    },
-    {
-      id: "ORD-9479",
-      date: "July 11, 2026",
-      total: 56.20,
-      itemsCount: 3,
-      status: "Delivered",
-      paymentMethod: "Visa •••• 4242",
-      items: "Sea Fish Salmon Fillet (1 kg), Fresh Summer Watermelon (1 pc)",
-      customerName: "Noah Brown",
-      customerEmail: "noah.b@example.com",
-    },
-  ];
+  const { user, isAdmin, token } = useAuth();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const generatePDF = (order: OrderItem) => {
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      if (isAdmin && token) {
+        const data = await api.adminListOrders(undefined, token);
+        setOrders(Array.isArray(data) ? data : []);
+      } else if (token) {
+        const data = await api.getMyOrders(token);
+        setOrders(Array.isArray(data) ? data : []);
+      } else {
+        setOrders([]);
+      }
+    } catch (err) {
+      console.error("Failed to load orders:", err);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [isAdmin, token]);
+
+  const handleUpdateStatus = async (orderId: string, nextStatus: string) => {
+    if (!token || !isAdmin) return;
+    setUpdatingId(orderId);
+    try {
+      await api.adminUpdateOrderStatus(orderId, nextStatus, token);
+      setOrders((prev) =>
+        prev.map((ord) => (ord.id === orderId ? { ...ord, status: nextStatus } : ord))
+      );
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const generatePDF = (order: any) => {
     const doc = new jsPDF();
 
     // Store Header
@@ -91,67 +80,81 @@ export default function OrdersPage() {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(34, 34, 34);
-    doc.text(`INVOICE NUMBER: ${order.id}`, 20, 52);
-    doc.text(`DATE: ${order.date}`, 130, 52);
+    doc.text(`INVOICE NUMBER: ${order.orderNumber || order.id}`, 20, 52);
+    doc.text(`DATE: ${new Date(order.createdAt).toLocaleDateString()}`, 130, 52);
 
     doc.setFont("helvetica", "normal");
-    doc.text(`Customer: ${order.customerName || "Valued Customer"}`, 20, 60);
-    doc.text(`Email: ${order.customerEmail || "customer@example.com"}`, 20, 66);
-    doc.text(`Payment: ${order.paymentMethod}`, 130, 60);
-    doc.text(`Order Status: ${order.status}`, 130, 66);
+    const customerName = order.user?.displayName || order.guestName || user?.displayName || "Customer";
+    const customerEmail = order.user?.email || order.guestEmail || user?.email || "customer@example.com";
+    doc.text(`Customer: ${customerName}`, 20, 60);
+    doc.text(`Email: ${customerEmail}`, 20, 66);
+    doc.text(`Payment: ${order.paymentMethod || "Cash on Delivery"}`, 130, 60);
+    doc.text(`Status: ${order.status}`, 130, 66);
 
-    // Table Header
-    doc.setFillColor(245, 245, 245);
+    // Items Table Header
+    doc.setFillColor(248, 248, 248);
     doc.rect(20, 76, 170, 8, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    doc.text("ITEM DESCRIPTION", 25, 81.5);
-    doc.text("QTY", 140, 81.5);
-    doc.text("AMOUNT", 165, 81.5);
+    doc.setTextColor(80, 80, 80);
+    doc.text("ORDERED ITEMS", 25, 81.5);
+    doc.text("QTY", 130, 81.5);
+    doc.text("SUBTOTAL", 160, 81.5);
 
     // Items List
     doc.setFont("helvetica", "normal");
-    const itemList = order.items.split(",");
-    let startY = 92;
+    doc.setFontSize(9);
+    doc.setTextColor(40, 40, 40);
 
-    itemList.forEach((itemText) => {
-      doc.text(itemText.trim(), 25, startY);
-      doc.text("1", 142, startY);
-      doc.text(`$${(order.total / itemList.length).toFixed(2)}`, 165, startY);
+    let startY = 92;
+    if (order.items && order.items.length > 0) {
+      order.items.forEach((item: any) => {
+        const title = item.product?.name || item.productId || "Organic Item";
+        doc.text(title.slice(0, 45), 25, startY);
+        doc.text(String(item.quantity || 1), 132, startY);
+        doc.text(`$${(item.price * item.quantity).toFixed(2)}`, 160, startY);
+        startY += 8;
+      });
+    } else {
+      doc.text("Farm Fresh Organics Package", 25, startY);
+      doc.text("1", 132, startY);
+      doc.text(`$${order.totalAmount?.toFixed(2)}`, 160, startY);
       startY += 8;
-    });
+    }
 
     // Divider Line
-    doc.setDrawColor(230, 230, 230);
+    doc.setDrawColor(220, 220, 220);
     doc.setLineWidth(0.5);
-    doc.line(20, startY + 4, 190, startY + 4);
+    doc.line(20, startY + 2, 190, startY + 2);
 
-    // Totals Summary
-    const subtotal = Math.max(0, order.total - 4.99);
-    doc.setFontSize(10);
+    // Pricing Breakdown
+    const finalY = startY + 12;
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("Subtotal:", 130, startY + 14);
-    doc.text(`$${subtotal.toFixed(2)}`, 165, startY + 14);
+    doc.text("Order Subtotal:", 125, finalY);
+    doc.text(`$${(order.subtotal || order.totalAmount).toFixed(2)}`, 165, finalY);
 
-    doc.text("Shipping:", 130, startY + 22);
-    doc.text("$4.99", 165, startY + 22);
+    doc.text("Shipping & Handling:", 125, finalY + 6);
+    doc.text(`$${(order.shippingFee || 0).toFixed(2)}`, 165, finalY + 6);
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setTextColor(229, 168, 66);
-    doc.text("Total Paid:", 130, startY + 34);
-    doc.text(`$${order.total.toFixed(2)}`, 165, startY + 34);
+    doc.text("Grand Total:", 125, finalY + 15);
+    doc.text(`$${order.totalAmount?.toFixed(2)}`, 165, finalY + 15);
 
-    // Footer Thank You
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(9);
+    // Footer Guarantee
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
     doc.setTextColor(140, 140, 140);
-    doc.text("Thank you for shopping with ShobPai Fresh Organics!", 20, startY + 50);
+    doc.text(
+      "Thank you for shopping organic with ShobPai! Hand-picked farm fresh quality guaranteed.",
+      20,
+      270
+    );
 
-    // Directly open PDF in a new tab (about:blank window blob)
-    const pdfBlob = doc.output("blob");
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    window.open(blobUrl, "_blank");
+    // Trigger Browser Download
+    doc.save(`ShobPai-Invoice-${order.orderNumber || order.id}.pdf`);
   };
 
   return (
@@ -160,71 +163,127 @@ export default function OrdersPage() {
       <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-[#222222] text-white rounded-3xl p-6 md:p-8 shadow-xl border-b-4 border-[#E5A842] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-black uppercase tracking-widest text-[#E5A842]">
-            Purchase History
+            {isAdmin ? "Admin Order Fulfillment" : "Purchase History"}
           </span>
           <h1 className="text-2xl md:text-3xl font-extrabold text-white mt-1">
-            My Orders & Invoices
+            {isAdmin ? "All Platform Orders" : "My Orders"}
           </h1>
           <p className="text-xs md:text-sm text-gray-300 mt-1 max-w-xl">
-            Track active deliveries and click "Invoice" to directly open & print official PDF receipts.
+            {isAdmin
+              ? "Manage customer shipments, update fulfillment stages, and export official billing invoices."
+              : "Review your completed organic produce orders, check tracking statuses, and download receipts."}
           </p>
         </div>
 
-        <span className="text-xs font-black bg-[#E5A842] text-gray-950 px-4 py-2 rounded-xl shadow-md self-start md:self-auto">
-          {orders.length} Total Orders
-        </span>
+        <button
+          onClick={fetchOrders}
+          disabled={loading}
+          className="self-start md:self-auto flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+        >
+          <FaSyncAlt className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+          <span>Refresh</span>
+        </button>
       </div>
 
-      {/* Orders Table Container */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-xs p-6 space-y-4">
-        {orders.map((order) => (
-          <div
-            key={order.id}
-            className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-3xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-[#E5A842]/40 hover:shadow-md transition-all"
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-[#E5A842] shrink-0 border border-amber-100">
-                <FaBox className="h-6 w-6" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-sm font-black text-gray-900">{order.id}</h3>
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      order.status === "Delivered"
-                        ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                        : "bg-amber-50 text-[#E5A842] border border-amber-100"
-                    }`}
-                  >
-                    <FaCheckCircle className="h-2.5 w-2.5" />
-                    <span>{order.status}</span>
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 font-medium">
-                  Placed on <strong className="text-gray-800">{order.date}</strong> • {order.itemsCount} Items • {order.paymentMethod}
-                </p>
-                <p className="text-xs text-gray-400 italic line-clamp-1">
-                  {order.items}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between md:justify-end gap-5 border-t md:border-t-0 border-gray-100 pt-3 md:pt-0">
-              <span className="text-lg font-black text-gray-900">
-                ${order.total.toFixed(2)}
-              </span>
-
-              {/* Directly generate & open PDF on click without modal */}
-              <button
-                onClick={() => generatePDF(order)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gray-900 text-white font-bold text-xs hover:bg-[#E5A842] hover:text-gray-950 transition-colors shadow-xs cursor-pointer"
-              >
-                <FaFileInvoiceDollar className="h-3.5 w-3.5" />
-                <span>Invoice</span>
-              </button>
-            </div>
+      {/* Orders List / Table */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-xs overflow-hidden">
+        {loading ? (
+          <div className="py-16 text-center text-sm text-gray-400">Loading orders from server...</div>
+        ) : orders.length === 0 ? (
+          <div className="py-16 flex flex-col items-center justify-center text-center p-6">
+            <FaBox className="h-12 w-12 text-gray-300 mb-3" />
+            <h3 className="text-base font-bold text-gray-800">No Orders Found</h3>
+            <p className="text-xs text-gray-400 mt-1">
+              {isAdmin
+                ? "No customer orders have been placed in the database yet."
+                : "You haven't placed any orders yet. Visit our shop to start ordering fresh produce!"}
+            </p>
           </div>
-        ))}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-gray-100 bg-gray-50/50 text-gray-400 font-bold uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th className="py-4 px-4">Order ID</th>
+                  <th className="py-4 px-4">Date</th>
+                  {isAdmin && <th className="py-4 px-4">Customer</th>}
+                  <th className="py-4 px-4">Items</th>
+                  <th className="py-4 px-4">Total</th>
+                  <th className="py-4 px-4">Status</th>
+                  <th className="py-4 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 font-semibold text-gray-700">
+                {orders.map((order) => {
+                  const itemsSummary =
+                    order.items?.map((i: any) => `${i.product?.name || i.productId} (${i.quantity})`).join(", ") ||
+                    `${order.items?.length || 1} Item(s)`;
+
+                  return (
+                    <tr key={order.id} className="hover:bg-gray-50/80 transition-colors">
+                      <td className="py-4 px-4 font-black text-gray-900">
+                        {order.orderNumber || order.id}
+                      </td>
+                      <td className="py-4 px-4 text-gray-500 whitespace-nowrap">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+                      {isAdmin && (
+                        <td className="py-4 px-4 text-gray-900 whitespace-nowrap">
+                          {order.user?.displayName || order.guestName || order.user?.email || "Guest"}
+                        </td>
+                      )}
+                      <td className="py-4 px-4 text-gray-600 max-w-xs truncate" title={itemsSummary}>
+                        {itemsSummary}
+                      </td>
+                      <td className="py-4 px-4 font-black text-gray-900 whitespace-nowrap">
+                        ${order.totalAmount?.toFixed(2)}
+                      </td>
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        {isAdmin ? (
+                          <select
+                            value={order.status}
+                            disabled={updatingId === order.id}
+                            onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg border border-gray-200 bg-white cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400"
+                          >
+                            <option value="PENDING">PENDING</option>
+                            <option value="CONFIRMED">CONFIRMED</option>
+                            <option value="SHIPPED">SHIPPED</option>
+                            <option value="DELIVERED">DELIVERED</option>
+                            <option value="CANCELLED">CANCELLED</option>
+                          </select>
+                        ) : (
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              order.status === "DELIVERED"
+                                ? "bg-emerald-50 text-emerald-600"
+                                : order.status === "PENDING"
+                                ? "bg-amber-50 text-[#E5A842]"
+                                : order.status === "CANCELLED"
+                                ? "bg-red-50 text-red-600"
+                                : "bg-blue-50 text-blue-600"
+                            }`}
+                          >
+                            {order.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4 px-4 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => generatePDF(order)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-[#E5A842] hover:text-gray-950 text-gray-700 text-[11px] font-bold transition-colors cursor-pointer"
+                        >
+                          <FaFileInvoiceDollar className="h-3.5 w-3.5" />
+                          <span>Invoice</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

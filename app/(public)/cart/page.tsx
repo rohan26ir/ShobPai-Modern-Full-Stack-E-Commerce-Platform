@@ -6,6 +6,7 @@ import { useState } from "react";
 import { FaArrowLeft, FaCheck, FaMinus, FaPlus, FaShoppingBag, FaTag } from "react-icons/fa";
 import { useCart } from "@/context/CartContext";
 import { availableCoupons } from "@/data/coupons";
+import { api } from "@/lib/api";
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, subtotal: rawSubtotal } = useCart();
@@ -13,19 +14,32 @@ export default function CartPage() {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<typeof availableCoupons[0] | null>(null);
   const [couponError, setCouponError] = useState("");
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     setCouponError("");
-    const matched = availableCoupons.find(
-      (c) => c.code.toLowerCase() === couponCode.trim().toLowerCase()
-    );
+    if (!couponCode.trim()) return;
 
-    if (!matched) {
-      setCouponError("Invalid coupon code. Try 'FRESH2026' or 'VEGIST10'");
+    setIsValidatingCoupon(true);
+    try {
+      const res = await api.validateCoupon(couponCode, rawSubtotal);
+      if (res.valid) {
+        setAppliedCoupon({
+          code: couponCode.toUpperCase(),
+          discountPercentage: res.discountPercentage,
+          minSpend: 0,
+          description: res.message,
+        });
+      } else {
+        setCouponError(res.message || "Invalid coupon code. Try 'FRESH2026' or 'VEGIST10'");
+        setAppliedCoupon(null);
+      }
+    } catch {
+      setCouponError("Could not validate coupon. Try 'FRESH2026'");
       setAppliedCoupon(null);
-    } else {
-      setAppliedCoupon(matched);
+    } finally {
+      setIsValidatingCoupon(false);
     }
   };
 

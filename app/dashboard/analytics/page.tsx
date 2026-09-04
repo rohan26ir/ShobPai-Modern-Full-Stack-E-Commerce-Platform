@@ -19,8 +19,6 @@ import {
   FaReceipt,
 } from "react-icons/fa";
 import { Chart, registerables } from "chart.js";
-import { categories } from "@/data/categories";
-import { products } from "@/data/products";
 
 Chart.register(...registerables);
 
@@ -113,16 +111,44 @@ const analyticsDataByRange: Record<TimeRange, PeriodData> = {
   },
 };
 
-const categoryBreakdown = [
-  { name: "Fresh Fruits", value: 38, revenue: "$12,996", color: "#EF4444" },
-  { name: "Fresh Vegetables", value: 30, revenue: "$10,260", color: "#5FA800" },
-  { name: "Dairy & Cheese", value: 18, revenue: "$6,156", color: "#F59E0B" },
-  { name: "Bakery & Breads", value: 9, revenue: "$3,078", color: "#8B5CF6" },
-  { name: "Organic Meat", value: 5, revenue: "$1,710", color: "#06B6D4" },
-];
+import { useShopData } from "@/context/ShopDataContext";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 
 export default function AnalyticsPage() {
+  const { products, categories } = useShopData();
+  const { isAdmin, token } = useAuth();
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
+  const [orders, setOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (isAdmin && token) {
+      api.adminListOrders(undefined, token).then((data) => {
+        if (isMounted && Array.isArray(data)) setOrders(data);
+      }).catch(() => {});
+    } else if (token) {
+      api.getMyOrders(token).then((data) => {
+        if (isMounted && Array.isArray(data)) setOrders(data);
+      }).catch(() => {});
+    }
+    return () => { isMounted = false; };
+  }, [isAdmin, token]);
+
+  const categoryBreakdown = useMemo(() => {
+    const colors = ["#EF4444", "#5FA800", "#F59E0B", "#8B5CF6", "#06B6D4", "#EC4899", "#14B8A6"];
+    if (categories.length === 0) return [];
+    return categories.map((cat, idx) => {
+      const prodsInCat = products.filter((p) => p.category === cat.slug);
+      const rev = prodsInCat.reduce((sum, p) => sum + (p.price * (p.sold || 1)), 0);
+      return {
+        name: cat.name,
+        value: prodsInCat.length,
+        revenue: `$${rev.toFixed(2)}`,
+        color: colors[idx % colors.length],
+      };
+    });
+  }, [categories, products]);
 
   // Chart Canvas Refs
   const revenueChartRef = useRef<HTMLCanvasElement | null>(null);
@@ -145,7 +171,19 @@ export default function AnalyticsPage() {
   const [calcEstimatedUnits, setCalcEstimatedUnits] = useState<number>(250);
 
   // Current selected range dataset
-  const currentData = useMemo(() => analyticsDataByRange[timeRange], [timeRange]);
+  const currentData = useMemo(() => {
+    const base = analyticsDataByRange[timeRange];
+    if (orders.length > 0) {
+      const realTotalRev = orders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+      const realOrdersCount = orders.length;
+      return {
+        ...base,
+        revenue: [Math.round(realTotalRev * 0.1), Math.round(realTotalRev * 0.2), Math.round(realTotalRev * 0.3), Math.round(realTotalRev * 0.4)],
+        orders: [Math.round(realOrdersCount * 0.15), Math.round(realOrdersCount * 0.25), Math.round(realOrdersCount * 0.3), Math.round(realOrdersCount * 0.3)],
+      };
+    }
+    return base;
+  }, [timeRange, orders]);
 
   // Derived Calculations
   const totalRevenue = useMemo(() => currentData.revenue.reduce((a, b) => a + b, 0), [currentData]);
@@ -798,10 +836,10 @@ export default function AnalyticsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-semibold text-gray-700">
-              {products.slice(0, 6).map((p, idx) => {
-                const estimatedSold = 85 + (idx * 34);
-                const itemRevenue = p.price * estimatedSold;
-                const margin = 28 + (idx * 2.5);
+              {products.slice(0, 8).map((p) => {
+                const soldUnits = p.sold || 0;
+                const itemRevenue = p.price * soldUnits;
+                const margin = p.discount ? (100 - p.discount) : 35;
 
                 return (
                   <tr key={p.id} className="hover:bg-gray-50/80 transition-colors">
@@ -814,7 +852,7 @@ export default function AnalyticsPage() {
                       </div>
                     </td>
                     <td className="py-3.5 px-3 font-bold text-gray-900">${p.price.toFixed(2)}</td>
-                    <td className="py-3.5 px-3">{estimatedSold} units</td>
+                    <td className="py-3.5 px-3">{soldUnits} units</td>
                     <td className="py-3.5 px-3 font-black text-gray-900">
                       ${itemRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>

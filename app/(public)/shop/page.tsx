@@ -28,8 +28,9 @@ import {
   GiHoneyJar,
 } from "react-icons/gi";
 
-import { products, Product } from "@/data/products";
-import { categories } from "@/data/categories";
+import { Product } from "@/data/products";
+import { Category } from "@/data/categories";
+import { useShopData } from "@/context/ShopDataContext";
 import ProductCard from "@/components/usable/ProductCard";
 import ProductCardList from "@/components/usable/ProductCardList";
 import ProductQuickViewModal from "@/components/usable/ProductQuickViewModal";
@@ -42,6 +43,7 @@ const ITEMS_PER_PAGE = 6;
 function ShopContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { products: productList, categories: categoryList } = useShopData();
 
   // Read URL query params on mount
   const initialCategory = searchParams.get("category") || "all";
@@ -140,7 +142,7 @@ function ShopContent() {
   };
 
   // Filter & sort logic
-  const filteredProducts = products.filter((p) => {
+  const filteredProducts = productList.filter((p) => {
     if (category !== "all" && p.category !== category) return false;
     if (
       searchTerm.trim() &&
@@ -257,10 +259,10 @@ function ShopContent() {
                     <FaThList className={category === "all" ? "text-gray-950 h-3.5 w-3.5" : "text-[#5FA800] h-3.5 w-3.5"} />
                     <span>All Categories</span>
                   </div>
-                  <span className="text-[11px] font-bold opacity-80">({products.length})</span>
+                  <span className="text-[11px] font-bold opacity-80">({productList.length})</span>
                 </button>
-                {categories.map((c) => {
-                  const count = products.filter((p) => p.category === c.slug).length;
+                {categoryList.map((c) => {
+                  const count = productList.filter((p) => p.category === c.slug).length;
                   return (
                     <button
                       key={c.id}

@@ -6,6 +6,8 @@ import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { ShopDataProvider } from "@/context/ShopDataContext";
+import ReduxProvider from "@/store/ReduxProvider";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -42,9 +44,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         suppressHydrationWarning
       >
         <AuthProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <ReduxProvider>
+            <ShopDataProvider>
+              <CartProvider>
+                {children}
+              </CartProvider>
+            </ShopDataProvider>
+          </ReduxProvider>
         </AuthProvider>
       </body>
     </html>

@@ -16,11 +16,21 @@ import {
   FaCheckCircle,
   FaStar,
 } from "react-icons/fa";
-import { products as initialProducts, Product } from "@/data/products";
-import { categories } from "@/data/categories";
+import { Product } from "@/data/products";
+import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useShopData } from "@/context/ShopDataContext";
+import { useEffect } from "react";
 
 export default function AdminProductsPage() {
-  const [productList, setProductList] = useState<Product[]>(initialProducts);
+  const { token } = useAuth();
+  const { products: shopProducts, categories, refreshProducts } = useShopData();
+  const [productList, setProductList] = useState<Product[]>(shopProducts);
+
+  useEffect(() => {
+    setProductList(shopProducts);
+  }, [shopProducts]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCatFilter, setSelectedCatFilter] = useState("all");
 
@@ -118,6 +128,9 @@ export default function AdminProductsPage() {
 
   const handleDeleteProduct = (id: string) => {
     setProductList((prev) => prev.filter((p) => p.id !== id));
+    if (token) {
+      api.adminDeleteProduct(id, token).then(() => refreshProducts()).catch(() => {});
+    }
   };
 
   const handleOpenEdit = (p: Product) => {
@@ -143,6 +156,16 @@ export default function AdminProductsPage() {
       .split("\n")
       .map((b) => b.trim())
       .filter(Boolean);
+
+    if (token && editingProduct) {
+      api.adminUpdateProduct(editingProduct.id, {
+        ...editProd,
+        price,
+        originalPrice: origPrice,
+        discount,
+        nutritionalBenefits: benefits,
+      }, token).then(() => refreshProducts()).catch(() => {});
+    }
 
     setProductList((prev) =>
       prev.map((p) =>
@@ -223,6 +246,9 @@ export default function AdminProductsPage() {
     };
 
     setProductList([createdProd, ...productList]);
+    if (token) {
+      api.adminCreateProduct(createdProd, token).then(() => refreshProducts()).catch(() => {});
+    }
     setIsAddingProduct(false);
     setNewProd({
       name: "",

@@ -1,12 +1,21 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { Product, products } from "@/data/products";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { Product } from "@/data/products";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  addToCart as addToCartAction,
+  removeFromCart as removeFromCartAction,
+  updateQuantity as updateQuantityAction,
+  clearCart as clearCartAction,
+  CartItem,
+} from "@/store/slices/cartSlice";
+import {
+  addToWishlist as addToWishlistAction,
+  removeFromWishlist as removeFromWishlistAction,
+} from "@/store/slices/wishlistSlice";
 
-export interface CartItem {
-  product: Product;
-  quantity: number;
-}
+export type { CartItem };
 
 export interface User {
   name: string;
@@ -35,7 +44,11 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  // Authentication state initialized from localStorage if available
+  const dispatch = useAppDispatch();
+  const cartItems = useAppSelector((state) => state.cart.items);
+  const wishlistItems = useAppSelector((state) => state.wishlist.items);
+
+  // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
 
@@ -63,73 +76,47 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("shobpai_user_email");
   };
 
-  // Initialize cart with mock items
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    { product: products[0], quantity: 2 },
-    { product: products[1], quantity: 1 },
-  ]);
-
-  // Wishlist state (1 item)
-  const [wishlistItems, setWishlistItems] = useState<Product[]>([products[2]]);
-
+  // Cart actions via Redux
   const addToCart = (product: Product, quantity: number = 1) => {
-    setCartItems((prev) => {
-      const existingIndex = prev.findIndex((item) => item.product.id === product.id);
-      if (existingIndex > -1) {
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          quantity: updated[existingIndex].quantity + quantity,
-        };
-        return updated;
-      }
-      return [...prev, { product, quantity }];
-    });
+    dispatch(addToCartAction({ product, quantity }));
   };
 
   const removeFromCart = (productId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
+    dispatch(removeFromCartAction(productId));
   };
 
   const updateQuantity = (productId: string, delta: number) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) => {
-          if (item.product.id === productId) {
-            const newQty = item.quantity + delta;
-            return newQty > 0 ? { ...item, quantity: newQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean) as CartItem[]
-    );
+    dispatch(updateQuantityAction({ productId, delta }));
   };
 
   const clearCart = () => {
-    setCartItems([]);
+    dispatch(clearCartAction());
   };
 
+  const cartCount = useMemo(
+    () => cartItems.reduce((acc, item) => acc + item.quantity, 0),
+    [cartItems]
+  );
+
+  const subtotal = useMemo(
+    () => cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0),
+    [cartItems]
+  );
+
+  // Wishlist actions via Redux
   const addToWishlist = (product: Product) => {
-    setWishlistItems((prev) => {
-      if (prev.some((p) => p.id === product.id)) return prev;
-      return [...prev, product];
-    });
+    dispatch(addToWishlistAction(product));
   };
 
   const removeFromWishlist = (productId: string) => {
-    setWishlistItems((prev) => prev.filter((p) => p.id !== productId));
+    dispatch(removeFromWishlistAction(productId));
   };
 
   const isInWishlist = (productId: string) => {
-    return wishlistItems.some((p) => p.id === productId);
+    return wishlistItems.some((item) => item.id === productId);
   };
 
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const wishlistCount = wishlistItems.length;
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.product.price * item.quantity,
-    0
-  );
 
   return (
     <CartContext.Provider

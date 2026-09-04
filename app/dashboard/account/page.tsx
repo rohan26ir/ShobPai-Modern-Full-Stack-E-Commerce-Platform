@@ -6,15 +6,18 @@ import { FaBox, FaMapMarkerAlt, FaUser, FaSave, FaCheckCircle, FaShieldAlt } fro
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 
+import { api } from "@/lib/api";
+
 export default function AccountPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, token } = useAuth();
   const [profile, setProfile] = useState({
-    name: user?.displayName || user?.email?.split("@")[0] || "Admin User",
-    email: user?.email || "test@gmail.com",
-    phone: user?.phoneNumber || "N/A",
-    address: "Dhaka, Bangladesh",
+    name: user?.displayName || user?.email?.split("@")[0] || "User",
+    email: user?.email || "",
+    phone: user?.phoneNumber || "",
+    address: "",
   });
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -25,12 +28,36 @@ export default function AccountPage() {
         phone: user.phoneNumber || prev.phone,
       }));
     }
-  }, [user]);
 
-  const handleSave = (e: React.FormEvent) => {
+    if (token) {
+      api.getMyAddresses(token).then((addresses) => {
+        if (Array.isArray(addresses) && addresses.length > 0) {
+          const addr = addresses[0];
+          setProfile((prev) => ({
+            ...prev,
+            address: `${addr.addressLine1 || ""}${addr.city ? `, ${addr.city}` : ""}`,
+          }));
+        }
+      }).catch(() => {});
+    }
+  }, [user, token]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    if (!token) return;
+    setLoading(true);
+    try {
+      await api.updateProfile(
+        { displayName: profile.name, phoneNumber: profile.phone },
+        token
+      );
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

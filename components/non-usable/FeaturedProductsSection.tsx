@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
-import { Product, products } from "@/data/products";
+import { Product } from "@/data/products";
+import { useShopData } from "@/context/ShopDataContext";
 import ProductGrid from "@/components/usable/ProductGrid";
 
 interface FeaturedProductsSectionProps {
@@ -10,6 +11,7 @@ interface FeaturedProductsSectionProps {
 }
 
 export default function FeaturedProductsSection({ onQuickView }: FeaturedProductsSectionProps) {
+  const { products } = useShopData();
   const featuredProducts = products.filter((p) => p.isFeatured || p.rating >= 4.7);
 
   return (

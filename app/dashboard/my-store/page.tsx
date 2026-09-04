@@ -1,25 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaStore, FaClock, FaCheckCircle, FaExclamationTriangle, FaShoppingBag, FaArrowRight } from "react-icons/fa";
 import Link from "next/link";
 
 type StoreStatus = "NONE" | "PENDING" | "APPROVED" | "REJECTED";
 
 export default function MyStorePage() {
-  // Mock state for demonstration. In a real app, this comes from the backend.
   const [storeStatus, setStoreStatus] = useState<StoreStatus>("NONE");
   const [storeName, setStoreName] = useState("");
   const [storeDesc, setStoreDesc] = useState("");
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("shobpai_seller_application");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.status) setStoreStatus(parsed.status);
+        if (parsed.name) setStoreName(parsed.name);
+        if (parsed.desc) setStoreDesc(parsed.desc);
+      }
+    } catch {}
+  }, []);
+
   const handleSubmitApplication = (e: React.FormEvent) => {
     e.preventDefault();
     if (!storeName.trim() || !storeDesc.trim()) return;
-    
-    // Simulate API call to submit store application
-    setTimeout(() => {
-      setStoreStatus("PENDING");
-    }, 800);
+
+    setStoreStatus("PENDING");
+    try {
+      localStorage.setItem(
+        "shobpai_seller_application",
+        JSON.stringify({ status: "PENDING", name: storeName, desc: storeDesc })
+      );
+    } catch {}
   };
 
   return (
