@@ -38,19 +38,27 @@ import Image from "next/image";
 
 import bannerBg from '@/public/sections/product-collection-banner.webp';
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 12;
 
 function ShopContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { products: productList, categories: categoryList } = useShopData();
 
+  // Dynamic calculation of catalog maximum price
+  const catalogMaxPrice = Math.max(
+    100,
+    ...productList.map((p) => Math.ceil(p.price || 0))
+  );
+
   // Read URL query params on mount
   const initialCategory = searchParams.get("category") || "all";
   const initialSearch = searchParams.get("search") || "";
   const initialSort = searchParams.get("sort") || "featured";
   const initialMinPrice = Number(searchParams.get("min")) || 0;
-  const initialMaxPrice = Number(searchParams.get("max")) || 50;
+  const initialMaxPrice = searchParams.has("max")
+    ? Number(searchParams.get("max")) || catalogMaxPrice
+    : catalogMaxPrice;
   const initialPage = Number(searchParams.get("page")) || 1;
 
   const [category, setCategory] = useState(initialCategory);
@@ -72,12 +80,12 @@ function ShopContent() {
     if (searchTerm.trim()) params.set("search", searchTerm);
     if (sortBy !== "featured") params.set("sort", sortBy);
     if (minPrice > 0) params.set("min", String(minPrice));
-    if (maxPrice < 50) params.set("max", String(maxPrice));
+    if (maxPrice < catalogMaxPrice) params.set("max", String(maxPrice));
     if (currentPage > 1) params.set("page", String(currentPage));
 
     const queryString = params.toString();
     router.push(queryString ? `/shop?${queryString}` : "/shop", { scroll: false });
-  }, [category, searchTerm, sortBy, minPrice, maxPrice, currentPage, router]);
+  }, [category, searchTerm, sortBy, minPrice, maxPrice, currentPage, router, catalogMaxPrice]);
 
   // Helper to render Category Icons in #5FA800 color
   const renderCategoryIcon = (slug: string) => {
@@ -129,12 +137,13 @@ function ShopContent() {
   };
 
   // Reset all filters
+  // Reset all filters
   const handleReset = () => {
     setCategory("all");
     setSearchTerm("");
     setSortBy("featured");
     setMinPrice(0);
-    setMaxPrice(50);
+    setMaxPrice(catalogMaxPrice);
     setCurrentPage(1);
     setInStockOnly(false);
     setOnSaleOnly(false);
@@ -143,14 +152,24 @@ function ShopContent() {
 
   // Filter & sort logic
   const filteredProducts = productList.filter((p) => {
-    if (category !== "all" && p.category !== category) return false;
-    if (
-      searchTerm.trim() &&
-      !p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !p.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-      return false;
-    if (p.price < minPrice || p.price > maxPrice) return false;
+    if (category !== "all") {
+      const catNorm = category.toLowerCase().trim();
+      const pCat = (p.category || "").toLowerCase().trim();
+      const pCatName = (p.categoryName || "").toLowerCase().trim();
+      const pCatSlug = pCatName.replace(/\s+/g, "-");
+      if (pCat !== catNorm && pCatName !== catNorm && pCatSlug !== catNorm) {
+        return false;
+      }
+    }
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase().trim();
+      const nameMatches = p.name?.toLowerCase().includes(q);
+      const catMatches = p.categoryName?.toLowerCase().includes(q);
+      const descMatches = p.shortDescription?.toLowerCase().includes(q);
+      if (!nameMatches && !catMatches && !descMatches) return false;
+    }
+    if (p.price < minPrice) return false;
+    if (searchParams.has("max") && p.price > maxPrice) return false;
     if (inStockOnly && p.stock <= 0) return false;
     if (onSaleOnly && !p.discount) return false;
     return true;
@@ -160,8 +179,10 @@ function ShopContent() {
     if (sortBy === "price-low") return a.price - b.price;
     if (sortBy === "price-high") return b.price - a.price;
     if (sortBy === "rating") return b.rating - a.rating;
-    if (sortBy === "newest") return b.id.localeCompare(a.id);
-    return 0; // featured default
+    if (sortBy === "newest") {
+      return String(b.createdAt || b.id).localeCompare(String(a.createdAt || a.id));
+    }
+    return 0; // featured default keeps newly published cards first
   });
 
   // Pagination Calculations
@@ -292,13 +313,13 @@ function ShopContent() {
 
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-500 font-medium">
-                  The highest price is $50.00
+                  The highest price is ${catalogMaxPrice}.00
                 </span>
                 <button
                   type="button"
                   onClick={() => {
                     setMinPrice(0);
-                    setMaxPrice(50);
+                    setMaxPrice(catalogMaxPrice);
                     setCurrentPage(1);
                   }}
                   className="font-bold text-gray-800 hover:text-[#5FA800] underline transition-colors cursor-pointer"
@@ -314,7 +335,7 @@ function ShopContent() {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const clickX = e.clientX - rect.left;
                   const clickRatio = Math.max(0, Math.min(1, clickX / rect.width));
-                  const clickedValue = Math.round(clickRatio * 50);
+                  const clickedValue = Math.round(clickRatio * catalogMaxPrice);
 
                   const distToMin = Math.abs(clickedValue - minPrice);
                   const distToMax = Math.abs(clickedValue - maxPrice);
@@ -336,8 +357,8 @@ function ShopContent() {
                 <div
                   className="absolute h-1.5 bg-gray-900 rounded-full"
                   style={{
-                    left: `${(minPrice / 50) * 100}%`,
-                    right: `${100 - (maxPrice / 50) * 100}%`,
+                    left: `${(minPrice / catalogMaxPrice) * 100}%`,
+                    right: `${100 - (maxPrice / catalogMaxPrice) * 100}%`,
                   }}
                 ></div>
 
@@ -345,7 +366,7 @@ function ShopContent() {
                 <input
                   type="range"
                   min="0"
-                  max="50"
+                  max={catalogMaxPrice}
                   step="1"
                   value={minPrice}
                   onMouseDown={() => setActiveThumb("min")}
@@ -364,7 +385,7 @@ function ShopContent() {
                 <input
                   type="range"
                   min="0"
-                  max="50"
+                  max={catalogMaxPrice}
                   step="1"
                   value={maxPrice}
                   onMouseDown={() => setActiveThumb("max")}
@@ -382,11 +403,11 @@ function ShopContent() {
                 {/* Custom Circular White Thumbs with Dark Borders */}
                 <div
                   className="absolute h-5 w-5 bg-white border-2 border-gray-900 rounded-full shadow-md z-10 pointer-events-none -ml-2.5"
-                  style={{ left: `${(minPrice / 50) * 100}%` }}
+                  style={{ left: `${(minPrice / catalogMaxPrice) * 100}%` }}
                 ></div>
                 <div
                   className="absolute h-5 w-5 bg-white border-2 border-gray-900 rounded-full shadow-md z-10 pointer-events-none -ml-2.5"
-                  style={{ left: `${(maxPrice / 50) * 100}%` }}
+                  style={{ left: `${(maxPrice / catalogMaxPrice) * 100}%` }}
                 ></div>
               </div>
 
@@ -420,10 +441,10 @@ function ShopContent() {
                     <input
                       type="number"
                       min={minPrice}
-                      max="50"
+                      max={catalogMaxPrice}
                       value={maxPrice}
                       onChange={(e) => {
-                        const val = Math.min(50, Math.max(Number(e.target.value), minPrice + 1));
+                        const val = Math.min(catalogMaxPrice, Math.max(Number(e.target.value), minPrice + 1));
                         setMaxPrice(val);
                         setCurrentPage(1);
                       }}

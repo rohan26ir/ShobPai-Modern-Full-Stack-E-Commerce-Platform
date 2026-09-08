@@ -73,6 +73,114 @@ export default function CategoriesPage() {
   // AI Description Generator State
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
+  // Image Upload Logic & Top 6 Formats Support (WebP, AVIF, JPEG, PNG, SVG, GIF)
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const SUPPORTED_IMAGE_TYPES = [
+    "image/webp",
+    "image/avif",
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/svg+xml",
+    "image/gif",
+  ];
+
+  const convertFileToWebP = (file: File, quality = 0.85): Promise<File> => {
+    return new Promise((resolve) => {
+      if (
+        file.type === "image/webp" ||
+        file.type === "image/svg+xml" ||
+        file.type === "image/gif"
+      ) {
+        resolve(file);
+        return;
+      }
+
+      const img = document.createElement("img");
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const cleanName = file.name.replace(/\.[^/.]+$/, "") + ".webp";
+              const webpFile = new File([blob], cleanName, { type: "image/webp" });
+              resolve(webpFile);
+            } else {
+              resolve(file);
+            }
+          },
+          "image/webp",
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isSupported =
+      SUPPORTED_IMAGE_TYPES.includes(file.type) ||
+      /\.(webp|avif|jpe?g|png|svg|gif)$/i.test(file.name);
+
+    if (!isSupported) {
+      toast.error("Unsupported file! Please upload one of the top 6 formats: WebP, AVIF, JPEG, PNG, SVG, or GIF.");
+      e.target.value = "";
+      return;
+    }
+
+    const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+    if (!apiKey) {
+      alert("Please add NEXT_PUBLIC_IMGBB_API_KEY to your .env.local file");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const isSpecial = file.type === "image/svg+xml" || file.type === "image/gif" || file.type === "image/webp";
+    const toastId = toast.loading(isSpecial ? "Uploading image..." : "Optimizing to WebP & uploading...");
+
+    try {
+      const processed = await convertFileToWebP(file);
+      const formData = new FormData();
+      formData.append("image", processed);
+
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        const url = data.data.url;
+        if (isEdit) {
+          setEditImage(url);
+        } else {
+          setNewCatImage(url);
+        }
+        toast.success("Image uploaded successfully!", { id: toastId });
+      } else {
+        toast.error("Failed to upload image.", { id: toastId });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred during image upload.", { id: toastId });
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
   // Load Categories from Backend API
   const loadCategories = async () => {
     setLoading(true);
@@ -463,18 +571,35 @@ export default function CategoriesPage() {
 
             {/* Banner Image URL & Presets */}
             <div className="md:col-span-2 space-y-2">
-              <label className="block font-bold text-gray-700 flex items-center gap-2">
-                <FaImage className="text-gray-400" />
-                <span>Banner Image URL *</span>
+              <label className="block font-bold text-gray-700 flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <FaImage className="text-gray-400" />
+                  <span>Banner Image URL *</span>
+                </span>
+                <span className="text-[11px] text-gray-500 font-normal">
+                  Top 6 formats: WebP, AVIF, JPEG, PNG, SVG, GIF
+                </span>
               </label>
-              <input
-                type="url"
-                required
-                value={newCatImage}
-                onChange={(e) => setNewCatImage(e.target.value)}
-                placeholder="https://images.unsplash.com/..."
-                className="w-full rounded-xl border-2 border-gray-100 bg-gray-50/50 px-4 py-2.5 outline-hidden focus:border-[#E5A842] focus:bg-white transition-all shadow-xs text-xs font-mono"
-              />
+              <div className="flex gap-2 items-center">
+                <input
+                  type="url"
+                  required
+                  value={newCatImage}
+                  onChange={(e) => setNewCatImage(e.target.value)}
+                  placeholder="https://images.unsplash.com/..."
+                  className="flex-1 rounded-xl border-2 border-gray-100 bg-gray-50/50 px-4 py-2.5 outline-hidden focus:border-[#E5A842] focus:bg-white transition-all shadow-xs text-xs font-mono"
+                />
+                <label className="flex items-center justify-center px-3.5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-bold cursor-pointer hover:bg-gray-200 transition-colors text-xs shrink-0">
+                  {isUploadingImage ? "Uploading..." : "Upload File"}
+                  <input
+                    type="file"
+                    accept="image/webp,image/avif,image/jpeg,image/png,image/svg+xml,image/gif,.webp,.avif,.jpeg,.jpg,.png,.svg,.gif"
+                    className="hidden"
+                    onChange={(e) => handleImageUpload(e, false)}
+                    disabled={isUploadingImage}
+                  />
+                </label>
+              </div>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <span className="text-xs text-gray-400 font-semibold">Quick Presets:</span>
                 {IMAGE_PRESETS.map((p, i) => (
@@ -612,7 +737,7 @@ export default function CategoriesPage() {
                     <FaImage className="text-gray-400" />
                     <span>Banner Image URL *</span>
                   </label>
-                  <div className="flex gap-3 items-center">
+                  <div className="flex gap-2 items-center">
                     <div className="relative h-14 w-20 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
                       {editImage ? (
                         <Image src={editImage} alt="Preview" fill className="object-cover" />
@@ -629,6 +754,16 @@ export default function CategoriesPage() {
                       onChange={(e) => setEditImage(e.target.value)}
                       className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-mono outline-hidden focus:border-[#E5A842] focus:bg-white text-xs"
                     />
+                    <label className="flex items-center justify-center px-3.5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-bold cursor-pointer hover:bg-gray-200 transition-colors text-xs shrink-0">
+                      {isUploadingImage ? "Uploading..." : "Upload File"}
+                      <input
+                        type="file"
+                        accept="image/webp,image/avif,image/jpeg,image/png,image/svg+xml,image/gif,.webp,.avif,.jpeg,.jpg,.png,.svg,.gif"
+                        className="hidden"
+                        onChange={(e) => handleImageUpload(e, true)}
+                        disabled={isUploadingImage}
+                      />
+                    </label>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 pt-1">

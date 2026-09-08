@@ -54,6 +54,41 @@ export const shopSlice = createSlice({
       state.productsLoading = false;
       state.loading = state.categoriesLoading;
     },
+    addProduct: (state, action: PayloadAction<Product>) => {
+      const filtered = state.products.filter(
+        (p) => p.id !== action.payload.id && p.slug !== action.payload.slug
+      );
+      state.products = [action.payload, ...filtered];
+      if (typeof window !== "undefined") {
+        try {
+          const current: Product[] = JSON.parse(localStorage.getItem("shobpai_custom_products") || "[]");
+          const updated = [action.payload, ...current.filter((p) => p.id !== action.payload.id && p.slug !== action.payload.slug)];
+          localStorage.setItem("shobpai_custom_products", JSON.stringify(updated));
+        } catch {}
+      }
+    },
+    updateProduct: (state, action: PayloadAction<Product>) => {
+      state.products = state.products.map((p) =>
+        p.id === action.payload.id ? action.payload : p
+      );
+      if (typeof window !== "undefined") {
+        try {
+          const current: Product[] = JSON.parse(localStorage.getItem("shobpai_custom_products") || "[]");
+          const updated = current.map((p) => p.id === action.payload.id ? action.payload : p);
+          localStorage.setItem("shobpai_custom_products", JSON.stringify(updated));
+        } catch {}
+      }
+    },
+    deleteProduct: (state, action: PayloadAction<string>) => {
+      state.products = state.products.filter((p) => p.id !== action.payload);
+      if (typeof window !== "undefined") {
+        try {
+          const current: Product[] = JSON.parse(localStorage.getItem("shobpai_custom_products") || "[]");
+          const updated = current.filter((p) => p.id !== action.payload);
+          localStorage.setItem("shobpai_custom_products", JSON.stringify(updated));
+        } catch {}
+      }
+    },
     setCategories: (state, action: PayloadAction<Category[]>) => {
       state.categories = action.payload;
       state.categoriesLoading = false;
@@ -71,7 +106,20 @@ export const shopSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.productsLoading = false;
         state.loading = state.categoriesLoading;
-        state.products = action.payload;
+        const fetched = action.payload || [];
+        if (typeof window !== "undefined") {
+          try {
+            const localCustom: Product[] = JSON.parse(localStorage.getItem("shobpai_custom_products") || "[]");
+            const fetchedIds = new Set(fetched.map((p: Product) => p.id));
+            const fetchedSlugs = new Set(fetched.map((p: Product) => p.slug));
+            const activeCustom = localCustom.filter(
+              (cp) => !fetchedIds.has(cp.id) && !fetchedSlugs.has(cp.slug)
+            );
+            state.products = [...activeCustom, ...fetched];
+            return;
+          } catch {}
+        }
+        state.products = fetched;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.productsLoading = false;
@@ -99,6 +147,6 @@ export const shopSlice = createSlice({
   },
 });
 
-export const { setProducts, setCategories } = shopSlice.actions;
+export const { setProducts, addProduct, updateProduct, deleteProduct, setCategories } = shopSlice.actions;
 
 export default shopSlice.reducer;

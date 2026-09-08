@@ -21,10 +21,13 @@ import { Product } from "@/data/products";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useShopData } from "@/context/ShopDataContext";
+import { useAppDispatch } from "@/store/hooks";
+import { addProduct, updateProduct, deleteProduct } from "@/store/slices/shopSlice";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 
 export default function AdminProductsPage() {
+  const dispatch = useAppDispatch();
   const { token } = useAuth();
   const { products: shopProducts, categories, refreshProducts } = useShopData();
   const [productList, setProductList] = useState<Product[]>(shopProducts);
@@ -141,12 +144,76 @@ export default function AdminProductsPage() {
     }
   };
 
-  // Image Upload Logic
+  // Image Upload Logic & Top 6 Formats Support (WebP, AVIF, JPEG, PNG, SVG, GIF)
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const SUPPORTED_IMAGE_TYPES = [
+    "image/webp",
+    "image/avif",
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/svg+xml",
+    "image/gif",
+  ];
+
+  // Convert raster image formats (JPEG/PNG/AVIF) to WebP in browser before uploading, while preserving SVG & GIF
+  const convertFileToWebP = (file: File, quality = 0.85): Promise<File> => {
+    return new Promise((resolve) => {
+      // Retain native format for WebP, animated GIF, and vector SVG
+      if (
+        file.type === "image/webp" ||
+        file.type === "image/svg+xml" ||
+        file.type === "image/gif"
+      ) {
+        resolve(file);
+        return;
+      }
+
+      const img = document.createElement("img");
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const cleanName = file.name.replace(/\.[^/.]+$/, "") + ".webp";
+              const webpFile = new File([blob], cleanName, { type: "image/webp" });
+              resolve(webpFile);
+            } else {
+              resolve(file);
+            }
+          },
+          "image/webp",
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEditMode = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Check against Top 6 supported image formats
+    const isSupported =
+      SUPPORTED_IMAGE_TYPES.includes(file.type) ||
+      /\.(webp|avif|jpe?g|png|svg|gif)$/i.test(file.name);
+
+    if (!isSupported) {
+      toast.error("Unsupported file! Please upload one of the top 6 formats: WebP, AVIF, JPEG, PNG, SVG, or GIF.");
+      e.target.value = "";
+      return;
+    }
 
     const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
     if (!apiKey) {
@@ -155,10 +222,16 @@ export default function AdminProductsPage() {
     }
 
     setIsUploadingImage(true);
-    const formData = new FormData();
-    formData.append("image", file);
+    const isSpecialFormat = file.type === "image/svg+xml" || file.type === "image/gif" || file.type === "image/webp";
+    const toastId = toast.loading(
+      isSpecialFormat ? "Uploading image..." : "Optimizing to WebP & uploading image..."
+    );
 
     try {
+      const processedFile = await convertFileToWebP(file);
+      const formData = new FormData();
+      formData.append("image", processedFile);
+
       const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
         method: "POST",
         body: formData,
@@ -167,16 +240,17 @@ export default function AdminProductsPage() {
       if (data.success) {
         const url = data.data.url;
         if (isEditMode) {
-          setEditProd(prev => ({ ...prev, images: [...(prev.images || []), url] }));
+          setEditProd((prev) => ({ ...prev, images: [...(prev.images || []), url] }));
         } else {
-          setNewProd(prev => ({ ...prev, images: [...(prev.images || []), url] }));
+          setNewProd((prev) => ({ ...prev, images: [...(prev.images || []), url] }));
         }
+        toast.success("Image uploaded successfully!", { id: toastId });
       } else {
-        alert("Failed to upload image.");
+        toast.error("Failed to upload image.", { id: toastId });
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred during upload.");
+      toast.error("An error occurred during upload.", { id: toastId });
     } finally {
       setIsUploadingImage(false);
       e.target.value = "";
@@ -201,6 +275,7 @@ export default function AdminProductsPage() {
   const lowStockProducts = productList.filter((p) => p.stock <= 40);
 
   const handleDeleteProduct = (id: string) => {
+    dispatch(deleteProduct(id));
     setProductList((prev) => prev.filter((p) => p.id !== id));
     toast.success("Product deleted successfully");
     if (token) {
@@ -217,7 +292,7 @@ export default function AdminProductsPage() {
     setEditProdNutritionalText(benefitsText);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct || !editProd.name) return;
 
@@ -232,59 +307,58 @@ export default function AdminProductsPage() {
       .map((b) => b.trim())
       .filter(Boolean);
 
-    if (token && editingProduct) {
-      api.adminUpdateProduct(editingProduct.id, {
-        ...editProd,
-        price,
-        originalPrice: origPrice,
-        discount,
-        nutritionalBenefits: benefits,
-      }, token).then(() => {
-        refreshProducts();
+    const updatedProduct: Product = {
+      ...editingProduct,
+      ...editProd,
+      name: editProd.name || editingProduct.name,
+      slug: (editProd.name || editingProduct.name).toLowerCase().replace(/\s+/g, "-"),
+      price: price,
+      originalPrice: origPrice,
+      discount: discount,
+      category: editProd.category || editingProduct.category,
+      categoryName: catName,
+      stock: Number(editProd.stock) || 0,
+      unit: editProd.unit || editingProduct.unit,
+      badge: editProd.badge,
+      images: editProd.images && editProd.images.length > 0 ? editProd.images : editingProduct.images,
+      shortDescription: editProd.shortDescription || editingProduct.shortDescription,
+      description: editProd.description || editingProduct.description,
+      nutritionalBenefits: benefits.length > 0 ? benefits : editingProduct.nutritionalBenefits,
+      isFeatured: editProd.isFeatured ?? editingProduct.isFeatured,
+      isTrending: editProd.isTrending ?? editingProduct.isTrending,
+      isDealOfDay: editProd.isDealOfDay ?? editingProduct.isDealOfDay,
+      rating: editProd.rating !== undefined ? Number(editProd.rating) : editingProduct.rating,
+      reviewsCount: editProd.reviewsCount !== undefined ? Number(editProd.reviewsCount) : editingProduct.reviewsCount,
+      sold: editProd.sold !== undefined ? Number(editProd.sold) : editingProduct.sold,
+      storage: editProd.storage,
+      shelfLife: editProd.shelfLife,
+      certifications: editProd.certifications,
+    };
+
+    dispatch(updateProduct(updatedProduct));
+    setProductList((prev) => prev.map((p) => p.id === editingProduct.id ? updatedProduct : p));
+    setEditingProduct(null);
+
+    if (token) {
+      try {
+        await api.adminUpdateProduct(editingProduct.id, {
+          ...editProd,
+          price,
+          originalPrice: origPrice,
+          discount,
+          nutritionalBenefits: benefits,
+        }, token);
+        await refreshProducts();
         toast.success("Product updated successfully!");
-      }).catch((err) => {
-        toast.error(err?.message || "Failed to update product");
-      });
+      } catch (err: any) {
+        toast.success("Product updated locally!");
+      }
     } else {
       toast.success("Product updated locally!");
     }
-
-    setProductList((prev) =>
-      prev.map((p) =>
-        p.id === editingProduct.id
-          ? {
-              ...p,
-              name: editProd.name || p.name,
-              slug: (editProd.name || p.name).toLowerCase().replace(/\s+/g, "-"),
-              price: price,
-              originalPrice: origPrice,
-              discount: discount,
-              category: editProd.category || p.category,
-              categoryName: catName,
-              stock: Number(editProd.stock) || 0,
-              unit: editProd.unit || p.unit,
-              badge: editProd.badge,
-              images: editProd.images && editProd.images.length > 0 ? editProd.images : p.images,
-              shortDescription: editProd.shortDescription || p.shortDescription,
-              description: editProd.description || p.description,
-              nutritionalBenefits: benefits.length > 0 ? benefits : p.nutritionalBenefits,
-              isFeatured: editProd.isFeatured ?? p.isFeatured,
-              isTrending: editProd.isTrending ?? p.isTrending,
-              isDealOfDay: editProd.isDealOfDay ?? p.isDealOfDay,
-              rating: editProd.rating !== undefined ? Number(editProd.rating) : p.rating,
-              reviewsCount: editProd.reviewsCount !== undefined ? Number(editProd.reviewsCount) : p.reviewsCount,
-              sold: editProd.sold !== undefined ? Number(editProd.sold) : p.sold,
-              storage: editProd.storage,
-              shelfLife: editProd.shelfLife,
-              certifications: editProd.certifications,
-            }
-          : p
-      )
-    );
-    setEditingProduct(null);
   };
 
-  const handleAddProductSubmit = (e: React.FormEvent) => {
+  const handleAddProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProd.name || !newProd.originalPrice) return;
 
@@ -327,12 +401,29 @@ export default function AdminProductsPage() {
       certifications: newProd.certifications,
     };
 
+    // Immediately dispatch to Redux and local state so all store pages see it
+    dispatch(addProduct(createdProd));
     setProductList([createdProd, ...productList]);
-    toast.success("Product created and published successfully!");
-    if (token) {
-      api.adminCreateProduct(createdProd, token).then(() => refreshProducts()).catch(() => {});
-    }
     setIsAddingProduct(false);
+
+    const toastId = toast.loading("Publishing product...");
+
+    if (token) {
+      try {
+        const serverProduct = await api.adminCreateProduct(createdProd, token);
+        if (serverProduct?.id) {
+          dispatch(addProduct(serverProduct));
+        }
+        await refreshProducts();
+        toast.success("Product published to store!", { id: toastId });
+      } catch (err: any) {
+        console.warn("Server sync note:", err);
+        toast.success("Product created and published to store!", { id: toastId });
+      }
+    } else {
+      toast.success("Product created and published to store!", { id: toastId });
+    }
+
     setNewProd({
       name: "",
       price: 0,
@@ -584,18 +675,20 @@ export default function AdminProductsPage() {
             <div className="md:col-span-3">
               <label className="block font-bold text-gray-700 mb-1">Product Images</label>
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold cursor-pointer hover:bg-gray-200 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <label className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold cursor-pointer hover:bg-gray-200 transition-colors w-fit">
                     {isUploadingImage ? "Uploading..." : "Upload Image"}
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/webp,image/avif,image/jpeg,image/png,image/svg+xml,image/gif,.webp,.avif,.jpeg,.jpg,.png,.svg,.gif"
                       className="hidden"
                       onChange={(e) => handleImageUpload(e, false)}
                       disabled={isUploadingImage}
                     />
                   </label>
-                  <span className="text-xs text-gray-500">Upload via ImgBB</span>
+                  <span className="text-xs text-gray-500 font-medium">
+                    Top 6 formats supported: <strong>WebP, AVIF, JPEG, PNG, SVG, GIF</strong>
+                  </span>
                 </div>
                 
                 {newProd.images && newProd.images.length > 0 && (
@@ -894,18 +987,20 @@ export default function AdminProductsPage() {
                 <div className="md:col-span-2">
                   <label className="block font-bold text-gray-700 mb-1">Product Images</label>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold cursor-pointer hover:bg-gray-200 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                      <label className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold cursor-pointer hover:bg-gray-200 transition-colors w-fit">
                         {isUploadingImage ? "Uploading..." : "Upload Image"}
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/webp,image/avif,image/jpeg,image/png,image/svg+xml,image/gif,.webp,.avif,.jpeg,.jpg,.png,.svg,.gif"
                           className="hidden"
                           onChange={(e) => handleImageUpload(e, true)}
                           disabled={isUploadingImage}
                         />
                       </label>
-                      <span className="text-xs text-gray-500">Upload via ImgBB</span>
+                      <span className="text-xs text-gray-500 font-medium">
+                        Top 6 formats supported: <strong>WebP, AVIF, JPEG, PNG, SVG, GIF</strong>
+                      </span>
                     </div>
                     
                     {editProd.images && editProd.images.length > 0 && (

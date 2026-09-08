@@ -98,7 +98,7 @@ export default function ProductDetailsPage() {
     return {
       id: `initial-5star-${product.id}`,
       rating: 5,
-      reviewerName: "Rohan Ahmed",
+      reviewerName: "Abdullah ",
       designation: "Verified Buyer",
       title: "Outstanding fresh organic quality!",
       comment: `Extremely fresh, crispy and delicious ${product.name.toLowerCase()}! 100% genuine farm-fresh organic taste and arrived in pristine condition. Exceeded expectations!`,
@@ -173,7 +173,7 @@ export default function ProductDetailsPage() {
         "shobpai_buy_now_item",
         JSON.stringify({ product, quantity })
       );
-    } catch {}
+    } catch { }
     router.push("/checkout?direct=true");
   };
 
@@ -315,11 +315,10 @@ export default function ProductDetailsPage() {
                   <button
                     key={idx}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition-all cursor-pointer ${
-                      activeImageIndex === idx
-                        ? "border-[#F0A843] ring-2 ring-[#F0A843]/30"
-                        : "border-transparent opacity-60 hover:opacity-100"
-                    }`}
+                    className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition-all cursor-pointer ${activeImageIndex === idx
+                      ? "border-[#F0A843] ring-2 ring-[#F0A843]/30"
+                      : "border-transparent opacity-60 hover:opacity-100"
+                      }`}
                   >
                     <Image src={img} alt="" fill className="object-cover" />
                   </button>
@@ -344,13 +343,12 @@ export default function ProductDetailsPage() {
                   {[...Array(5)].map((_, i) => (
                     <FaStar
                       key={i}
-                      className={`h-4 w-4 ${
-                        i < Math.floor(effectiveRating)
-                          ? "fill-[#F0A843] text-[#F0A843]"
-                          : i < effectiveRating
+                      className={`h-4 w-4 ${i < Math.floor(effectiveRating)
+                        ? "fill-[#F0A843] text-[#F0A843]"
+                        : i < effectiveRating
                           ? "fill-[#F0A843] text-[#F0A843] opacity-75"
                           : "text-gray-300"
-                      }`}
+                        }`}
                     />
                   ))}
                   <span className="ml-1.5 font-bold text-gray-800">{effectiveRating.toFixed(1)}</span>
@@ -435,11 +433,10 @@ export default function ProductDetailsPage() {
                 {/* Add to Cart */}
                 <button
                   onClick={handleAddToCart}
-                  className={`flex-1 min-w-[180px] flex items-center justify-center gap-2 rounded-2xl py-3.5 px-6 font-bold text-gray-950 transition-all shadow-md cursor-pointer ${
-                    isAdded
-                      ? "bg-gray-900 text-white"
-                      : "bg-[#F0A843] hover:bg-[#e09732] shadow-[#F0A843]/20"
-                  }`}
+                  className={`flex-1 min-w-[180px] flex items-center justify-center gap-2 rounded-2xl py-3.5 px-6 font-bold text-gray-950 transition-all shadow-md cursor-pointer ${isAdded
+                    ? "bg-gray-900 text-white"
+                    : "bg-[#F0A843] hover:bg-[#e09732] shadow-[#F0A843]/20"
+                    }`}
                 >
                   <FaShoppingBag className="h-4 w-4" />
                   <span>{isAdded ? "Added to Cart!" : "Add to Cart"}</span>
@@ -448,9 +445,8 @@ export default function ProductDetailsPage() {
                 {/* Wishlist */}
                 <button
                   onClick={handleToggleWishlist}
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 transition-colors cursor-pointer ${
-                    isWishlisted ? "bg-red-50 text-red-500 border-red-200" : "bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 transition-colors cursor-pointer ${isWishlisted ? "bg-red-50 text-red-500 border-red-200" : "bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
                   title="Wishlist"
                 >
                   <FaHeart className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
@@ -475,25 +471,22 @@ export default function ProductDetailsPage() {
           <div className="flex border-b border-gray-100 gap-8 mb-6 text-sm font-bold">
             <button
               onClick={() => setActiveTab("desc")}
-              className={`pb-3 border-b-2 transition-colors cursor-pointer ${
-                activeTab === "desc" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
-              }`}
+              className={`pb-3 border-b-2 transition-colors cursor-pointer ${activeTab === "desc" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
+                }`}
             >
               Full Description
             </button>
             <button
               onClick={() => setActiveTab("specs")}
-              className={`pb-3 border-b-2 transition-colors cursor-pointer ${
-                activeTab === "specs" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
-              }`}
+              className={`pb-3 border-b-2 transition-colors cursor-pointer ${activeTab === "specs" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
+                }`}
             >
               Nutrition & Origin
             </button>
             <button
               onClick={() => setActiveTab("reviews")}
-              className={`pb-3 border-b-2 transition-colors cursor-pointer ${
-                activeTab === "reviews" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
-              }`}
+              className={`pb-3 border-b-2 transition-colors cursor-pointer ${activeTab === "reviews" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
+                }`}
             >
               Reviews ({effectiveReviewsCount})
             </button>
@@ -595,9 +588,8 @@ export default function ProductDetailsPage() {
                           {[1, 2, 3, 4, 5].map((i) => (
                             <FaStar
                               key={i}
-                              className={`h-4 w-4 ${
-                                i <= Math.round(avgScore) ? "fill-current text-amber-400" : "text-gray-300"
-                              }`}
+                              className={`h-4 w-4 ${i <= Math.round(avgScore) ? "fill-current text-amber-400" : "text-gray-300"
+                                }`}
                             />
                           ))}
                         </div>
@@ -792,9 +784,8 @@ export default function ProductDetailsPage() {
                             {[...Array(5)].map((_, i) => (
                               <FaStar
                                 key={i}
-                                className={`h-3.5 w-3.5 ${
-                                  i < rev.rating ? "fill-current text-amber-400" : "text-gray-300"
-                                }`}
+                                className={`h-3.5 w-3.5 ${i < rev.rating ? "fill-current text-amber-400" : "text-gray-300"
+                                  }`}
                               />
                             ))}
                           </div>

@@ -105,11 +105,17 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
         onMouseLeave={() => setCurrentImageIndex(0)}
       >
         <Image
-          src={product.images[currentImageIndex] || product.images[0]}
-          alt={product.name}
+          src={
+            product.images && product.images.length > 0 && product.images[currentImageIndex]
+              ? product.images[currentImageIndex]
+              : product.images && product.images.length > 0 && product.images[0]
+              ? product.images[0]
+              : "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80"
+          }
+          alt={product.name || "Product"}
           fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
         />
       </div>
 
