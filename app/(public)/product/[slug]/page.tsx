@@ -102,7 +102,7 @@ export default function ProductDetailsPage() {
       designation: "Verified Buyer",
       title: "Outstanding fresh organic quality!",
       comment: `Extremely fresh, crispy and delicious ${product.name.toLowerCase()}! 100% genuine farm-fresh organic taste and arrived in pristine condition. Exceeded expectations!`,
-      createdAt: product.createdAt || "2026-03-01T10:00:00.000Z",
+      createdAt: (product as any)?.createdAt || "2026-03-01T10:00:00.000Z",
       verified: true,
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80",
     };

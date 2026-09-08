@@ -29,6 +29,8 @@ export interface Product {
     minutes: number;
     seconds: number;
   };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Live products are fetched directly from the Neon PostgreSQL database via api.getProducts()
