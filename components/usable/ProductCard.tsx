@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { FaEye, FaHeart, FaShoppingBag, FaStar, FaShoppingCart  } from "react-icons/fa";
+import { FaEye, FaHeart, FaShoppingBag, FaShoppingCart, FaStar } from "react-icons/fa";
 import { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 
@@ -115,21 +115,22 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
 
       {/* Product Info */}
       <div className="flex flex-1 flex-col">
-        
-        
-
         {/* Product Title */}
-        <h3 className="line-clamp-2 mb-2 text-sm font-semibold text-gray-800 transition-colors group-hover:text-[#F0A843]">
+        <h3 className="line-clamp-2 mb-1.5 text-sm font-semibold text-gray-800 transition-colors group-hover:text-[#F0A843]">
           <Link href={`/product/${product.slug}`}>{product.name}</Link>
         </h3>
 
-        {/* Rating */}
-        <div className="mb-3 flex items-center gap-1.5 text-xs text-amber-500">
-          <div className="flex items-center">
-            <FaStar className="h-3.5 w-3.5 fill-[#F0A843]" />
-            <span className="ml-1 font-bold text-gray-700">{product.rating}</span>
+        {/* Real Review Star with Point */}
+        <div className="mb-2 flex items-center gap-1.5 text-xs">
+          <div className="flex items-center gap-1 text-[#F0A843]">
+            <FaStar className="h-3 w-3 fill-current" />
+            <span className="font-bold text-gray-900 text-xs">
+              {(product.rating ? Number(product.rating) : 5.0).toFixed(1)}
+            </span>
           </div>
-          <span className="text-gray-400">({product.reviewsCount})</span>
+          <span className="text-gray-400 text-[11px]">
+            ({product.reviewsCount || 1})
+          </span>
         </div>
 
         {/* Price & Add to Cart */}

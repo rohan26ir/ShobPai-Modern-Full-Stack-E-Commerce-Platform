@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { FaBox, FaMapMarkerAlt, FaUser, FaSave, FaCheckCircle, FaShieldAlt } from "react-icons/fa";
+import { FaBox, FaMapMarkerAlt, FaUser, FaSave, FaCheckCircle, FaShieldAlt, FaSpinner } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
-
 import { api } from "@/lib/api";
+import toast from "react-hot-toast";
 
 export default function AccountPage() {
   const { user, isAdmin, token } = useAuth();
@@ -15,6 +15,7 @@ export default function AccountPage() {
     email: user?.email || "",
     phone: user?.phoneNumber || "",
     address: "",
+    city: "Dhaka",
   });
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,15 +31,19 @@ export default function AccountPage() {
     }
 
     if (token) {
-      api.getMyAddresses(token).then((addresses) => {
-        if (Array.isArray(addresses) && addresses.length > 0) {
-          const addr = addresses[0];
-          setProfile((prev) => ({
-            ...prev,
-            address: `${addr.addressLine1 || ""}${addr.city ? `, ${addr.city}` : ""}`,
-          }));
-        }
-      }).catch(() => {});
+      api.getMyAddresses(token)
+        .then((addresses) => {
+          if (Array.isArray(addresses) && addresses.length > 0) {
+            const defaultAddr = addresses.find((a: any) => a.isDefault) || addresses[0];
+            setProfile((prev) => ({
+              ...prev,
+              address: defaultAddr.addressLine || "",
+              city: defaultAddr.city || "Dhaka",
+              phone: defaultAddr.phone && defaultAddr.phone !== "N/A" ? defaultAddr.phone : prev.phone,
+            }));
+          }
+        })
+        .catch(() => {});
     }
   }, [user, token]);
 
@@ -47,14 +52,31 @@ export default function AccountPage() {
     if (!token) return;
     setLoading(true);
     try {
+      // 1. Update Profile (Display Name & Phone Number)
       await api.updateProfile(
         { displayName: profile.name, phoneNumber: profile.phone },
         token
       );
+
+      // 2. Save/Update Default Address in Database
+      if (profile.address.trim()) {
+        await api.saveDefaultAddress(
+          {
+            addressLine: profile.address.trim(),
+            city: profile.city?.trim() || "Dhaka",
+            fullName: profile.name,
+            phone: profile.phone || "N/A",
+          },
+          token
+        );
+      }
+
       setSaved(true);
+      toast.success("Profile & address saved successfully!");
       setTimeout(() => setSaved(false), 2500);
-    } catch (err) {
-      console.error("Failed to update profile:", err);
+    } catch (err: any) {
+      console.error("Failed to update profile and address:", err);
+      toast.error(err?.message || "Failed to save profile");
     } finally {
       setLoading(false);
     }
@@ -78,7 +100,7 @@ export default function AccountPage() {
           Account & Personal Details
         </h1>
         <p className="text-xs md:text-sm text-gray-300 mt-1 max-w-xl">
-          View and update your personal information, contact email, phone number, and default delivery address.
+          View and update your personal information, contact email, phone number, and default delivery address saved in Neon PostgreSQL.
         </p>
       </div>
 
@@ -126,10 +148,10 @@ export default function AccountPage() {
             <label className="block font-bold text-gray-700 mb-1">Email Address</label>
             <input
               type="email"
-              required
+              disabled
               value={profile.email}
-              onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 font-semibold outline-hidden focus:border-[#E5A842]"
+              className="w-full rounded-xl border border-gray-200 bg-gray-100 text-gray-500 px-4 py-3 font-semibold outline-hidden cursor-not-allowed"
+              title="Email is managed via your Firebase authentication login"
             />
           </div>
 
@@ -137,6 +159,7 @@ export default function AccountPage() {
             <label className="block font-bold text-gray-700 mb-1">Phone Number</label>
             <input
               type="text"
+              placeholder="+880 1700-000000"
               value={profile.phone}
               onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 font-semibold outline-hidden focus:border-[#E5A842]"
@@ -144,9 +167,21 @@ export default function AccountPage() {
           </div>
 
           <div>
-            <label className="block font-bold text-gray-700 mb-1">Default Shipping Address</label>
+            <label className="block font-bold text-gray-700 mb-1">City / Region</label>
             <input
               type="text"
+              placeholder="e.g. Dhaka, Chittagong"
+              value={profile.city}
+              onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 font-semibold outline-hidden focus:border-[#E5A842]"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block font-bold text-gray-700 mb-1">Default Shipping Address (Street, House, Road, Area)</label>
+            <input
+              type="text"
+              placeholder="e.g. House 12, Road 5, Block B, Banani"
               value={profile.address}
               onChange={(e) => setProfile({ ...profile, address: e.target.value })}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 font-semibold outline-hidden focus:border-[#E5A842]"
@@ -157,18 +192,19 @@ export default function AccountPage() {
         <div className="flex items-center justify-between border-t border-gray-100 pt-6">
           {saved ? (
             <span className="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
-              <FaCheckCircle className="h-4 w-4" /> Profile updated successfully!
+              <FaCheckCircle className="h-4 w-4" /> Profile & address saved to database!
             </span>
           ) : (
-            <span className="text-xs text-gray-400">Authenticated Member</span>
+            <span className="text-xs text-gray-400">Saved to Neon PostgreSQL</span>
           )}
 
           <button
             type="submit"
-            className="flex items-center gap-2 rounded-xl bg-[#E5A842] hover:bg-[#d49633] px-6 py-3 text-xs font-black text-gray-950 transition-colors shadow-md cursor-pointer"
+            disabled={loading}
+            className="flex items-center gap-2 rounded-xl bg-[#E5A842] hover:bg-[#d49633] px-6 py-3 text-xs font-black text-gray-950 transition-colors shadow-md cursor-pointer disabled:opacity-50"
           >
-            <FaSave className="h-3.5 w-3.5" />
-            <span>Save Profile</span>
+            {loading ? <FaSpinner className="h-3.5 w-3.5 animate-spin" /> : <FaSave className="h-3.5 w-3.5" />}
+            <span>{loading ? "Saving..." : "Save Profile & Address"}</span>
           </button>
         </div>
       </form>

@@ -7,6 +7,7 @@ import { FaArrowLeft, FaCheck, FaMinus, FaPlus, FaShoppingBag, FaTag } from "rea
 import { useCart } from "@/context/CartContext";
 import { availableCoupons } from "@/data/coupons";
 import { api } from "@/lib/api";
+import toast from "react-hot-toast";
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, subtotal: rawSubtotal } = useCart();
@@ -31,12 +32,16 @@ export default function CartPage() {
           minSpend: 0,
           description: res.message,
         });
+        toast.success(`Coupon "${couponCode.toUpperCase()}" applied! (${res.discountPercentage}% OFF)`);
       } else {
-        setCouponError(res.message || "Invalid coupon code. Try 'FRESH2026' or 'VEGIST10'");
+        const err = res.message || "Invalid coupon code. Try 'FRESH2026'";
+        setCouponError(err);
+        toast.error(err);
         setAppliedCoupon(null);
       }
     } catch {
       setCouponError("Could not validate coupon. Try 'FRESH2026'");
+      toast.error("Could not validate coupon");
       setAppliedCoupon(null);
     } finally {
       setIsValidatingCoupon(false);

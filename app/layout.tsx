@@ -27,6 +27,8 @@ const poppins = localFont({
   variable: '--font-poppins',
 });
 
+import ToastProvider from "@/components/ToastProvider";
+
 export const metadata: Metadata = {
   title: "ShobPai E-Commerce - Farm Fresh Organic Store",
   description: "Fresh organic fruits, vegetables, dairy & groceries delivered to your door.",
@@ -43,6 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         className="min-h-full flex flex-col font-sans"
         suppressHydrationWarning
       >
+        <ToastProvider />
         <AuthProvider>
           <ReduxProvider>
             <ShopDataProvider>

@@ -10,7 +10,8 @@ interface TrendingSectionProps {
 }
 
 export default function TrendingSection({ onQuickView }: TrendingSectionProps) {
-  const { products } = useShopData();
+  const { products, loading, productsLoading } = useShopData();
+  const isLoading = productsLoading || (loading && products.length === 0);
   const [activeTab, setActiveTab] = useState<string>("all");
 
   const filterTabs = [
@@ -62,6 +63,8 @@ export default function TrendingSection({ onQuickView }: TrendingSectionProps) {
         <ProductGrid
           products={filteredProducts.slice(0, 8)}
           onQuickView={onQuickView}
+          loading={isLoading}
+          skeletonCount={8}
         />
       </div>
     </section>

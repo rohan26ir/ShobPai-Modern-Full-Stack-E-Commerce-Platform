@@ -28,6 +28,7 @@ import {
   FaLock,
   FaSpinner,
   FaUserCheck,
+  FaTag,
 } from "react-icons/fa";
 import logoImg from "@/public/logo/logo_shobpai.webp";
 import { useAuth } from "@/context/AuthContext";
@@ -44,6 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Overview", href: "/dashboard", icon: FaChartPie },
     { name: "Products", href: "/dashboard/admin", icon: FaShoppingBag },
     { name: "Categories", href: "/dashboard/categories", icon: FaFolder },
+    { name: "Offers", href: "/dashboard/offers", icon: FaTag },
     { name: "Customers", href: "/dashboard/customers", icon: FaUsers },
     { name: "Analytics", href: "/dashboard/analytics", icon: FaChartLine },
     { name: "Account Profile", href: "/dashboard/account", icon: FaUserCircle },
@@ -53,7 +55,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const userItems = [
     { name: "My Orders", href: "/dashboard/orders", icon: FaBox },
     { name: "My Wishlist", href: "/dashboard/wishlist", icon: FaHeart },
-    { name: "My Store", href: "/dashboard/my-store", icon: FaStore },
     { name: "Shopping Cart", href: "/cart", icon: FaShoppingBag },
     { name: "Saved Payments", href: "/dashboard/payments", icon: FaCreditCard },
     { name: "My Reviews", href: "/dashboard/reviews", icon: FaStar },
@@ -64,6 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isAdminOnlyRoute = [
     "/dashboard/admin",
     "/dashboard/categories",
+    "/dashboard/offers",
     "/dashboard/customers",
     "/dashboard/analytics",
   ].some((route) => pathname.startsWith(route));

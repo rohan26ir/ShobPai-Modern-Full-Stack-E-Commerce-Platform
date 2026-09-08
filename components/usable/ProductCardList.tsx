@@ -83,26 +83,27 @@ export default function ProductCardList({ product, onQuickView }: ProductCardLis
       {/* Middle Content Column */}
       <div className="flex flex-1 flex-col justify-between space-y-1.5 w-full">
         <div>
-          {/* Category & Unit */}
+          {/* Category, Unit & Real Review Star */}
           <div className="flex items-center gap-2 text-[11px] font-bold">
             <span className="text-[#F0A843]">{product.categoryName}</span>
             <span className="text-gray-300">•</span>
             <span className="text-gray-500">{product.unit}</span>
+            <span className="text-gray-300">•</span>
+            <div className="flex items-center gap-1 text-[#F0A843]">
+              <FaStar className="h-3 w-3 fill-current" />
+              <span className="font-bold text-gray-900 text-[11px]">
+                {(product.rating ? Number(product.rating) : 5.0).toFixed(1)}
+              </span>
+              <span className="font-normal text-gray-400 text-[10px]">
+                ({product.reviewsCount || 1})
+              </span>
+            </div>
           </div>
 
           {/* Product Title */}
           <h3 className="text-base font-bold text-gray-900 transition-colors group-hover:text-[#F0A843] line-clamp-1">
             <Link href={`/product/${product.slug}`}>{product.name}</Link>
           </h3>
-
-          {/* Rating */}
-          <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-500">
-            <div className="flex items-center">
-              <FaStar className="h-3 w-3 fill-[#F0A843]" />
-              <span className="ml-1 font-bold text-gray-800 text-[11px]">{product.rating}</span>
-            </div>
-            <span className="text-gray-400 text-[11px]">({product.reviewsCount} reviews)</span>
-          </div>
 
           {/* Description */}
           <p className="mt-1.5 text-xs text-gray-500 leading-relaxed line-clamp-2">

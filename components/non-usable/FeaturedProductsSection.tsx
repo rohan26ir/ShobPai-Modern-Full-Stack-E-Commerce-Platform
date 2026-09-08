@@ -11,7 +11,8 @@ interface FeaturedProductsSectionProps {
 }
 
 export default function FeaturedProductsSection({ onQuickView }: FeaturedProductsSectionProps) {
-  const { products } = useShopData();
+  const { products, loading, productsLoading } = useShopData();
+  const isLoading = productsLoading || (loading && products.length === 0);
   const featuredProducts = products.filter((p) => p.isFeatured || p.rating >= 4.7);
 
   return (
@@ -40,6 +41,8 @@ export default function FeaturedProductsSection({ onQuickView }: FeaturedProduct
         <ProductGrid
           products={featuredProducts}
           onQuickView={onQuickView}
+          loading={isLoading}
+          skeletonCount={4}
         />
       </div>
     </section>

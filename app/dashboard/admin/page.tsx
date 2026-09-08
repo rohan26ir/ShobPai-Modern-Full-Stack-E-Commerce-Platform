@@ -15,12 +15,14 @@ import {
   FaTimes,
   FaCheckCircle,
   FaStar,
+  FaMagic,
 } from "react-icons/fa";
 import { Product } from "@/data/products";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useShopData } from "@/context/ShopDataContext";
 import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function AdminProductsPage() {
   const { token } = useAuth();
@@ -66,6 +68,78 @@ export default function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editProd, setEditProd] = useState<Partial<Product>>({});
   const [editProdNutritionalText, setEditProdNutritionalText] = useState("");
+
+  // AI Product Details Generation State & Handler
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const handleGenerateWithAI = async (isEditMode = false) => {
+    const targetName = isEditMode ? editProd.name : newProd.name;
+    if (!targetName || !targetName.trim()) {
+      toast.error("Please enter a Product Name first to generate with AI!");
+      return;
+    }
+
+    const targetCategory = isEditMode ? editProd.category : newProd.category;
+    setIsGeneratingAI(true);
+    const toastId = toast.loading(`Generating AI details for "${targetName}"...`);
+
+    try {
+      const res = await fetch("/api/ai/generate-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productName: targetName,
+          category: targetCategory,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.data) {
+        throw new Error(json.error || "Failed to generate details");
+      }
+
+      const {
+        shortDescription,
+        description,
+        nutritionalBenefitsText,
+        storage,
+        shelfLife,
+        certifications,
+      } = json.data;
+
+      if (isEditMode) {
+        setEditProd((prev) => ({
+          ...prev,
+          shortDescription: shortDescription || prev.shortDescription,
+          description: description || prev.description,
+          storage: storage || prev.storage,
+          shelfLife: shelfLife || prev.shelfLife,
+          certifications: certifications || prev.certifications,
+        }));
+        setEditProdNutritionalText(nutritionalBenefitsText);
+      } else {
+        setNewProd((prev) => ({
+          ...prev,
+          shortDescription: shortDescription || prev.shortDescription,
+          description: description || prev.description,
+          storage: storage || prev.storage,
+          shelfLife: shelfLife || prev.shelfLife,
+          certifications: certifications || prev.certifications,
+        }));
+        setNewProdNutritionalText(nutritionalBenefitsText);
+      }
+
+      toast.success(
+        `✨ AI generated descriptions & nutritional benefits for "${targetName}"!`,
+        { id: toastId }
+      );
+    } catch (err: any) {
+      console.error("AI generate error:", err);
+      toast.error(err.message || "Failed to generate with AI", { id: toastId });
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   // Image Upload Logic
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -128,6 +202,7 @@ export default function AdminProductsPage() {
 
   const handleDeleteProduct = (id: string) => {
     setProductList((prev) => prev.filter((p) => p.id !== id));
+    toast.success("Product deleted successfully");
     if (token) {
       api.adminDeleteProduct(id, token).then(() => refreshProducts()).catch(() => {});
     }
@@ -164,7 +239,14 @@ export default function AdminProductsPage() {
         originalPrice: origPrice,
         discount,
         nutritionalBenefits: benefits,
-      }, token).then(() => refreshProducts()).catch(() => {});
+      }, token).then(() => {
+        refreshProducts();
+        toast.success("Product updated successfully!");
+      }).catch((err) => {
+        toast.error(err?.message || "Failed to update product");
+      });
+    } else {
+      toast.success("Product updated locally!");
     }
 
     setProductList((prev) =>
@@ -246,6 +328,7 @@ export default function AdminProductsPage() {
     };
 
     setProductList([createdProd, ...productList]);
+    toast.success("Product created and published successfully!");
     if (token) {
       api.adminCreateProduct(createdProd, token).then(() => refreshProducts()).catch(() => {});
     }
@@ -350,7 +433,19 @@ export default function AdminProductsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
             <div className="md:col-span-2">
-              <label className="block font-bold text-gray-700 mb-1">Product Name *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-gray-700">Product Name *</label>
+                <button
+                  type="button"
+                  onClick={() => handleGenerateWithAI(false)}
+                  disabled={isGeneratingAI || !newProd.name?.trim()}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-extrabold bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-gray-950 hover:brightness-105 transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  title="Automatically generate Short Description, Product Details, Nutritional Benefits & Storage using AI"
+                >
+                  <FaMagic className={`h-3 w-3 ${isGeneratingAI ? "animate-spin" : ""}`} />
+                  <span>{isGeneratingAI ? "Generating with AI..." : "✨ Auto-Fill with AI"}</span>
+                </button>
+              </div>
               <input
                 type="text"
                 required
@@ -442,7 +537,19 @@ export default function AdminProductsPage() {
             </div>
 
             <div className="md:col-span-1">
-              <label className="block font-bold text-gray-700 mb-1">Storage</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-gray-700">Storage</label>
+                <button
+                  type="button"
+                  onClick={() => handleGenerateWithAI(false)}
+                  disabled={isGeneratingAI || !newProd.name?.trim()}
+                  className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                  title="Generate storage instructions with AI"
+                >
+                  <FaMagic className="h-2.5 w-2.5" />
+                  <span>AI Auto-Fill</span>
+                </button>
+              </div>
               <input
                 type="text"
                 value={newProd.storage || ""}
@@ -541,7 +648,19 @@ export default function AdminProductsPage() {
             </div>
 
             <div className="md:col-span-3">
-              <label className="block font-bold text-gray-700 mb-1">Short Description (Product Card Summary)</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-gray-700">Short Description (Product Card Summary)</label>
+                <button
+                  type="button"
+                  onClick={() => handleGenerateWithAI(false)}
+                  disabled={isGeneratingAI || !newProd.name?.trim()}
+                  className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                  title="Generate short description with AI based on Product Name"
+                >
+                  <FaMagic className="h-2.5 w-2.5" />
+                  <span>✨ AI Generate</span>
+                </button>
+              </div>
               <input
                 type="text"
                 value={newProd.shortDescription || ""}
@@ -552,7 +671,19 @@ export default function AdminProductsPage() {
             </div>
 
             <div className="md:col-span-3">
-              <label className="block font-bold text-gray-700 mb-1">Product Details (Full Narrative Description)</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-gray-700">Product Details (Full Narrative Description)</label>
+                <button
+                  type="button"
+                  onClick={() => handleGenerateWithAI(false)}
+                  disabled={isGeneratingAI || !newProd.name?.trim()}
+                  className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                  title="Generate full narrative description with AI based on Product Name"
+                >
+                  <FaMagic className="h-2.5 w-2.5" />
+                  <span>✨ AI Generate</span>
+                </button>
+              </div>
               <textarea
                 rows={3}
                 value={newProd.description || ""}
@@ -563,9 +694,21 @@ export default function AdminProductsPage() {
             </div>
 
             <div className="md:col-span-3">
-              <label className="block font-bold text-gray-700 mb-1">
-                Nutritional Benefits (Enter 1 benefit per line with title: "Title – Description")
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-gray-700">
+                  Nutritional Benefits (Enter 1 benefit per line with title: "Title – Description")
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleGenerateWithAI(false)}
+                  disabled={isGeneratingAI || !newProd.name?.trim()}
+                  className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                  title="Generate 4 detailed nutritional benefits with AI formatted as 'Title – Description'"
+                >
+                  <FaMagic className="h-2.5 w-2.5" />
+                  <span>✨ AI Generate</span>
+                </button>
+              </div>
               <textarea
                 rows={4}
                 value={newProdNutritionalText}
@@ -608,7 +751,19 @@ export default function AdminProductsPage() {
             <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block font-bold text-gray-700 mb-1">Product Name</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-gray-700">Product Name</label>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateWithAI(true)}
+                      disabled={isGeneratingAI || !editProd.name?.trim()}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-extrabold bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-gray-950 hover:brightness-105 transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      title="Automatically regenerate descriptions, benefits & storage with AI"
+                    >
+                      <FaMagic className={`h-3 w-3 ${isGeneratingAI ? "animate-spin" : ""}`} />
+                      <span>{isGeneratingAI ? "Generating..." : "✨ Auto-Fill with AI"}</span>
+                    </button>
+                  </div>
                   <input
                     type="text"
                     required
@@ -695,7 +850,19 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div className="md:col-span-1">
-                  <label className="block font-bold text-gray-700 mb-1">Storage</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-gray-700">Storage</label>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateWithAI(true)}
+                      disabled={isGeneratingAI || !editProd.name?.trim()}
+                      className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                      title="Generate storage instructions with AI"
+                    >
+                      <FaMagic className="h-2.5 w-2.5" />
+                      <span>AI Auto-Fill</span>
+                    </button>
+                  </div>
                   <input
                     type="text"
                     value={editProd.storage || ""}
@@ -761,11 +928,47 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block font-bold text-gray-700 mb-1">Full Description (Product Details)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-gray-700">Short Description (Product Card Summary)</label>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateWithAI(true)}
+                      disabled={isGeneratingAI || !editProd.name?.trim()}
+                      className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                      title="Generate short description with AI"
+                    >
+                      <FaMagic className="h-2.5 w-2.5" />
+                      <span>✨ AI Generate</span>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={editProd.shortDescription || ""}
+                    onChange={(e) => setEditProd({ ...editProd, shortDescription: e.target.value })}
+                    placeholder="Short summary for product cards..."
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold outline-hidden focus:border-[#E5A842]"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-gray-700">Product Details (Full Narrative Description)</label>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateWithAI(true)}
+                      disabled={isGeneratingAI || !editProd.name?.trim()}
+                      className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                      title="Generate full description with AI"
+                    >
+                      <FaMagic className="h-2.5 w-2.5" />
+                      <span>✨ AI Generate</span>
+                    </button>
+                  </div>
                   <textarea
                     rows={3}
                     value={editProd.description || ""}
                     onChange={(e) => setEditProd({ ...editProd, description: e.target.value })}
+                    placeholder="Detailed origin, harvest process, taste, texture, and culinary uses..."
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold outline-hidden focus:border-[#E5A842]"
                   />
                 </div>
@@ -801,13 +1004,26 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block font-bold text-gray-700 mb-1">
-                    Nutritional Benefits (1 bullet per line)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-gray-700">
+                      Nutritional Benefits (Enter 1 benefit per line with title: "Title – Description")
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateWithAI(true)}
+                      disabled={isGeneratingAI || !editProd.name?.trim()}
+                      className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                      title="Generate nutritional benefits with AI"
+                    >
+                      <FaMagic className="h-2.5 w-2.5" />
+                      <span>✨ AI Generate</span>
+                    </button>
+                  </div>
                   <textarea
                     rows={4}
                     value={editProdNutritionalText}
                     onChange={(e) => setEditProdNutritionalText(e.target.value)}
+                    placeholder="Rich In Dietary Fibre – Supports healthy digestion.\nHigh in Natural Energy – Instant energy boost."
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold font-mono text-[11px] outline-hidden focus:border-[#E5A842]"
                   />
                 </div>

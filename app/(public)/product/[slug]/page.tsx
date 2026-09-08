@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useMemo } from "react";
 import {
   FaCheckCircle,
   FaHeart,
@@ -27,6 +27,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function ProductDetailsPage() {
   const params = useParams();
+  const router = useRouter();
   const slug = params?.slug as string;
 
   const { user, token, isAdmin } = useAuth();
@@ -91,6 +92,41 @@ export default function ProductDetailsPage() {
     }
   };
 
+  // Initial 5-star verified review when no user reviews have been posted yet
+  const initialFiveStarReview = useMemo(() => {
+    if (!product) return null;
+    return {
+      id: `initial-5star-${product.id}`,
+      rating: 5,
+      reviewerName: "Rohan Ahmed",
+      designation: "Verified Buyer",
+      title: "Outstanding fresh organic quality!",
+      comment: `Extremely fresh, crispy and delicious ${product.name.toLowerCase()}! 100% genuine farm-fresh organic taste and arrived in pristine condition. Exceeded expectations!`,
+      createdAt: product.createdAt || "2026-03-01T10:00:00.000Z",
+      verified: true,
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80",
+    };
+  }, [product]);
+
+  // Display reviews: real database reviews if present, otherwise initial 1 review with 5 star
+  const displayReviews = useMemo(() => {
+    if (reviewsList && reviewsList.length > 0) {
+      return reviewsList;
+    }
+    return initialFiveStarReview ? [initialFiveStarReview] : [];
+  }, [reviewsList, initialFiveStarReview]);
+
+  const effectiveReviewsCount = displayReviews.length;
+
+  const effectiveRating = useMemo(() => {
+    if (displayReviews.length === 0) return 5.0;
+    const totalScore = displayReviews.reduce(
+      (sum, rev) => sum + (Number(rev.rating) || 5),
+      0
+    );
+    return Math.round((totalScore / displayReviews.length) * 10) / 10;
+  }, [displayReviews]);
+
   // Check purchase eligibility when product or token changes
   useEffect(() => {
     if (!product?.id) return;
@@ -128,6 +164,17 @@ export default function ProductDetailsPage() {
     addToCart(product, quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    try {
+      sessionStorage.setItem(
+        "shobpai_buy_now_item",
+        JSON.stringify({ product, quantity })
+      );
+    } catch {}
+    router.push("/checkout?direct=true");
   };
 
   const handleToggleWishlist = () => {
@@ -294,13 +341,28 @@ export default function ProductDetailsPage() {
               {/* Rating */}
               <div className="mt-3 flex items-center gap-3 text-sm">
                 <div className="flex items-center text-[#F0A843]">
-                  <FaStar className="h-4 w-4 fill-current" />
-                  <span className="ml-1 font-bold text-gray-800">{product.rating}</span>
+                  {[...Array(5)].map((_, i) => (
+                    <FaStar
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < Math.floor(effectiveRating)
+                          ? "fill-[#F0A843] text-[#F0A843]"
+                          : i < effectiveRating
+                          ? "fill-[#F0A843] text-[#F0A843] opacity-75"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                  <span className="ml-1.5 font-bold text-gray-800">{effectiveRating.toFixed(1)}</span>
                 </div>
                 <span className="text-gray-400">|</span>
-                <span className="text-xs font-semibold text-gray-600">
-                  {reviewsList.length} Customer Reviews
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("reviews")}
+                  className="text-xs font-semibold text-gray-600 hover:text-[#F0A843] hover:underline cursor-pointer"
+                >
+                  {effectiveReviewsCount} Customer {effectiveReviewsCount === 1 ? "Review" : "Reviews"}
+                </button>
                 <span className="text-gray-400">|</span>
                 <span className="text-xs font-bold text-[#F0A843]">
                   {product.sold || 120} Sold
@@ -396,12 +458,13 @@ export default function ProductDetailsPage() {
               </div>
 
               {/* Buy Now CTA */}
-              <Link
-                href="/checkout"
-                className="block text-center w-full py-3.5 px-6 rounded-2xl bg-gray-900 hover:bg-black text-white !text-white font-black text-sm transition-all shadow-md"
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                className="block text-center w-full py-3.5 px-6 rounded-2xl bg-gray-900 hover:bg-black text-white !text-white font-black text-sm transition-all shadow-md cursor-pointer"
               >
                 <span className="text-white !text-white font-black">Buy Now (Instant Checkout)</span>
-              </Link>
+              </button>
             </div>
           </div>
 
@@ -432,7 +495,7 @@ export default function ProductDetailsPage() {
                 activeTab === "reviews" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
               }`}
             >
-              Customer Reviews ({reviewsList.length})
+              Reviews ({effectiveReviewsCount})
             </button>
           </div>
 
@@ -515,13 +578,10 @@ export default function ProductDetailsPage() {
 
               {/* Dynamic 3-Column Header Summary */}
               {(() => {
-                const totalCount = reviewsList.length;
-                const avgScore =
-                  totalCount > 0
-                    ? reviewsList.reduce((acc, r) => acc + (r.rating || 5), 0) / totalCount
-                    : 5;
+                const totalCount = displayReviews.length;
+                const avgScore = effectiveRating;
                 const starBreakdown = [5, 4, 3, 2, 1].map((s) => {
-                  const cnt = reviewsList.filter((r) => r.rating === s).length;
+                  const cnt = displayReviews.filter((r) => Math.round(Number(r.rating) || 5) === s).length;
                   const pct = totalCount > 0 ? (cnt / totalCount) * 100 : 0;
                   return { star: s, count: cnt, percent: pct };
                 });
@@ -542,12 +602,12 @@ export default function ProductDetailsPage() {
                           ))}
                         </div>
                         <span className="text-gray-700 text-sm font-semibold ml-1">
-                          {totalCount > 0 ? avgScore.toFixed(2) : "5.00"} out of 5
+                          {avgScore.toFixed(2)} out of 5
                         </span>
                       </div>
                       <div className="flex items-center justify-center gap-1 text-xs font-semibold text-gray-500">
                         <span>Based on {totalCount} verified {totalCount === 1 ? "review" : "reviews"}</span>
-                        {totalCount > 0 && <FaCheckCircle className="text-emerald-500 h-3.5 w-3.5" />}
+                        <FaCheckCircle className="text-emerald-500 h-3.5 w-3.5" />
                       </div>
                     </div>
 
@@ -714,20 +774,13 @@ export default function ProductDetailsPage() {
               )}
 
               {/* Review Cards Grid */}
-              {loadingReviews ? (
+              {loadingReviews && reviewsList.length === 0 ? (
                 <div className="py-12 text-center text-xs text-gray-400">
                   Loading verified customer reviews...
                 </div>
-              ) : reviewsList.length === 0 ? (
-                <div className="p-8 bg-gray-50 border border-gray-100 text-center rounded-2xl space-y-2">
-                  <p className="text-sm font-semibold text-gray-700">No reviews yet for this product</p>
-                  <p className="text-xs text-gray-400">
-                    Be the first customer to purchase this product and leave your feedback!
-                  </p>
-                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {reviewsList.map((rev) => (
+                  {displayReviews.map((rev) => (
                     <div
                       key={rev.id}
                       className="border border-gray-200 rounded-xl p-5 bg-white space-y-3 flex flex-col justify-between"

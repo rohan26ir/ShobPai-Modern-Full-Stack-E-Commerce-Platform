@@ -12,10 +12,13 @@ import "swiper/css/navigation";
 
 import { useShopData } from "@/context/ShopDataContext";
 import CategoryCard from "@/components/usable/CategoryCard";
+import { CategorySliderSkeleton } from "@/components/skeletons/HomeSkeletons";
 
 export default function CategorySection() {
   const swiperRef = useRef<SwiperClass | null>(null);
-  const { categories, products } = useShopData();
+  const { categories, products, loading, categoriesLoading } = useShopData();
+
+  const isLoading = categoriesLoading || (loading && categories.length === 0);
 
   // Derive dynamic category item counts directly from products catalog
   const categoriesWithCounts = categories.map((cat) => {
@@ -66,54 +69,50 @@ export default function CategorySection() {
           </div>
         </div>
 
-        {/* Swiper Slider Component */}
-        <Swiper
-          onBeforeInit={(swiper) => {
-            swiperRef.current = swiper;
-          }}
-          modules={[Navigation, Autoplay]}
-          loop={true}
-          slidesPerGroup={1}
-          spaceBetween={16}
-          autoplay={{
-            delay: 4000,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-          }}
-          breakpoints={{
-            320: {
-              slidesPerView: 3.0,
-              spaceBetween: 12,
-            },
-            480: {
-              slidesPerView: 3.0,
-              spaceBetween: 14,
-            },
-            640: {
-              slidesPerView: 3,
-              spaceBetween: 16,
-            },
-            768: {
-              slidesPerView: 4,
-              spaceBetween: 16,
-            },
-            // 1024: {
-            //   slidesPerView: 5,
-            //   spaceBetween: 20,
-            // },
-            // 1280: {
-            //   slidesPerView: 6,
-            //   spaceBetween: 20,
-            // },
-          }}
-          className="py-2"
-        >
-          {categoriesWithCounts.map((cat) => (
-            <SwiperSlide key={cat.id}>
-              <CategoryCard category={cat} itemCount={cat.itemCount} />
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        {/* Category Slider or Skeleton Loading State */}
+        {isLoading ? (
+          <CategorySliderSkeleton />
+        ) : (
+          <Swiper
+            onBeforeInit={(swiper) => {
+              swiperRef.current = swiper;
+            }}
+            modules={[Navigation, Autoplay]}
+            loop={categoriesWithCounts.length > 4}
+            slidesPerGroup={1}
+            spaceBetween={16}
+            autoplay={{
+              delay: 4000,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true,
+            }}
+            breakpoints={{
+              320: {
+                slidesPerView: 3.0,
+                spaceBetween: 12,
+              },
+              480: {
+                slidesPerView: 3.0,
+                spaceBetween: 14,
+              },
+              640: {
+                slidesPerView: 3,
+                spaceBetween: 16,
+              },
+              768: {
+                slidesPerView: 4,
+                spaceBetween: 16,
+              },
+            }}
+            className="py-2"
+          >
+            {categoriesWithCounts.map((cat) => (
+              <SwiperSlide key={cat.id}>
+                <CategoryCard category={cat} itemCount={cat.itemCount} />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        )}
       </div>
     </section>
   );

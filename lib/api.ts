@@ -163,6 +163,21 @@ export const api = {
     );
   },
 
+  saveDefaultAddress: async (addressData: any, token: string) => {
+    return fetchWithAuth(
+      "/auth/addresses/default",
+      {
+        method: "PUT",
+        body: JSON.stringify(addressData),
+      },
+      token
+    );
+  },
+
+  deleteAddress: async (addressId: string, token: string) => {
+    return fetchWithAuth(`/auth/addresses/${addressId}`, { method: "DELETE" }, token);
+  },
+
   // Products
   getProducts: async (params?: { category_slug?: string; search?: string; featured?: boolean; trending?: boolean }): Promise<Product[]> => {
     const query = new URLSearchParams();
@@ -187,7 +202,81 @@ export const api = {
     return Array.isArray(data) ? data : [];
   },
 
-  // Coupons
+  createCategory: async (categoryData: Partial<Category>, token?: string | null) => {
+    return fetchWithAuth(
+      "/categories",
+      {
+        method: "POST",
+        body: JSON.stringify(categoryData),
+      },
+      token
+    );
+  },
+
+  updateCategory: async (id: string, categoryData: Partial<Category>, token?: string | null) => {
+    return fetchWithAuth(
+      `/categories/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(categoryData),
+      },
+      token
+    );
+  },
+
+  deleteCategory: async (id: string, token?: string | null) => {
+    return fetchWithAuth(
+      `/categories/${id}`,
+      {
+        method: "DELETE",
+      },
+      token
+    );
+  },
+
+  // Coupons & Offers
+  getCoupons: async (activeOnly?: boolean): Promise<any[]> => {
+    try {
+      const url = activeOnly ? "/coupons?activeOnly=true" : "/coupons";
+      const data = await fetchWithAuth(url, { method: "GET" });
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  },
+
+  createCoupon: async (couponData: any, token?: string | null) => {
+    return fetchWithAuth(
+      "/coupons",
+      {
+        method: "POST",
+        body: JSON.stringify(couponData),
+      },
+      token
+    );
+  },
+
+  updateCoupon: async (id: string, couponData: any, token?: string | null) => {
+    return fetchWithAuth(
+      `/coupons/${id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(couponData),
+      },
+      token
+    );
+  },
+
+  deleteCoupon: async (id: string, token?: string | null) => {
+    return fetchWithAuth(
+      `/coupons/${id}`,
+      {
+        method: "DELETE",
+      },
+      token
+    );
+  },
+
   validateCoupon: async (code: string, subtotal: number): Promise<{ valid: boolean; discountPercentage: number; discountAmount: number; message: string }> => {
     return fetchWithAuth("/coupons/validate", {
       method: "POST",
@@ -226,6 +315,71 @@ export const api = {
       {
         method: "POST",
         body: JSON.stringify({ productId }),
+      },
+      token
+    );
+  },
+
+  removeFromWishlist: async (productId: string, token?: string | null) => {
+    return fetchWithAuth(`/wishlist/${productId}`, { method: "DELETE" }, token);
+  },
+
+  syncWishlist: async (productIds: string[], token?: string | null) => {
+    return fetchWithAuth(
+      "/wishlist/sync",
+      {
+        method: "POST",
+        body: JSON.stringify({ productIds }),
+      },
+      token
+    );
+  },
+
+  // Cart
+  getMyCart: async (token?: string | null) => {
+    return fetchWithAuth("/cart", { method: "GET" }, token);
+  },
+
+  addToCart: async (productId: string, quantity: number = 1, token?: string | null) => {
+    return fetchWithAuth(
+      "/cart",
+      {
+        method: "POST",
+        body: JSON.stringify({ productId, quantity }),
+      },
+      token
+    );
+  },
+
+  updateCartQuantity: async (
+    productId: string,
+    payload: { delta?: number; quantity?: number },
+    token?: string | null
+  ) => {
+    return fetchWithAuth(
+      `/cart/${productId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      },
+      token
+    );
+  },
+
+  removeFromCart: async (productId: string, token?: string | null) => {
+    return fetchWithAuth(`/cart/${productId}`, { method: "DELETE" }, token);
+  },
+
+  clearCart: async (token?: string | null) => {
+    return fetchWithAuth("/cart", { method: "DELETE" }, token);
+  },
+
+  syncCart: async (items: { productId: string; quantity: number }[], token?: string | null) => {
+    return fetchWithAuth(
+      "/cart/sync",
+      {
+        method: "POST",
+        body: JSON.stringify({ items }),
       },
       token
     );

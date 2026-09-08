@@ -10,6 +10,8 @@ interface ShopDataContextType {
   products: Product[];
   categories: Category[];
   loading: boolean;
+  productsLoading: boolean;
+  categoriesLoading: boolean;
   error: string | null;
   refreshProducts: () => Promise<void>;
   refreshCategories: () => Promise<void>;
@@ -20,7 +22,7 @@ const ShopDataContext = createContext<ShopDataContextType | undefined>(undefined
 
 export function ShopDataProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
-  const { products, categories, loading, error } = useAppSelector(
+  const { products, categories, loading, productsLoading, categoriesLoading, error } = useAppSelector(
     (state) => state.shop
   );
 
@@ -45,6 +47,8 @@ export function ShopDataProvider({ children }: { children: React.ReactNode }) {
         products,
         categories,
         loading,
+        productsLoading,
+        categoriesLoading,
         error,
         refreshProducts: handleRefreshProducts,
         refreshCategories: handleRefreshCategories,

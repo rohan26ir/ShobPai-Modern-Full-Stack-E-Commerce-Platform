@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FaHeart, FaMinus, FaPlus, FaRegHeart, FaRegStar, FaStar, FaTimes } from "react-icons/fa";
 import { Product } from "@/data/products";
@@ -16,6 +17,7 @@ export default function ProductQuickViewModal({
   product,
   onClose,
 }: ProductQuickViewModalProps) {
+  const router = useRouter();
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -67,6 +69,18 @@ export default function ProductQuickViewModal({
       setIsAdded(false);
       onClose();
     }, 1200);
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    try {
+      sessionStorage.setItem(
+        "shobpai_buy_now_item",
+        JSON.stringify({ product, quantity })
+      );
+    } catch {}
+    onClose();
+    router.push("/checkout?direct=true");
   };
 
   const handleToggleWishlist = () => {
@@ -142,15 +156,20 @@ export default function ProductQuickViewModal({
               <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-500">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) =>
-                    i < Math.floor(product.rating) ? (
+                    i < Math.floor(product.rating || 5) ? (
                       <FaStar key={i} className="h-3.5 w-3.5 fill-[#F0A843]" />
                     ) : (
                       <FaRegStar key={i} className="h-3.5 w-3.5 text-gray-300" />
                     )
                   )}
                 </div>
-                <span className="text-gray-400 text-xs ml-1">
-                  {product.reviewsCount > 0 ? `${product.reviewsCount} review` : "No reviews"}
+                <span className="font-bold text-gray-900 text-xs ml-1">
+                  {(product.rating ? Number(product.rating) : 5.0).toFixed(1)}
+                </span>
+                <span className="text-gray-400 text-xs">
+                  ({(product.reviewsCount || 1) === 1
+                    ? "1 review"
+                    : `${product.reviewsCount} reviews`})
                 </span>
               </div>
 
@@ -268,13 +287,13 @@ export default function ProductQuickViewModal({
                   {isAdded ? "Added to cart!" : "Add to cart"}
                 </button>
 
-                <Link
-                  href="/checkout"
-                  onClick={onClose}
-                  className="py-3 px-4 rounded-sm bg-gray-900 hover:bg-black text-white !text-white font-bold text-xs transition-colors shadow-xs text-center block"
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="py-3 px-4 rounded-sm bg-gray-900 hover:bg-black text-white !text-white font-bold text-xs transition-colors shadow-xs text-center block w-full cursor-pointer"
                 >
                   <span className="text-white !text-white font-bold">Buy it now</span>
-                </Link>
+                </button>
               </div>
 
               {/* Wishlist Link */}

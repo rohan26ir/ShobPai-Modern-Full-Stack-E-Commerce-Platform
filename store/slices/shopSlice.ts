@@ -7,13 +7,17 @@ export interface ShopState {
   products: Product[];
   categories: Category[];
   loading: boolean;
+  productsLoading: boolean;
+  categoriesLoading: boolean;
   error: string | null;
 }
 
 const initialState: ShopState = {
   products: [],
   categories: [],
-  loading: false,
+  loading: true,
+  productsLoading: true,
+  categoriesLoading: true,
   error: null,
 };
 
@@ -47,36 +51,49 @@ export const shopSlice = createSlice({
   reducers: {
     setProducts: (state, action: PayloadAction<Product[]>) => {
       state.products = action.payload;
+      state.productsLoading = false;
+      state.loading = state.categoriesLoading;
     },
     setCategories: (state, action: PayloadAction<Category[]>) => {
       state.categories = action.payload;
+      state.categoriesLoading = false;
+      state.loading = state.productsLoading;
     },
   },
   extraReducers: (builder) => {
     // Fetch Products
     builder
       .addCase(fetchProducts.pending, (state) => {
+        state.productsLoading = true;
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
-        state.loading = false;
+        state.productsLoading = false;
+        state.loading = state.categoriesLoading;
         state.products = action.payload;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
-        state.loading = false;
+        state.productsLoading = false;
+        state.loading = state.categoriesLoading;
         state.error = action.payload as string;
       });
 
     // Fetch Categories
     builder
       .addCase(fetchCategories.pending, (state) => {
+        state.categoriesLoading = true;
+        state.loading = true;
         state.error = null;
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.categoriesLoading = false;
+        state.loading = state.productsLoading;
         state.categories = action.payload;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
+        state.categoriesLoading = false;
+        state.loading = state.productsLoading;
         state.error = action.payload as string;
       });
   },

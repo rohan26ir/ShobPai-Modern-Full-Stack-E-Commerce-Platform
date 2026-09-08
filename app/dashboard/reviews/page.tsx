@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FaStar, FaRegStar, FaCheckCircle, FaTrashAlt, FaCommentAlt, FaSyncAlt, FaShieldAlt, FaReply } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
+import toast from "react-hot-toast";
 
 export default function ReviewsPage() {
   const { user, isAdmin, token } = useAuth();
@@ -53,11 +54,12 @@ export default function ReviewsPage() {
             : r
         )
       );
+      toast.success("Reply submitted successfully!");
       setReplyingId(null);
       setReplyText("");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to submit admin reply:", err);
-      alert("Failed to submit reply. Only administrators can reply.");
+      toast.error(err?.message || "Failed to submit reply");
     } finally {
       setSavingReply(false);
     }
@@ -70,8 +72,10 @@ export default function ReviewsPage() {
     try {
       await api.deleteReview(id, token);
       setReviews((prev) => prev.filter((r) => r.id !== id));
-    } catch (err) {
+      toast.success("Review deleted");
+    } catch (err: any) {
       console.error("Failed to delete review:", err);
+      toast.error(err?.message || "Failed to delete review");
     } finally {
       setDeletingId(null);
     }

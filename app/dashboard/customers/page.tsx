@@ -1,88 +1,69 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import {
   FaSearch,
   FaUserShield,
   FaUserCheck,
   FaSyncAlt,
   FaUsers,
+  FaSpinner,
 } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/lib/api";
-
-interface CustomerItem {
-  id: string;
-  firebaseUid?: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: "USER" | "ADMIN";
-  ordersCount: number;
-  createdAt: string;
-}
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchDashboardCustomers,
+  updateCustomerRoleThunk,
+  setCustomersPage,
+  setCustomersPageSize,
+  setCustomersSearch,
+  selectPaginatedCustomers,
+} from "@/store/slices/dashboardSlice";
+import { PaginationControls } from "@/components/dashboard/PaginationControls";
+import { TableSkeleton } from "@/components/dashboard/DashboardSkeletons";
+import toast from "react-hot-toast";
 
 export default function CustomersPage() {
+  const dispatch = useAppDispatch();
   const { isAdmin, token } = useAuth();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [customers, setCustomers] = useState<CustomerItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
-    if (!token || !isAdmin) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const data = await api.getAdminUsers(token);
-      if (Array.isArray(data)) {
-        const mapped = data.map((u: any) => ({
-          id: u.id,
-          firebaseUid: u.firebaseUid,
-          name: u.displayName || u.email?.split("@")[0] || "User",
-          email: u.email || "No email",
-          phone: u.phoneNumber || "N/A",
-          role: u.role || "USER",
-          ordersCount: u._count?.orders || 0,
-          createdAt: u.createdAt,
-        }));
-        setCustomers(mapped);
-      }
-    } catch (err) {
-      console.error("Failed to load users from backend:", err);
-      setCustomers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Redux memoized selectors & state
+  const { items: paginatedCustomers, totalCount, totalPages, currentPage, pageSize } =
+    useAppSelector(selectPaginatedCustomers);
+  const loading = useAppSelector((state) => state.dashboard.customers.loading);
+  const updatingId = useAppSelector((state) => state.dashboard.customers.updatingId);
+  const search = useAppSelector((state) => state.dashboard.customers.search);
 
+  // Fetch customers with cache TTL check (instant load if within 2 min cache)
   useEffect(() => {
-    fetchUsers();
-  }, [isAdmin, token]);
+    if (!token || !isAdmin) return;
+    dispatch(fetchDashboardCustomers({ token }));
+  }, [isAdmin, token, dispatch]);
+
+  const handleRefresh = useCallback(() => {
+    if (!token || !isAdmin) return;
+    dispatch(fetchDashboardCustomers({ token, force: true }));
+  }, [isAdmin, token, dispatch]);
 
   const toggleRole = async (userId: string, currentRole: "USER" | "ADMIN") => {
     if (!token || !isAdmin) return;
     const newRole: "USER" | "ADMIN" = currentRole === "ADMIN" ? "USER" : "ADMIN";
-    setUpdatingId(userId);
     try {
-      await api.updateUserRole(userId, newRole, token);
-      setCustomers((prev) =>
-        prev.map((c) => (c.id === userId ? { ...c, role: newRole } : c))
-      );
-    } catch (err) {
-      console.error("Failed to update role:", err);
-    } finally {
-      setUpdatingId(null);
+      await dispatch(updateCustomerRoleThunk({ userId, role: newRole, token })).unwrap();
+      toast.success(`User access updated to ${newRole}!`, {
+        icon:
+          newRole === "ADMIN" ? (
+            <FaUserShield className="text-purple-400 text-lg shrink-0" />
+          ) : (
+            <FaUserCheck className="text-emerald-400 text-lg shrink-0" />
+          ),
+      });
+    } catch {
+      toast.error("Failed to update user role");
     }
   };
 
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const isInitialLoading = loading && paginatedCustomers.length === 0 && !search;
 
   return (
     <div className="space-y-8">
@@ -101,124 +82,139 @@ export default function CustomersPage() {
         </div>
 
         <button
-          onClick={fetchUsers}
+          type="button"
+          onClick={handleRefresh}
           disabled={loading}
-          className="self-start md:self-auto flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+          className="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-3 text-xs font-bold text-white transition-all backdrop-blur-xs disabled:opacity-50 cursor-pointer self-start md:self-auto"
         >
           <FaSyncAlt className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
-          <span>Refresh</span>
+          <span>Refresh Directory</span>
         </button>
       </div>
 
-      {/* Main Table Section */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-xs overflow-hidden">
-        {/* Search Bar */}
-        <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:w-80">
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-gray-200 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#E5A842]"
-            />
-            <FaSearch className="absolute left-3.5 top-3.5 h-3.5 w-3.5 text-gray-400" />
-          </div>
-
-          <span className="text-xs font-bold text-gray-400 self-end sm:self-auto">
-            {filteredCustomers.length} Total Users Found
-          </span>
+      {/* Search Toolbar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-xs">
+        <div className="relative w-full sm:w-80">
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 h-3 w-3" />
+          <input
+            type="text"
+            placeholder="Search by name, email, or phone..."
+            value={search}
+            onChange={(e) => dispatch(setCustomersSearch(e.target.value))}
+            className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-gray-50/50 text-xs text-gray-800 placeholder-gray-400 outline-none focus:border-[#E5A842] focus:bg-white transition-colors"
+          />
         </div>
 
-        {loading ? (
-          <div className="py-16 text-center text-sm text-gray-400">Loading registered users from server...</div>
-        ) : filteredCustomers.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center p-6">
-            <FaUsers className="h-12 w-12 text-gray-300 mb-3" />
-            <h3 className="text-base font-bold text-gray-800">No Users Found</h3>
-            <p className="text-xs text-gray-400 mt-1">
-              {isAdmin
-                ? "No matching users found in the database."
-                : "Sign in with an Administrator account to manage users."}
-            </p>
-          </div>
-        ) : (
+        <div className="text-xs font-bold text-gray-500">
+          Total Users: <span className="text-gray-900">{totalCount}</span>
+        </div>
+      </div>
+
+      {/* Customers Table or Skeletons */}
+      {isInitialLoading ? (
+        <TableSkeleton rows={6} cols={5} />
+      ) : paginatedCustomers.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-white p-12 text-center text-gray-500">
+          <FaUsers className="h-12 w-12 text-gray-300 mb-3" />
+          <h3 className="text-base font-bold text-gray-800">No Customers Found</h3>
+          <p className="text-xs text-gray-400 mt-1">
+            {search ? "No users match your search query." : "No registered accounts found in the database."}
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-gray-100 bg-gray-50/50 text-gray-400 font-bold uppercase text-[10px] tracking-wider">
-                <tr>
-                  <th className="py-4 px-4">User</th>
-                  <th className="py-4 px-4">Email</th>
-                  <th className="py-4 px-4">Phone</th>
-                  <th className="py-4 px-4">Orders</th>
-                  <th className="py-4 px-4">Role</th>
-                  <th className="py-4 px-4 text-right">Access Control</th>
+            <table className="w-full text-left text-xs text-gray-600">
+              <thead>
+                <tr className="border-b border-gray-100 text-[11px] font-bold uppercase text-gray-400 tracking-wider">
+                  <th className="py-3 px-3">User / Customer</th>
+                  <th className="py-3 px-3">Contact</th>
+                  <th className="py-3 px-3">Role</th>
+                  <th className="py-3 px-3">Orders</th>
+                  <th className="py-3 px-3">Joined Date</th>
+                  <th className="py-3 px-3 text-right">Access Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 font-semibold text-gray-700">
-                {filteredCustomers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-2xl bg-amber-100 text-[#E5A842] flex items-center justify-center font-black text-xs shrink-0">
-                          {customer.name.slice(0, 2).toUpperCase()}
+              <tbody className="divide-y divide-gray-50">
+                {paginatedCustomers.map((c) => {
+                  const isUpdating = updatingId === c.id;
+                  const isUserAdmin = c.role === "ADMIN";
+
+                  return (
+                    <tr key={c.id} className="hover:bg-gray-50/70 transition-colors">
+                      <td className="py-3 px-3">
+                        <div className="font-bold text-gray-900">{c.name}</div>
+                        <div className="text-[11px] text-gray-400 font-mono">
+                          {c.firebaseUid ? `${c.firebaseUid.slice(0, 10)}...` : c.id.slice(0, 8)}
                         </div>
-                        <div>
-                          <span className="font-bold text-gray-900 block">{customer.name}</span>
-                          <span className="text-[10px] text-gray-400 font-normal">
-                            Joined {new Date(customer.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-gray-600">{customer.email}</td>
-                    <td className="py-4 px-4 text-gray-500">{customer.phone}</td>
-                    <td className="py-4 px-4 font-black text-gray-900">{customer.ordersCount} Orders</td>
-                    <td className="py-4 px-4">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black ${
-                          customer.role === "ADMIN"
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        {customer.role === "ADMIN" ? (
-                          <>
-                            <FaUserShield className="h-3 w-3" />
-                            <span>ADMIN</span>
-                          </>
-                        ) : (
-                          <>
-                            <FaUserCheck className="h-3 w-3" />
-                            <span>USER</span>
-                          </>
-                        )}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={() => toggleRole(customer.id, customer.role)}
-                        disabled={updatingId === customer.id}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black transition-colors cursor-pointer ${
-                          customer.role === "ADMIN"
-                            ? "bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600"
-                            : "bg-amber-50 text-[#E5A842] hover:bg-amber-100"
-                        }`}
-                      >
-                        {updatingId === customer.id
-                          ? "Updating..."
-                          : customer.role === "ADMIN"
-                          ? "Demote to User"
-                          : "Promote to Admin"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="text-gray-900 font-medium">{c.email}</div>
+                        <div className="text-[11px] text-gray-400">{c.phone}</div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                            isUserAdmin
+                              ? "bg-purple-50 text-purple-700 border-purple-200"
+                              : "bg-gray-100 text-gray-700 border-gray-200"
+                          }`}
+                        >
+                          {isUserAdmin ? <FaUserShield className="h-3 w-3" /> : <FaUserCheck className="h-3 w-3" />}
+                          {c.role}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 font-semibold text-gray-900">
+                        {c.ordersCount}
+                      </td>
+                      <td className="py-3 px-3 text-gray-400">
+                        {c.createdAt
+                          ? new Date(c.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "N/A"}
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => toggleRole(c.id, c.role)}
+                          disabled={isUpdating}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50 ${
+                            isUserAdmin
+                              ? "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
+                              : "bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200"
+                          }`}
+                        >
+                          {isUpdating ? (
+                            <FaSpinner className="h-3 w-3 animate-spin" />
+                          ) : isUserAdmin ? (
+                            <span>Demote to User</span>
+                          ) : (
+                            <span>Promote to Admin</span>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+
+          {/* Memoized Pagination Controls */}
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            onPageChange={(p) => dispatch(setCustomersPage(p))}
+            onPageSizeChange={(s) => dispatch(setCustomersPageSize(s))}
+            pageSizeOptions={[10, 25, 50]}
+          />
+        </div>
+      )}
     </div>
   );
 }
