@@ -88,11 +88,11 @@ export default function CategorySection() {
             }}
             breakpoints={{
               320: {
-                slidesPerView: 3.0,
+                slidesPerView: 1.6,
                 spaceBetween: 12,
               },
               480: {
-                slidesPerView: 3.0,
+                slidesPerView: 2.2,
                 spaceBetween: 14,
               },
               640: {
@@ -100,6 +100,10 @@ export default function CategorySection() {
                 spaceBetween: 16,
               },
               768: {
+                slidesPerView: 3.5,
+                spaceBetween: 16,
+              },
+              1024: {
                 slidesPerView: 4,
                 spaceBetween: 16,
               },

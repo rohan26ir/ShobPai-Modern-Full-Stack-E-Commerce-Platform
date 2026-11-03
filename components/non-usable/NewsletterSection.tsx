@@ -48,19 +48,19 @@ export default function NewsletterSection() {
           </p>
 
           {/* Single Clean Input + Button Form */}
-          <form onSubmit={handleSubmit} className="flex max-w-xl mx-auto rounded-sm overflow-hidden bg-white shadow-md border border-gray-200">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row max-w-xl mx-auto rounded-sm overflow-hidden bg-white shadow-md border border-gray-200">
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
               required
-              className="w-full bg-white px-5 py-3.5 text-xs text-gray-800 placeholder-gray-400 outline-hidden"
+              className="w-full bg-white px-4 sm:px-5 py-3.5 text-xs text-gray-800 placeholder-gray-400 outline-hidden min-h-[44px]"
             />
 
             <button
               type="submit"
-              className="bg-[#E5A842] hover:bg-[#d49633] text-white font-bold px-8 py-3.5 text-xs shrink-0 transition-colors cursor-pointer"
+              className="bg-[#E5A842] hover:bg-[#d49633] text-white font-bold px-6 sm:px-8 py-3.5 text-xs shrink-0 transition-colors cursor-pointer min-h-[44px] flex items-center justify-center"
             >
               {isSubmitted ? "Subscribed!" : "Subscribe"}
             </button>

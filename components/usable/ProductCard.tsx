@@ -63,12 +63,14 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
         )} */}
       </div>
 
-      {/* Quick Action Overlay Buttons (Wishlist, Quick View, Cart) */}
-      <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 opacity-0 transition-all duration-300 group-hover:opacity-100">
+      {/* Quick Action Overlay Buttons (Wishlist [hidden on small device], Quick View, Cart [kept]) */}
+      <div className="absolute top-2.5 right-2.5 z-10 flex flex-col gap-1.5 opacity-90 md:opacity-0 transition-all duration-300 md:group-hover:opacity-100">
+        {/* Wishlist Button: hidden on small device, kept on desktop (md+) */}
         <button
           onClick={handleToggleWishlist}
           title="Add to Wishlist"
-          className={`flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-xs transition-transform hover:scale-110 cursor-pointer ${
+          aria-label="Add to Wishlist"
+          className={`hidden md:flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-xs transition-transform hover:scale-110 active:scale-95 cursor-pointer min-h-[36px] min-w-[36px] ${
             isWishlisted ? "text-red-500" : "text-gray-600 hover:text-red-500"
           }`}
         >
@@ -79,20 +81,22 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
           <button
             onClick={handleQuickViewClick}
             title="Quick View"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-md backdrop-blur-xs transition-transform hover:scale-110 hover:text-[#F0A843] cursor-pointer"
+            aria-label="Quick View"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-gray-600 shadow-md backdrop-blur-xs transition-transform hover:scale-110 active:scale-95 hover:text-[#F0A843] cursor-pointer min-h-[36px] min-w-[36px]"
           >
             <FaEye className="h-4 w-4" />
           </button>
         )}
         
+        {/* Add to Cart Button (Kept on small device and desktop) */}
         <button
-            onClick={handleQuickViewClick}
-            title="Quick View"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-md backdrop-blur-xs transition-transform hover:scale-110 hover:text-[#F0A843] cursor-pointer"
-          >
-            <FaShoppingCart className="h-4 w-4" />
+          onClick={handleAddToCart}
+          title="Add to Cart"
+          aria-label="Add to Cart"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-gray-600 shadow-md backdrop-blur-xs transition-transform hover:scale-110 active:scale-95 hover:text-[#F0A843] cursor-pointer min-h-[36px] min-w-[36px]"
+        >
+          <FaShoppingCart className="h-4 w-4" />
         </button>
-      
       </div>
 
       {/* Product Image */}
@@ -153,13 +157,13 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
           </div>
 
           <button
-            // onClick={handleAddToCart}
-            onClick={handleQuickViewClick}
-            className={`flex h-10 items-center justify-center gap-1.5 rounded-xl px-3.5 text-xs font-bold transition-all cursor-pointer ${
+            onClick={handleAddToCart}
+            className={`flex h-10 min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-3 sm:px-3.5 text-xs font-bold transition-all cursor-pointer ${
               isAdded
                 ? "bg-gray-900 text-white"
                 : "bg-[#F0A843] text-gray-950 hover:bg-[#e09732] shadow-xs"
             }`}
+            aria-label={`Add ${product.name} to cart`}
           >
             <FaShoppingBag className="h-3.5 w-3.5" />
             <span>{isAdded ? "Added!" : "Add"}</span>

@@ -269,16 +269,16 @@ export default function ProductDetailsPage() {
       <div className="container mx-auto px-4">
 
         {/* Breadcrumbs */}
-        <div className="mb-6 flex items-center gap-2 text-xs font-semibold text-gray-500">
-          <Link href="/" className="hover:text-[#F0A843]">Home</Link>
-          <span>/</span>
-          <Link href="/shop" className="hover:text-[#F0A843]">Shop</Link>
-          <span>/</span>
-          <Link href={`/category/${product.category}`} className="hover:text-[#F0A843]">
+        <div className="mb-6 flex items-center gap-2 text-xs font-semibold text-gray-500 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
+          <Link href="/" className="hover:text-[#F0A843] shrink-0">Home</Link>
+          <span className="shrink-0">/</span>
+          <Link href="/shop" className="hover:text-[#F0A843] shrink-0">Shop</Link>
+          <span className="shrink-0">/</span>
+          <Link href={`/category/${product.category}`} className="hover:text-[#F0A843] shrink-0">
             {product.categoryName}
           </Link>
-          <span>/</span>
-          <span className="text-gray-900 font-bold">{product.name}</span>
+          <span className="shrink-0">/</span>
+          <span className="text-gray-900 font-bold truncate">{product.name}</span>
         </div>
 
         {/* Product Details Header Grid */}
@@ -388,21 +388,21 @@ export default function ProductDetailsPage() {
               </p>
 
               {/* Trust Badges */}
-              <div className="mt-6 grid grid-cols-2 gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100 text-xs font-semibold text-gray-700">
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100 text-xs font-semibold text-gray-700">
                 <div className="flex items-center gap-2">
-                  <FaTruck className="text-[#F0A843] h-4 w-4" />
+                  <FaTruck className="text-[#F0A843] h-4 w-4 shrink-0" />
                   <span>Free Express Delivery ($50+)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FaCheckCircle className="text-[#F0A843] h-4 w-4" />
+                  <FaCheckCircle className="text-[#F0A843] h-4 w-4 shrink-0" />
                   <span>100% Organic Farm Fresh</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FaShieldAlt className="text-[#F0A843] h-4 w-4" />
+                  <FaShieldAlt className="text-[#F0A843] h-4 w-4 shrink-0" />
                   <span>100% Satisfaction Guarantee</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FaRedo className="text-[#F0A843] h-4 w-4" />
+                  <FaRedo className="text-[#F0A843] h-4 w-4 shrink-0" />
                   <span>7 Days Fresh Return Policy</span>
                 </div>
               </div>
@@ -410,12 +410,13 @@ export default function ProductDetailsPage() {
 
             {/* Actions: Quantity + Add to Cart + Buy Now */}
             <div className="mt-8 pt-6 border-t border-gray-100 space-y-4">
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 {/* Quantity */}
                 <div className="flex items-center rounded-2xl border border-gray-200 bg-gray-50 p-1">
                   <button
                     onClick={handleDecrease}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-gray-600 shadow-xs hover:bg-gray-100"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-gray-600 shadow-xs hover:bg-gray-100 cursor-pointer min-h-[44px] min-w-[44px]"
+                    aria-label="Decrease quantity"
                   >
                     <FaMinus className="h-3 w-3" />
                   </button>
@@ -424,7 +425,8 @@ export default function ProductDetailsPage() {
                   </span>
                   <button
                     onClick={handleIncrease}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-gray-600 shadow-xs hover:bg-gray-100"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-gray-600 shadow-xs hover:bg-gray-100 cursor-pointer min-h-[44px] min-w-[44px]"
+                    aria-label="Increase quantity"
                   >
                     <FaPlus className="h-3 w-3" />
                   </button>
@@ -433,7 +435,7 @@ export default function ProductDetailsPage() {
                 {/* Add to Cart */}
                 <button
                   onClick={handleAddToCart}
-                  className={`flex-1 min-w-[180px] flex items-center justify-center gap-2 rounded-2xl py-3.5 px-6 font-bold text-gray-950 transition-all shadow-md cursor-pointer ${isAdded
+                  className={`flex-1 min-w-[160px] flex items-center justify-center gap-2 rounded-2xl py-3.5 px-6 font-bold text-gray-950 transition-all shadow-md cursor-pointer min-h-[44px] ${isAdded
                     ? "bg-gray-900 text-white"
                     : "bg-[#F0A843] hover:bg-[#e09732] shadow-[#F0A843]/20"
                     }`}
@@ -442,12 +444,13 @@ export default function ProductDetailsPage() {
                   <span>{isAdded ? "Added to Cart!" : "Add to Cart"}</span>
                 </button>
 
-                {/* Wishlist */}
+                {/* Wishlist (Hidden on small device, kept on desktop) */}
                 <button
                   onClick={handleToggleWishlist}
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 transition-colors cursor-pointer ${isWishlisted ? "bg-red-50 text-red-500 border-red-200" : "bg-white text-gray-600 hover:bg-gray-50"
+                  className={`hidden md:flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 transition-colors cursor-pointer min-h-[44px] min-w-[44px] ${isWishlisted ? "bg-red-50 text-red-500 border-red-200" : "bg-white text-gray-600 hover:bg-gray-50"
                     }`}
                   title="Wishlist"
+                  aria-label="Toggle Wishlist"
                 >
                   <FaHeart className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
                 </button>
@@ -457,7 +460,7 @@ export default function ProductDetailsPage() {
               <button
                 type="button"
                 onClick={handleBuyNow}
-                className="block text-center w-full py-3.5 px-6 rounded-2xl bg-gray-900 hover:bg-black text-white !text-white font-black text-sm transition-all shadow-md cursor-pointer"
+                className="block text-center w-full py-4 px-6 rounded-2xl bg-gray-900 hover:bg-black text-white !text-white font-black text-sm transition-all shadow-md cursor-pointer min-h-[48px]"
               >
                 <span className="text-white !text-white font-black">Buy Now (Instant Checkout)</span>
               </button>
@@ -467,25 +470,25 @@ export default function ProductDetailsPage() {
         </div>
 
         {/* Tabbed Info & Reviews */}
-        <div className="mb-16 rounded-3xl border border-gray-100 bg-white p-6 md:p-8 shadow-xs">
-          <div className="flex border-b border-gray-100 gap-8 mb-6 text-sm font-bold">
+        <div className="mb-16 rounded-3xl border border-gray-100 bg-white p-4 sm:p-6 md:p-8 shadow-xs">
+          <div className="flex border-b border-gray-100 gap-4 sm:gap-8 mb-6 text-sm font-bold overflow-x-auto no-scrollbar whitespace-nowrap">
             <button
               onClick={() => setActiveTab("desc")}
-              className={`pb-3 border-b-2 transition-colors cursor-pointer ${activeTab === "desc" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
+              className={`pb-3 border-b-2 transition-colors cursor-pointer min-h-[44px] ${activeTab === "desc" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
                 }`}
             >
               Full Description
             </button>
             <button
               onClick={() => setActiveTab("specs")}
-              className={`pb-3 border-b-2 transition-colors cursor-pointer ${activeTab === "specs" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
+              className={`pb-3 border-b-2 transition-colors cursor-pointer min-h-[44px] ${activeTab === "specs" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
                 }`}
             >
               Nutrition & Origin
             </button>
             <button
               onClick={() => setActiveTab("reviews")}
-              className={`pb-3 border-b-2 transition-colors cursor-pointer ${activeTab === "reviews" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
+              className={`pb-3 border-b-2 transition-colors cursor-pointer min-h-[44px] ${activeTab === "reviews" ? "border-[#F0A843] text-[#F0A843]" : "border-transparent text-gray-500 hover:text-gray-800"
                 }`}
             >
               Reviews ({effectiveReviewsCount})

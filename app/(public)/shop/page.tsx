@@ -72,6 +72,7 @@ function ShopContent() {
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Sync states to URL query params
   useEffect(() => {
@@ -202,37 +203,40 @@ function ShopContent() {
       <div className="container mx-auto px-4">
         
         {/* Page Header */}
-        <div className="relative mb-8  text-white p-8 ">
+        <div className="relative mb-8 text-white p-6 sm:p-8 rounded-2xl overflow-hidden">
           
           {/* bg image */}
-          <div className="absolute inset-0 overflow-hidden ">
+          <div className="absolute inset-0 overflow-hidden">
             <Image 
-            src={bannerBg}
-            alt="bg product banner"
-            fill
-            className="object-cover  "
+              src={bannerBg}
+              alt="bg product banner"
+              fill
+              className="object-cover"
+              priority
             />
+            <div className="absolute inset-0 bg-black/40" />
           </div>
           
-          <div className="relative -z-10">
+          <div className="relative z-10">
             <span className="text-xs font-black uppercase tracking-widest text-[#E5A842]">
-            Organic Grocery Store
-          </span>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white mt-1">
-            Shop Fresh Produce & Groceries
-          </h1>
-          <p className="text-sm text-gray-300 mt-2 max-w-xl">
-            Browse our complete selection of farm-fresh fruits, organic vegetables, dairy, bakery, and healthy beverages.
-          </p>
+              Organic Grocery Store
+            </span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mt-1">
+              Shop Fresh Produce & Groceries
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-200 mt-2 max-w-xl">
+              Browse our complete selection of farm-fresh fruits, organic vegetables, dairy, bakery, and healthy beverages.
+            </p>
           </div>
-
 
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
           
-          {/* Sidebar Filter Panel */}
-          <aside className="lg:col-span-1 space-y-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-xs h-fit">
+          {/* Sidebar Filter Panel (Collapsible on mobile/tablet, permanently visible on desktop) */}
+          <aside className={`lg:col-span-1 space-y-6 bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs h-fit ${
+            mobileFiltersOpen ? "block" : "hidden lg:block"
+          }`}>
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <div className="flex items-center gap-2 text-gray-900 font-bold">
                 <FaFilter className="text-[#E5A842] h-4 w-4" />
@@ -240,7 +244,7 @@ function ShopContent() {
               </div>
               <button
                 onClick={handleReset}
-                className="flex items-center gap-1 text-xs font-bold text-[#E5A842] hover:text-[#d49633] transition-colors cursor-pointer"
+                className="flex items-center gap-1 text-xs font-bold text-[#E5A842] hover:text-[#d49633] transition-colors cursor-pointer py-1"
                 title="Reset Filters"
               >
                 <FaRedo className="h-3 w-3" />
@@ -488,19 +492,32 @@ function ShopContent() {
           <main className="lg:col-span-3 space-y-6">
             {/* Top Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-xs">
-              <p className="text-xs font-bold text-gray-600">
-                Showing <span className="text-[#5FA800] font-black">{paginatedProducts.length > 0 ? `${startIndex + 1}–${Math.min(startIndex + ITEMS_PER_PAGE, sortedProducts.length)}` : 0}</span> of{" "}
-                <span className="text-gray-900 font-bold">{sortedProducts.length}</span> organic products
-              </p>
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-xs font-bold text-gray-600">
+                  Showing <span className="text-[#5FA800] font-black">{paginatedProducts.length > 0 ? `${startIndex + 1}–${Math.min(startIndex + ITEMS_PER_PAGE, sortedProducts.length)}` : 0}</span> of{" "}
+                  <span className="text-gray-900 font-bold">{sortedProducts.length}</span> organic products
+                </p>
 
-              <div className="flex items-center gap-4">
+                {/* Mobile Filter Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+                  className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-800 hover:border-[#E5A842] transition-colors cursor-pointer min-h-[44px]"
+                  aria-label="Toggle Filters"
+                >
+                  <FaFilter className="text-[#E5A842] h-3.5 w-3.5" />
+                  <span>{mobileFiltersOpen ? "Hide Filters" : "Filter"}</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-wrap">
                 {/* Sort selector */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-500">Sort By:</span>
+                  <span className="text-xs font-bold text-gray-500 whitespace-nowrap">Sort By:</span>
                   <select
                     value={sortBy}
                     onChange={(e) => handleSortChange(e.target.value)}
-                    className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 outline-hidden focus:border-[#5FA800]"
+                    className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 outline-hidden focus:border-[#5FA800] min-h-[44px]"
                   >
                     <option value="featured">Featured Picks</option>
                     <option value="price-low">Price: Low to High</option>
@@ -514,19 +531,21 @@ function ShopContent() {
                 <div className="flex items-center rounded-xl border border-gray-200 bg-gray-50 p-1">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                    className={`p-2 rounded-lg text-xs transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center ${
                       viewMode === "grid" ? "bg-white text-[#5FA800] shadow-xs" : "text-gray-400"
                     }`}
                     title="Grid View"
+                    aria-label="Grid View"
                   >
                     <FaThLarge className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                    className={`p-2 rounded-lg text-xs transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center ${
                       viewMode === "list" ? "bg-white text-[#5FA800] shadow-xs" : "text-gray-400"
                     }`}
                     title="List View"
+                    aria-label="List View"
                   >
                     <FaList className="h-4 w-4" />
                   </button>
@@ -536,7 +555,7 @@ function ShopContent() {
 
             {/* Products Listing */}
             {sortedProducts.length === 0 ? (
-              <div className="flex min-h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">
+              <div className="flex min-h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-gray-300 bg-white p-8 sm:p-12 text-center text-gray-500">
                 <FaSlidersH className="h-10 w-10 text-gray-300 mb-3" />
                 <h3 className="text-base font-bold text-gray-800">No products match your criteria</h3>
                 <p className="text-xs text-gray-400 mt-1 mb-6">
@@ -544,13 +563,13 @@ function ShopContent() {
                 </p>
                 <button
                   onClick={handleReset}
-                  className="rounded-xl bg-[#E5A842] px-6 py-2.5 text-xs font-bold text-gray-950 hover:bg-[#d49633] transition-colors cursor-pointer"
+                  className="rounded-xl bg-[#E5A842] px-6 py-3 text-xs font-bold text-gray-950 hover:bg-[#d49633] transition-colors cursor-pointer min-h-[44px]"
                 >
                   Clear All Filters
                 </button>
               </div>
             ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {paginatedProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -574,13 +593,14 @@ function ShopContent() {
             {/* Pagination Controls Component */}
             {totalPages > 1 && (
               <div className="mt-12 pt-8 border-t border-gray-200/60 flex flex-col items-center gap-4 text-center">
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2 max-w-full">
                   {/* Previous Page Button */}
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 transition-all hover:border-[#E5A842] hover:bg-[#E5A842] hover:text-gray-950 disabled:opacity-40 disabled:hover:bg-white disabled:hover:border-gray-200 cursor-pointer disabled:cursor-not-allowed shadow-2xs"
+                    className="flex h-11 w-11 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 transition-all hover:border-[#E5A842] hover:bg-[#E5A842] hover:text-gray-950 disabled:opacity-40 disabled:hover:bg-white disabled:hover:border-gray-200 cursor-pointer disabled:cursor-not-allowed shadow-2xs min-h-[44px] min-w-[44px]"
                     title="Previous Page"
+                    aria-label="Previous Page"
                   >
                     <FaChevronLeft className="h-3 w-3" />
                   </button>
@@ -592,7 +612,7 @@ function ShopContent() {
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`flex h-10 w-10 items-center justify-center rounded-md text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+                        className={`flex h-11 w-11 items-center justify-center rounded-md text-xs font-bold transition-all cursor-pointer shadow-2xs min-h-[44px] min-w-[44px] ${
                           currentPage === pageNum
                             ? "bg-[#E5A842] border border-[#E5A842] text-gray-950 shadow-sm"
                             : "border border-gray-200 bg-white text-gray-700 hover:border-[#E5A842] hover:bg-[#E5A842] hover:text-gray-950"
@@ -607,8 +627,9 @@ function ShopContent() {
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 transition-all hover:border-[#E5A842] hover:bg-[#E5A842] hover:text-gray-950 disabled:opacity-40 disabled:hover:bg-white disabled:hover:border-gray-200 cursor-pointer disabled:cursor-not-allowed shadow-2xs"
+                    className="flex h-11 w-11 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 transition-all hover:border-[#E5A842] hover:bg-[#E5A842] hover:text-gray-950 disabled:opacity-40 disabled:hover:bg-white disabled:hover:border-gray-200 cursor-pointer disabled:cursor-not-allowed shadow-2xs min-h-[44px] min-w-[44px]"
                     title="Next Page"
+                    aria-label="Next Page"
                   >
                     <FaChevronRight className="h-3 w-3" />
                   </button>

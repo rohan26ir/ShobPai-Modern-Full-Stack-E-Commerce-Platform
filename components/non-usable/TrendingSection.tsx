@@ -41,13 +41,13 @@ export default function TrendingSection({ onQuickView }: TrendingSectionProps) {
             </h2>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-2xl border border-gray-200/80 shadow-xs">
+          {/* Filter / Sort Tabs (Hidden on small devices, visible on desktop md:) */}
+          <div className="hidden md:flex flex-wrap items-center gap-1.5 sm:gap-2 bg-white p-1.5 rounded-2xl border border-gray-200/80 shadow-xs max-w-full overflow-x-auto no-scrollbar">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                className={`px-3.5 sm:px-4 py-2 min-h-[44px] flex items-center justify-center text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   activeTab === tab.id
                     ? "bg-black text-white shadow-xs"
                     : "text-gray-600 hover:text-[#F0A843] hover:bg-amber-50/50"

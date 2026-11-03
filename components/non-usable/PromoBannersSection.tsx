@@ -47,33 +47,34 @@ export default function PromoBannersSection() {
             <Link
               key={b.id}
               href={b.link}
-              className="group relative min-h-55  overflow-hidden  flex items-center p-6 cursor-pointer"
+              className="group relative min-h-52 sm:min-h-56 overflow-hidden flex items-center p-6 cursor-pointer rounded-sm"
             >
-              <div>
-                {/* image */}
-                <div className="absolute inset-0 w-full h-full">
-                  <Image
-                    src={b.image}
-                    alt={b.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                {/* content */}
-                <div className="relative z-10 text-white">
-                  <span className="text-[14px]  uppercase tracking-widest text-black/80  ">
-                    {b.subtitle}
-                  </span>
-                  <h3 className="text-xl md:text-2xl font-black text-black mt-1 mb-1 leading-tight">
-                    {b.title}
-                  </h3>
-                  <p className="text-xs font-bold text-black mb-4">{b.discount}</p>
+              {/* Background Image */}
+              <div className="absolute inset-0 w-full h-full">
+                <Image
+                  src={b.image}
+                  alt={b.title}
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
 
-                  <div
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-md ${b.btnBg}`}
-                  >
-                    <span>Shop Now</span>
-                    <FaArrowRight className="h-3 w-3" />
-                  </div>
+              {/* Content Overlay */}
+              <div className="relative z-10 text-white w-full">
+                <span className="text-xs sm:text-[14px] uppercase tracking-widest text-black/80 font-bold block">
+                  {b.subtitle}
+                </span>
+                <h3 className="text-lg sm:text-xl md:text-2xl font-black text-black mt-1 mb-1 leading-tight">
+                  {b.title}
+                </h3>
+                <p className="text-xs font-bold text-black mb-3 sm:mb-4">{b.discount}</p>
+
+                <div
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-md min-h-[44px] ${b.btnBg}`}
+                >
+                  <span>Shop Now</span>
+                  <FaArrowRight className="h-3 w-3" />
                 </div>
               </div>
             </Link>

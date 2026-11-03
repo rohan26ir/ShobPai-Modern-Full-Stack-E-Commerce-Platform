@@ -82,13 +82,71 @@ body {
     @apply border-border outline-ring/50;
   }
 
+  html,
   body {
     @apply bg-background text-foreground;
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-text-size-adjust: 100%;
   }
 
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
+
+  /* Responsive fluid media defaults */
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Enforce bounded container on large and ultra-wide/4K displays (>=1024px, 1280px, 1920px+) */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1320px;
+  }
+}
+
+/* Utility to hide scrollbars while maintaining scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .hero-swiper .swiper-pagination-bullet {

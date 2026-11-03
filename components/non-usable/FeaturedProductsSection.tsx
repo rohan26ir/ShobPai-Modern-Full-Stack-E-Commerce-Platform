@@ -30,7 +30,7 @@ export default function FeaturedProductsSection({ onQuickView }: FeaturedProduct
           </div>
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors min-h-[44px]"
           >
             <span>Explore All Products</span>
             <FaArrowRight className="h-3.5 w-3.5" />

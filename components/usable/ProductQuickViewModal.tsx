@@ -103,12 +103,13 @@ export default function ProductQuickViewModal({
       />
 
       {/* Modal Container */}
-      <div className="relative z-10 w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-xl bg-white p-6 md:p-8 shadow-2xl transition-all">
+      <div className="relative z-10 w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-xl bg-white p-4 sm:p-6 md:p-8 shadow-2xl transition-all">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
           title="Close Modal"
+          aria-label="Close Modal"
         >
           <FaTimes className="h-4 w-4" />
         </button>
@@ -279,10 +280,10 @@ export default function ProductQuickViewModal({
 
             {/* Action Buttons: Add to Cart & Buy It Now */}
             <div className="space-y-3 pt-2">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={handleAddToCart}
-                  className="py-3 px-4 rounded-sm bg-[#F0A843] hover:bg-[#e09732] text-gray-950 font-bold text-xs transition-colors shadow-xs cursor-pointer text-center"
+                  className="py-3.5 px-4 rounded-sm bg-[#F0A843] hover:bg-[#e09732] text-gray-950 font-bold text-xs transition-colors shadow-xs cursor-pointer text-center min-h-[44px] flex items-center justify-center"
                 >
                   {isAdded ? "Added to cart!" : "Add to cart"}
                 </button>
@@ -290,16 +291,16 @@ export default function ProductQuickViewModal({
                 <button
                   type="button"
                   onClick={handleBuyNow}
-                  className="py-3 px-4 rounded-sm bg-gray-900 hover:bg-black text-white !text-white font-bold text-xs transition-colors shadow-xs text-center block w-full cursor-pointer"
+                  className="py-3.5 px-4 rounded-sm bg-gray-900 hover:bg-black text-white !text-white font-bold text-xs transition-colors shadow-xs text-center block w-full cursor-pointer min-h-[44px] flex items-center justify-center"
                 >
                   <span className="text-white !text-white font-bold">Buy it now</span>
                 </button>
               </div>
 
-              {/* Wishlist Link */}
+              {/* Wishlist Link (Hidden on small device, kept on desktop) */}
               <button
                 onClick={handleToggleWishlist}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-[#F0A843] transition-colors cursor-pointer"
+                className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-[#F0A843] transition-colors cursor-pointer min-h-[36px]"
               >
                 {isWishlisted ? (
                   <FaHeart className="h-3.5 w-3.5 text-red-500 fill-current" />

@@ -172,7 +172,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <Link
                           href={item.href}
                           onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${isActive
+                          className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all min-h-[44px] ${isActive
                             ? "bg-[#E5A842] text-gray-950 font-black shadow-md"
                             : "text-gray-300 hover:bg-gray-800 hover:text-white"
                             }`}
@@ -211,7 +211,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <Link
                           href={item.href}
                           onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${isActive
+                          className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all min-h-[44px] ${isActive
                             ? "bg-[#5FA800] text-white font-black shadow-md"
                             : "text-gray-300 hover:bg-gray-800 hover:text-white"
                             }`}
@@ -301,7 +301,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-4 flex-1 max-w-xl">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
+              className="md:hidden flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
+              aria-label="Open Sidebar"
             >
               <FaBars className="h-4 w-4" />
             </button>
@@ -378,7 +379,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page Content Body or Access Denied Screen */}
-        <main className="flex-1 p-4 md:p-8">
+        <main className="flex-1 p-3 sm:p-4 md:p-8 min-w-0 max-w-full overflow-x-hidden">
           {showAdminRestrictedWarning ? (
             <div className="max-w-xl mx-auto my-12 p-8 bg-white rounded-3xl border border-red-100 shadow-xl text-center space-y-4">
               <div className="h-16 w-16 rounded-2xl bg-red-50 text-red-500 border border-red-200 flex items-center justify-center mx-auto">

@@ -111,11 +111,11 @@ export default function CartPage() {
               {cartItems.map(({ product, quantity }) => (
                 <div
                   key={product.id}
-                  className="flex flex-col sm:grid sm:grid-cols-12 gap-4 items-center border-b border-gray-100 pb-4 last:border-b-0"
+                  className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 items-start sm:items-center border-b border-gray-100 pb-4 last:border-b-0"
                 >
                   {/* Product Info */}
-                  <div className="sm:col-span-6 flex items-center gap-4 w-full">
-                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-gray-50 border border-gray-100">
+                  <div className="sm:col-span-6 flex items-center gap-3 sm:gap-4 w-full">
+                    <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-2xl bg-gray-50 border border-gray-100">
                       <Image
                         src={product.images[0]}
                         alt={product.name}
@@ -123,51 +123,58 @@ export default function CartPage() {
                         className="object-cover"
                       />
                     </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-gray-900 line-clamp-1">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-xs sm:text-sm font-bold text-gray-900 line-clamp-1">
                         <Link href={`/product/${product.slug}`} className="hover:text-[#E5A842]">
                           {product.name}
                         </Link>
                       </h3>
-                      <span className="text-xs text-gray-400">Unit: {product.unit}</span>
+                      <span className="text-[11px] sm:text-xs text-gray-400 block">Unit: {product.unit}</span>
                       <button
                         onClick={() => removeFromCart(product.id)}
-                        className="block mt-1 text-[11px] font-bold text-red-500 hover:text-red-700 cursor-pointer"
+                        className="inline-block mt-1 text-[11px] font-bold text-red-500 hover:text-red-700 cursor-pointer min-h-[28px] py-0.5"
                       >
                         Remove
                       </button>
                     </div>
                   </div>
 
-                  {/* Unit Price */}
-                  <div className="sm:col-span-2 text-center text-xs font-bold text-gray-700">
-                    ${product.price.toFixed(2)}
-                  </div>
-
-                  {/* Quantity Controls */}
-                  <div className="sm:col-span-2 flex justify-center">
-                    <div className="flex items-center rounded-xl border border-gray-200 bg-gray-50 p-0.5">
-                      <button
-                        onClick={() => updateQuantity(product.id, -1)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-gray-600 hover:bg-gray-200 cursor-pointer"
-                      >
-                        <FaMinus className="h-2.5 w-2.5" />
-                      </button>
-                      <span className="w-8 text-center text-xs font-bold text-gray-800">
-                        {quantity}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(product.id, 1)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-gray-600 hover:bg-gray-200 cursor-pointer"
-                      >
-                        <FaPlus className="h-2.5 w-2.5" />
-                      </button>
+                  {/* Pricing and Quantity Group for Mobile, Grid columns for Desktop */}
+                  <div className="flex sm:contents items-center justify-between w-full pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100/60">
+                    {/* Unit Price */}
+                    <div className="sm:col-span-2 text-left sm:text-center text-xs font-bold text-gray-700">
+                      <span className="text-[10px] text-gray-400 uppercase sm:hidden block">Price</span>
+                      ${product.price.toFixed(2)}
                     </div>
-                  </div>
 
-                  {/* Line Total */}
-                  <div className="sm:col-span-2 text-right text-sm font-black text-gray-900">
-                    ${(product.price * quantity).toFixed(2)}
+                    {/* Quantity Controls */}
+                    <div className="sm:col-span-2 flex justify-center">
+                      <div className="flex items-center rounded-xl border border-gray-200 bg-gray-50 p-0.5">
+                        <button
+                          onClick={() => updateQuantity(product.id, -1)}
+                          className="flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-lg bg-white text-gray-600 hover:bg-gray-200 cursor-pointer min-h-[32px] min-w-[32px]"
+                          aria-label="Decrease quantity"
+                        >
+                          <FaMinus className="h-2.5 w-2.5" />
+                        </button>
+                        <span className="w-8 text-center text-xs font-bold text-gray-800">
+                          {quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(product.id, 1)}
+                          className="flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-lg bg-white text-gray-600 hover:bg-gray-200 cursor-pointer min-h-[32px] min-w-[32px]"
+                          aria-label="Increase quantity"
+                        >
+                          <FaPlus className="h-2.5 w-2.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Line Total */}
+                    <div className="sm:col-span-2 text-right text-xs sm:text-sm font-black text-gray-900">
+                      <span className="text-[10px] text-gray-400 uppercase sm:hidden block">Total</span>
+                      ${(product.price * quantity).toFixed(2)}
+                    </div>
                   </div>
                 </div>
               ))}

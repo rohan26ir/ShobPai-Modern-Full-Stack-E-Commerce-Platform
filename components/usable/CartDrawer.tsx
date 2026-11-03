@@ -23,20 +23,21 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         onClick={onClose}
       />
 
-      <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
+      <div className="fixed inset-y-0 right-0 flex max-w-full pl-0 sm:pl-10">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 p-5 bg-gray-50/80">
+          <div className="flex items-center justify-between border-b border-gray-100 p-4 sm:p-5 bg-gray-50/80">
             <div className="flex items-center gap-2">
               <FaShoppingBag className="h-5 w-5 text-[#F0A843]" />
-              <h2 className="text-lg font-bold text-gray-900">Your Shopping Cart</h2>
+              <h2 className="text-base sm:text-lg font-bold text-gray-900">Your Shopping Cart</h2>
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900">
                 {cartCount}
               </span>
             </div>
             <button
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors cursor-pointer"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors cursor-pointer"
+              aria-label="Close cart drawer"
             >
               <FaTimes className="h-4 w-4" />
             </button>
@@ -98,7 +99,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50">
                         <button
                           onClick={() => updateQuantity(product.id, -1)}
-                          className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-200 rounded-l-lg cursor-pointer"
+                          className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-200 rounded-l-lg cursor-pointer min-h-[32px] min-w-[32px]"
+                          aria-label="Decrease quantity"
                         >
                           <FaMinus className="h-2.5 w-2.5" />
                         </button>
@@ -107,7 +109,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         </span>
                         <button
                           onClick={() => updateQuantity(product.id, 1)}
-                          className="flex h-7 w-7 items-center justify-center text-gray-600 hover:bg-gray-200 rounded-r-lg cursor-pointer"
+                          className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-200 rounded-r-lg cursor-pointer min-h-[32px] min-w-[32px]"
+                          aria-label="Increase quantity"
                         >
                           <FaPlus className="h-2.5 w-2.5" />
                         </button>
@@ -125,7 +128,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
           {/* Footer Subtotal & Actions */}
           {cartItems.length > 0 && (
-            <div className="border-t border-gray-100 bg-gray-50/80 p-5 space-y-3">
+            <div className="border-t border-gray-100 bg-gray-50/80 p-4 sm:p-5 space-y-3">
               <div className="flex items-center justify-between text-sm font-bold text-gray-800">
                 <span>Subtotal</span>
                 <span className="text-lg font-black text-gray-900">
@@ -140,14 +143,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <Link
                   href="/checkout"
                   onClick={onClose}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-[#F0A843] py-3.5 text-sm font-black text-gray-950 shadow-md hover:bg-[#e09732] transition-colors"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#F0A843] py-3.5 text-sm font-black text-gray-950 shadow-md hover:bg-[#e09732] transition-colors min-h-[44px]"
                 >
                   <span>Proceed to Checkout</span>
                 </Link>
                 <Link
                   href="/cart"
                   onClick={onClose}
-                  className="flex items-center justify-center rounded-xl border border-gray-300 bg-white py-3 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-center rounded-xl border border-gray-300 bg-white py-3 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
                 >
                   <span>View Full Cart</span>
                 </Link>

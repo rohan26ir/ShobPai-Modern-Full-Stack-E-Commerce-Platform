@@ -45,8 +45,8 @@ export const RecentOrdersWidget = React.memo(function RecentOrdersWidget({
             <p className="text-xs font-semibold">No orders recorded yet.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto mt-4">
-            <table className="w-full text-left text-xs text-gray-600">
+          <div className="overflow-x-auto mt-4 -mx-2 sm:mx-0">
+            <table className="w-full text-left text-xs text-gray-600 min-w-[500px]">
               <thead>
                 <tr className="border-b border-gray-100 text-[11px] font-bold uppercase text-gray-400">
                   <th className="py-2.5 px-3">Order ID</th>

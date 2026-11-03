@@ -384,7 +384,7 @@ export default function CheckoutPage() {
                     required
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 outline-hidden focus:border-emerald-500"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
                   />
                 </div>
 
@@ -395,7 +395,7 @@ export default function CheckoutPage() {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 outline-hidden focus:border-emerald-500"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
                   />
                 </div>
 
@@ -406,7 +406,7 @@ export default function CheckoutPage() {
                     required
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 outline-hidden focus:border-emerald-500"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
                   />
                 </div>
 
@@ -417,7 +417,7 @@ export default function CheckoutPage() {
                     required
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 outline-hidden focus:border-emerald-500"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
                   />
                 </div>
 
@@ -428,7 +428,7 @@ export default function CheckoutPage() {
                     required
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 outline-hidden focus:border-emerald-500"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
                   />
                 </div>
               </div>
@@ -570,13 +570,13 @@ export default function CheckoutPage() {
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                         placeholder="e.g. FRESH2026"
-                        className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-xs font-mono font-bold text-gray-900 placeholder-gray-400 outline-hidden focus:border-[#E5A842] uppercase"
+                        className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs font-mono font-bold text-gray-900 placeholder-gray-400 outline-hidden focus:border-[#E5A842] uppercase min-h-[44px]"
                       />
                       <button
                         type="button"
                         onClick={handleApplyCoupon}
                         disabled={isValidatingCoupon || !couponCode.trim()}
-                        className="rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-white hover:bg-[#E5A842] hover:text-gray-950 transition-colors cursor-pointer disabled:opacity-50"
+                        className="rounded-xl bg-gray-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-[#E5A842] hover:text-gray-950 transition-colors cursor-pointer disabled:opacity-50 min-h-[44px] flex items-center justify-center shrink-0"
                       >
                         {isValidatingCoupon ? "Applying..." : "Apply"}
                       </button>
@@ -619,7 +619,7 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold text-white shadow-md hover:bg-emerald-700 transition-colors"
+                className="w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold text-white shadow-md hover:bg-emerald-700 transition-colors min-h-[48px] cursor-pointer"
               >
                 Place Order Now
               </button>

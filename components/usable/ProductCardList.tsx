@@ -144,30 +144,31 @@ export default function ProductCardList({ product, onQuickView }: ProductCardLis
         <div className="flex items-center gap-1.5 sm:mt-3">
           <button
             onClick={handleAddToCart}
-            className={`flex h-9 items-center justify-center gap-1.5 rounded-xl px-3.5 text-xs font-bold transition-all cursor-pointer ${
+            className={`flex h-10 min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all cursor-pointer ${
               isAdded
                 ? "bg-gray-900 text-white"
                 : "bg-[#F0A843] hover:bg-[#e09732] text-gray-950 shadow-xs"
             }`}
           >
-            <FaShoppingBag className="h-3 w-3" />
-            <span>{isAdded ? "Added!" : "Add"}</span>
+            <FaShoppingBag className="h-3.5 w-3.5" />
+            <span>{isAdded ? "Added!" : "Add to Cart"}</span>
           </button>
 
           {onQuickView && (
             <button
               onClick={handleQuickViewClick}
               title="Quick View"
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-amber-50 hover:text-[#F0A843] transition-colors cursor-pointer"
+              className="flex h-10 w-10 min-h-[40px] min-w-[40px] items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-amber-50 hover:text-[#F0A843] transition-colors cursor-pointer"
             >
               <FaEye className="h-3.5 w-3.5" />
             </button>
           )}
 
+          {/* Wishlist: hidden on small devices, kept on desktop */}
           <button
             onClick={handleToggleWishlist}
             title="Wishlist"
-            className={`flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 transition-colors cursor-pointer ${
+            className={`hidden md:flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 transition-colors cursor-pointer ${
               isWishlisted ? "bg-red-50 text-red-500 border-red-200" : "bg-white text-gray-600 hover:bg-gray-50"
             }`}
           >

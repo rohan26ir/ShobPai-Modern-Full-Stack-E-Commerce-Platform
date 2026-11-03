@@ -24,7 +24,7 @@ export default function CategoriesPage() {
           No categories found.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {categories.map((category) => (
             <div key={category.id} className="border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
               <CategoryCard category={category} />
