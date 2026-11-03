@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { FaFire, FaShoppingBag, FaStar } from "react-icons/fa";
 import { Product } from "@/data/products";
 import { useShopData } from "@/context/ShopDataContext";
@@ -11,9 +11,12 @@ interface DealOfTheDaySectionProps {
   onQuickView: (product: Product) => void;
 }
 
-export default function DealOfTheDaySection({ onQuickView }: DealOfTheDaySectionProps) {
+function DealOfTheDaySection({ onQuickView }: DealOfTheDaySectionProps) {
   const { products } = useShopData();
-  const dealProduct = products.find((p) => p.isDealOfDay) || products[0];
+  const dealProduct = useMemo(
+    () => products.find((p) => p.isDealOfDay) || products[0],
+    [products]
+  );
   const [isAdded, setIsAdded] = useState(false);
 
   if (!dealProduct) {
@@ -153,3 +156,6 @@ export default function DealOfTheDaySection({ onQuickView }: DealOfTheDaySection
     </section>
   );
 }
+
+// Performance Optimization: Prevent full section re-render when unaffected parent states update
+export default memo(DealOfTheDaySection);

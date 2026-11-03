@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { Product } from "@/data/products";
 import { useShopData } from "@/context/ShopDataContext";
 import ProductGrid from "@/components/usable/ProductGrid";
@@ -9,29 +9,31 @@ interface TrendingSectionProps {
   onQuickView: (product: Product) => void;
 }
 
-export default function TrendingSection({ onQuickView }: TrendingSectionProps) {
+const filterTabs = [
+  { id: "all", label: "All Items" },
+  { id: "fresh-fruits", label: "Fresh Fruits" },
+  { id: "vegetables", label: "Vegetables" },
+  { id: "dairy", label: "Dairy & Cheese" },
+  { id: "bakery", label: "Bakery & Breads" },
+];
+
+function TrendingSection({ onQuickView }: TrendingSectionProps) {
   const { products, loading, productsLoading } = useShopData();
   const isLoading = productsLoading || (loading && products.length === 0);
   const [activeTab, setActiveTab] = useState<string>("all");
 
-  const filterTabs = [
-    { id: "all", label: "All Items" },
-    { id: "fresh-fruits", label: "Fresh Fruits" },
-    { id: "vegetables", label: "Vegetables" },
-    { id: "dairy", label: "Dairy & Cheese" },
-    { id: "bakery", label: "Bakery & Breads" },
-  ];
-
-  const filteredProducts = products.filter((p) => {
-    if (activeTab === "all") return p.isTrending || true;
-    return p.category === activeTab;
-  });
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      if (activeTab === "all") return p.isTrending || true;
+      return p.category === activeTab;
+    });
+  }, [products, activeTab]);
 
   return (
     <section className="py-12 bg-gray-50/50 border-y border-gray-100">
       <div className="container mx-auto px-4">
         {/* Section Header with Filter Tabs */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
           <div>
             <span className="text-xs font-black tracking-widest uppercase text-[#F0A843]">
               Popular Picks
@@ -41,8 +43,8 @@ export default function TrendingSection({ onQuickView }: TrendingSectionProps) {
             </h2>
           </div>
 
-          {/* Filter / Sort Tabs (Hidden on small devices, visible on desktop md:) */}
-          <div className="hidden md:flex flex-wrap items-center gap-1.5 sm:gap-2 bg-white p-1.5 rounded-2xl border border-gray-200/80 shadow-xs max-w-full overflow-x-auto no-scrollbar">
+          {/* Filter / Sort Tabs (Hidden on small and medium devices < lg, visible on desktop lg:) */}
+          <div className="hidden lg:flex flex-wrap items-center gap-1.5 sm:gap-2 bg-white p-1.5 rounded-2xl border border-gray-200/80 shadow-xs max-w-full overflow-x-auto no-scrollbar">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -70,3 +72,5 @@ export default function TrendingSection({ onQuickView }: TrendingSectionProps) {
     </section>
   );
 }
+
+export default memo(TrendingSection);

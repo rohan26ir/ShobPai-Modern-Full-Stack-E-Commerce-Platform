@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useMemo, memo } from "react";
 // import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
@@ -14,20 +14,25 @@ import { useShopData } from "@/context/ShopDataContext";
 import CategoryCard from "@/components/usable/CategoryCard";
 import { CategorySliderSkeleton } from "@/components/skeletons/HomeSkeletons";
 
-export default function CategorySection() {
+function CategorySection() {
   const swiperRef = useRef<SwiperClass | null>(null);
   const { categories, products, loading, categoriesLoading } = useShopData();
 
   const isLoading = categoriesLoading || (loading && categories.length === 0);
 
-  // Derive dynamic category item counts directly from products catalog
-  const categoriesWithCounts = categories.map((cat) => {
-    const count = products.filter((p) => p.category === cat.slug).length;
-    return {
+  // Performance Optimization: O(N) single-pass category count lookup memoized with useMemo
+  const categoriesWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (let i = 0; i < products.length; i++) {
+      const cat = products[i].category;
+      if (cat) counts[cat] = (counts[cat] || 0) + 1;
+    }
+
+    return categories.map((cat) => ({
       ...cat,
-      itemCount: count > 0 ? count : (cat.itemCount || 0),
-    };
-  });
+      itemCount: counts[cat.slug] !== undefined ? counts[cat.slug] : (cat.itemCount || 0),
+    }));
+  }, [categories, products]);
 
   return (
     <section className="py-12 bg-white">
@@ -121,3 +126,6 @@ export default function CategorySection() {
     </section>
   );
 }
+
+// Performance Optimization: Memoize CategorySection to prevent re-renders when parent states change
+export default memo(CategorySection);

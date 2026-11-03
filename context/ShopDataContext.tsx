@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useCallback, useMemo } from "react";
 import { Product } from "@/data/products";
 import { Category } from "@/data/categories";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -26,35 +26,48 @@ export function ShopDataProvider({ children }: { children: React.ReactNode }) {
     (state) => state.shop
   );
 
-  const handleRefreshProducts = async () => {
+  const handleRefreshProducts = useCallback(async () => {
     await dispatch(fetchProducts()).unwrap().catch(() => {});
-  };
+  }, [dispatch]);
 
-  const handleRefreshCategories = async () => {
+  const handleRefreshCategories = useCallback(async () => {
     await dispatch(fetchCategories()).unwrap().catch(() => {});
-  };
+  }, [dispatch]);
 
-  const handleRefreshAll = async () => {
+  const handleRefreshAll = useCallback(async () => {
     await Promise.all([
       dispatch(fetchProducts()).unwrap().catch(() => {}),
       dispatch(fetchCategories()).unwrap().catch(() => {}),
     ]);
-  };
+  }, [dispatch]);
+
+  const contextValue = useMemo(
+    () => ({
+      products,
+      categories,
+      loading,
+      productsLoading,
+      categoriesLoading,
+      error,
+      refreshProducts: handleRefreshProducts,
+      refreshCategories: handleRefreshCategories,
+      refreshAll: handleRefreshAll,
+    }),
+    [
+      products,
+      categories,
+      loading,
+      productsLoading,
+      categoriesLoading,
+      error,
+      handleRefreshProducts,
+      handleRefreshCategories,
+      handleRefreshAll,
+    ]
+  );
 
   return (
-    <ShopDataContext.Provider
-      value={{
-        products,
-        categories,
-        loading,
-        productsLoading,
-        categoriesLoading,
-        error,
-        refreshProducts: handleRefreshProducts,
-        refreshCategories: handleRefreshCategories,
-        refreshAll: handleRefreshAll,
-      }}
-    >
+    <ShopDataContext.Provider value={contextValue}>
       {children}
     </ShopDataContext.Provider>
   );

@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import {
   FaHeart,
   FaSearch,
@@ -32,11 +33,15 @@ import {
 import { FiUser, FiHeart, FiShoppingBag } from "react-icons/fi";
 
 import AnnouncementBar from "@/components/non-usable/AnnouncementBar";
-import CartDrawer from "@/components/usable/CartDrawer";
 import logoImg from "@/public/logo/logo_shobpai.webp";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useShopData } from "@/context/ShopDataContext";
+
+// Dynamic code-splitting for heavy Cart Drawer (only loaded when user triggers it)
+const CartDrawer = dynamic(() => import("@/components/usable/CartDrawer"), {
+  ssr: false,
+});
 
 export default function Navbar() {
   const router = useRouter();
@@ -51,16 +56,20 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  // Listen to window scroll position (triggers instantly on any scroll > 0)
+  // Throttled passive scroll listener using requestAnimationFrame (stops layout thrashing)
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      if (window.scrollY > 0) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrolled = window.scrollY > 10;
+          setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev));
+          ticking = false;
+        });
+        ticking = true;
       }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -116,23 +125,29 @@ export default function Navbar() {
     }
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchQuery.trim()) {
-      params.set("search", searchQuery.trim());
-    }
-    if (selectedCategory && selectedCategory !== "all") {
-      params.set("category", selectedCategory);
-    }
-    const queryStr = params.toString();
-    setIsSearchFocused(false);
-    router.push(queryStr ? `/shop?${queryStr}` : "/shop");
-  };
+  const handleSearchSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) {
+        params.set("search", searchQuery.trim());
+      }
+      if (selectedCategory && selectedCategory !== "all") {
+        params.set("category", selectedCategory);
+      }
+      const queryStr = params.toString();
+      setIsSearchFocused(false);
+      router.push(queryStr ? `/shop?${queryStr}` : "/shop");
+    },
+    [searchQuery, selectedCategory, router]
+  );
 
-  const suggestedProducts = searchQuery.trim()
-    ? products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5)
-    : [];
+  // Memoized search suggestions to avoid scanning the entire catalog on every unrelated render
+  const suggestedProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return products.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 5);
+  }, [searchQuery, products]);
 
   const collectionMegaCards = [
     {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import HeroBanner from "@/components/non-usable/HeroBanner";
 import FeaturesBanner from "@/components/non-usable/FeaturesBanner";
 import CategorySection from "@/components/non-usable/CategorySection";
@@ -10,20 +11,28 @@ import FeaturedProductsSection from "@/components/non-usable/FeaturedProductsSec
 import CustomerReviewsSection from "@/components/non-usable/CustomerReviewsSection";
 import BrandLogosSection from "@/components/non-usable/BrandLogosSection";
 import NewsletterSection from "@/components/non-usable/NewsletterSection";
-import ProductQuickViewModal from "@/components/usable/ProductQuickViewModal";
-import Subscriber from "@/components/modals/Subscriber";
 import { Product } from "@/data/products";
+
+// Dynamic Code Splitting for non-critical modals (deferred from initial bundle)
+const ProductQuickViewModal = dynamic(
+  () => import("@/components/usable/ProductQuickViewModal"),
+  { ssr: false }
+);
+const Subscriber = dynamic(
+  () => import("@/components/modals/Subscriber"),
+  { ssr: false }
+);
 
 export default function HomePage() {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
-  const handleOpenQuickView = (product: Product) => {
+  const handleOpenQuickView = useCallback((product: Product) => {
     setQuickViewProduct(product);
-  };
+  }, []);
 
-  const handleCloseQuickView = () => {
+  const handleCloseQuickView = useCallback(() => {
     setQuickViewProduct(null);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">

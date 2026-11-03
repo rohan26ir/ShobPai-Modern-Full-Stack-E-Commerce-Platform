@@ -27,6 +27,38 @@ export const apiClient = axios.create({
   },
 });
 
+// In-flight request deduplication map (prevents identical concurrent network requests)
+const inFlightRequests = new Map<string, Promise<any>>();
+
+// In-memory SWR cache with TTL
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+const apiCache = new Map<string, CacheEntry<any>>();
+
+// Cache TTL configuration (in ms)
+const CACHE_TTL_MS: Record<string, number> = {
+  "/products": 45 * 1000,       // 45 seconds for catalog
+  "/categories": 180 * 1000,    // 3 minutes for categories
+  "/coupons": 120 * 1000,       // 2 minutes for coupons
+};
+
+/**
+ * Invalidate cached API responses when mutations occur
+ */
+export function invalidateApiCache(pattern?: string) {
+  if (!pattern) {
+    apiCache.clear();
+    return;
+  }
+  for (const key of apiCache.keys()) {
+    if (key.includes(pattern)) {
+      apiCache.delete(key);
+    }
+  }
+}
+
 export async function fetchWithAuth(
   endpoint: string,
   options: RequestInit = {},
@@ -34,6 +66,30 @@ export async function fetchWithAuth(
   timeoutMs = 8000
 ) {
   const method = (options.method || "GET").toUpperCase();
+  const cacheKey = `${method}:${endpoint}`;
+  const isCacheable = method === "GET" && !token;
+
+  // 1. SWR Cache check for GET requests without auth
+  if (isCacheable) {
+    const cached = apiCache.get(cacheKey);
+    const ttl = Object.entries(CACHE_TTL_MS).find(([route]) => endpoint.startsWith(route))?.[1] || 30000;
+    if (cached && Date.now() - cached.timestamp < ttl) {
+      return cached.data;
+    }
+
+    // 2. In-flight request deduplication: return existing pending promise if identical query is already in flight
+    if (inFlightRequests.has(cacheKey)) {
+      return inFlightRequests.get(cacheKey);
+    }
+  }
+
+  // Invalidate cache on mutations (POST, PUT, DELETE)
+  if (method !== "GET") {
+    if (endpoint.includes("/products")) invalidateApiCache("/products");
+    if (endpoint.includes("/categories")) invalidateApiCache("/categories");
+    if (endpoint.includes("/coupons")) invalidateApiCache("/coupons");
+  }
+
   let data: any = undefined;
 
   if (options.body) {
@@ -62,51 +118,68 @@ export async function fetchWithAuth(
     activeApiUrl.includes("localhost") ? DEPLOYED_API_URL : LOCAL_API_URL,
   ];
 
-  let lastError: any = null;
+  const executeRequest = async () => {
+    let lastError: any = null;
 
-  for (const candidateBase of candidateUrls) {
-    try {
-      const res = await axios.request({
-        url: `${candidateBase}${endpoint}`,
-        method,
-        data,
-        headers,
-        timeout: timeoutMs,
-      });
+    for (const candidateBase of candidateUrls) {
+      try {
+        const res = await axios.request({
+          url: `${candidateBase}${endpoint}`,
+          method,
+          data,
+          headers,
+          timeout: timeoutMs,
+        });
 
-      // Switch active URL if alternate candidate succeeded
-      if (candidateBase !== activeApiUrl) {
-        console.warn(`[API Failover] Switched active backend to: ${candidateBase}`);
-        activeApiUrl = candidateBase;
+        // Switch active URL if alternate candidate succeeded
+        if (candidateBase !== activeApiUrl) {
+          console.warn(`[API Failover] Switched active backend to: ${candidateBase}`);
+          activeApiUrl = candidateBase;
+        }
+
+        // Store into cache on successful GET
+        if (isCacheable) {
+          apiCache.set(cacheKey, { data: res.data, timestamp: Date.now() });
+        }
+
+        return res.data;
+      } catch (error: any) {
+        lastError = error;
+        const status = error.response?.status;
+        if (status && status < 500) {
+          const msg =
+            error.response?.data?.message ||
+            error.response?.data?.detail ||
+            error.message;
+          throw new Error(Array.isArray(msg) ? msg.join(", ") : msg);
+        }
+        console.warn(
+          `[API] Attempt on ${candidateBase}${endpoint} failed (${status || error.code || 'Network'}), checking fallback...`
+        );
       }
-
-      return res.data;
-    } catch (error: any) {
-      lastError = error;
-      const status = error.response?.status;
-      // Valid client-level status codes (400, 401, 403, 404, 409, 422) don't need server failover
-      if (status && status < 500) {
-        const msg =
-          error.response?.data?.message ||
-          error.response?.data?.detail ||
-          error.message;
-        throw new Error(Array.isArray(msg) ? msg.join(", ") : msg);
-      }
-      // If 5xx error or connection refusal, continue loop to try fallback URL
-      console.warn(
-        `[API] Attempt on ${candidateBase}${endpoint} failed (${status || error.code || 'Network'}), checking fallback...`
-      );
     }
+
+    const message =
+      lastError?.response?.data?.message ||
+      lastError?.response?.data?.detail ||
+      lastError?.message ||
+      `Request failed (${endpoint})`;
+    const formatted = Array.isArray(message) ? message.join(", ") : message;
+    console.error(`[API Failover Exhausted] (${endpoint}):`, formatted);
+    throw new Error(formatted);
+  };
+
+  const requestPromise = executeRequest().finally(() => {
+    if (isCacheable) {
+      inFlightRequests.delete(cacheKey);
+    }
+  });
+
+  if (isCacheable) {
+    inFlightRequests.set(cacheKey, requestPromise);
   }
 
-  const message =
-    lastError?.response?.data?.message ||
-    lastError?.response?.data?.detail ||
-    lastError?.message ||
-    `Request failed (${endpoint})`;
-  const formatted = Array.isArray(message) ? message.join(", ") : message;
-  console.error(`[API Failover Exhausted] (${endpoint}):`, formatted);
-  throw new Error(formatted);
+  return requestPromise;
 }
 
 // Live API Service Methods (Connected directly to Neon PostgreSQL Backend)

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { FaEye, FaHeart, FaShoppingBag, FaStar } from "react-icons/fa";
 import { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
@@ -12,22 +12,22 @@ interface ProductCardListProps {
   onQuickView?: (product: Product) => void;
 }
 
-export default function ProductCardList({ product, onQuickView }: ProductCardListProps) {
+function ProductCardList({ product, onQuickView }: ProductCardListProps) {
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const [isAdded, setIsAdded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const isWishlisted = isInWishlist(product.id);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product, 1);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1800);
-  };
+  }, [addToCart, product]);
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
+  const handleToggleWishlist = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (isWishlisted) {
@@ -35,15 +35,15 @@ export default function ProductCardList({ product, onQuickView }: ProductCardLis
     } else {
       addToWishlist(product);
     }
-  };
+  }, [isWishlisted, removeFromWishlist, addToWishlist, product]);
 
-  const handleQuickViewClick = (e: React.MouseEvent) => {
+  const handleQuickViewClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (onQuickView) {
       onQuickView(product);
     }
-  };
+  }, [onQuickView, product]);
 
   return (
     <div className="group relative flex flex-col sm:flex-row items-center overflow-hidden rounded-2xl border border-gray-100 bg-white p-3.5 sm:p-4 transition-all duration-300 hover:border-[#F0A843]/50 hover:shadow-md hover:shadow-[#F0A843]/10 gap-4 md:gap-6">
@@ -180,3 +180,5 @@ export default function ProductCardList({ product, onQuickView }: ProductCardLis
     </div>
   );
 }
+
+export default memo(ProductCardList);

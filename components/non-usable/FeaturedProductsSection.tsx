@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, memo } from "react";
 import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
 import { Product } from "@/data/products";
@@ -10,10 +11,13 @@ interface FeaturedProductsSectionProps {
   onQuickView: (product: Product) => void;
 }
 
-export default function FeaturedProductsSection({ onQuickView }: FeaturedProductsSectionProps) {
+function FeaturedProductsSection({ onQuickView }: FeaturedProductsSectionProps) {
   const { products, loading, productsLoading } = useShopData();
   const isLoading = productsLoading || (loading && products.length === 0);
-  const featuredProducts = products.filter((p) => p.isFeatured || p.rating >= 4.7);
+
+  const featuredProducts = useMemo(() => {
+    return products.filter((p) => p.isFeatured || p.rating >= 4.7);
+  }, [products]);
 
   return (
     <section className="py-12 bg-white">
@@ -48,3 +52,5 @@ export default function FeaturedProductsSection({ onQuickView }: FeaturedProduct
     </section>
   );
 }
+
+export default memo(FeaturedProductsSection);

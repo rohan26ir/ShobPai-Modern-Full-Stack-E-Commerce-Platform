@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, memo } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
@@ -17,7 +17,7 @@ interface RelatedProductsSliderProps {
   onQuickView?: (product: Product) => void;
 }
 
-export default function RelatedProductsSlider({
+function RelatedProductsSlider({
   products,
   onQuickView,
 }: RelatedProductsSliderProps) {
@@ -99,3 +99,6 @@ export default function RelatedProductsSlider({
     </div>
   );
 }
+
+// Performance Optimization: Prevent slider re-initialization on parent state updates
+export default memo(RelatedProductsSlider);

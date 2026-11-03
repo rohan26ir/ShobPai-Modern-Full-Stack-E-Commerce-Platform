@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Product } from "@/data/products";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -153,14 +153,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   }, [token, dispatch]);
 
-  const login = (email: string) => {
+  const login = useCallback((email: string) => {
     const u = { name: email.split("@")[0] || "User", email };
     setLocalUser(u);
     localStorage.setItem("shobpai_logged_in", "true");
     localStorage.setItem("shobpai_user_email", email);
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setLocalUser(null);
     syncedTokenRef.current = null;
     localStorage.removeItem("shobpai_logged_in");
@@ -168,10 +168,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (authLogout) {
       await authLogout();
     }
-  };
+  }, [authLogout]);
 
   // Cart actions with Optimistic UI + PostgreSQL Sync
-  const addToCart = (product: Product, quantity: number = 1) => {
+  const addToCart = useCallback((product: Product, quantity: number = 1) => {
     // 1. Optimistic update
     dispatch(addToCartAction({ product, quantity }));
     toast.success(`Added ${quantity > 1 ? `${quantity}x ` : ""}${product.name} to cart!`, {
@@ -184,9 +184,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.warn("[Cart DB] Failed to save addToCart:", err);
       });
     }
-  };
+  }, [dispatch, token]);
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = useCallback((productId: string) => {
     // 1. Optimistic update
     dispatch(removeFromCartAction(productId));
     toast.success("Item removed from cart", {
@@ -199,9 +199,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.warn("[Cart DB] Failed to save removeFromCart:", err);
       });
     }
-  };
+  }, [dispatch, token]);
 
-  const updateQuantity = (productId: string, delta: number) => {
+  const updateQuantity = useCallback((productId: string, delta: number) => {
     // 1. Optimistic update
     dispatch(updateQuantityAction({ productId, delta }));
 
@@ -211,9 +211,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.warn("[Cart DB] Failed to save updateQuantity:", err);
       });
     }
-  };
+  }, [dispatch, token]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     // 1. Optimistic update
     dispatch(clearCartAction());
     toast("Cart cleared", {
@@ -226,7 +226,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.warn("[Cart DB] Failed to clear cart:", err);
       });
     }
-  };
+  }, [dispatch, token]);
 
   const cartCount = useMemo(
     () => cartItems.reduce((acc, item) => acc + item.quantity, 0),
@@ -239,7 +239,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Wishlist actions with Optimistic UI + PostgreSQL Sync
-  const addToWishlist = (product: Product) => {
+  const addToWishlist = useCallback((product: Product) => {
     const exists = wishlistItems.some((item) => item.id === product.id);
     if (!exists) {
       dispatch(addToWishlistAction(product));
@@ -252,9 +252,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }
-  };
+  }, [dispatch, token, wishlistItems]);
 
-  const removeFromWishlist = (productId: string) => {
+  const removeFromWishlist = useCallback((productId: string) => {
     dispatch(removeFromWishlistAction(productId));
     toast("Removed from wishlist", {
       icon: <FaHeartBroken className="text-gray-400 text-lg shrink-0" />,
@@ -264,45 +264,66 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         console.warn("[Wishlist DB] Failed to save removeFromWishlist:", err);
       });
     }
-  };
+  }, [dispatch, token]);
 
-  const toggleWishlist = (product: Product) => {
+  const toggleWishlist = useCallback((product: Product) => {
     const isSaved = wishlistItems.some((item) => item.id === product.id);
     if (isSaved) {
       removeFromWishlist(product.id);
     } else {
       addToWishlist(product);
     }
-  };
+  }, [wishlistItems, removeFromWishlist, addToWishlist]);
 
-  const isInWishlist = (productId: string) => {
+  const isInWishlist = useCallback((productId: string) => {
     return wishlistItems.some((item) => item.id === productId);
-  };
+  }, [wishlistItems]);
 
   const wishlistCount = wishlistItems.length;
 
+  const contextValue = useMemo(
+    () => ({
+      cartItems,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      cartCount,
+      subtotal,
+      wishlistItems,
+      addToWishlist,
+      removeFromWishlist,
+      toggleWishlist,
+      isInWishlist,
+      wishlistCount,
+      isLoggedIn,
+      user: currentUser,
+      login,
+      logout,
+    }),
+    [
+      cartItems,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      cartCount,
+      subtotal,
+      wishlistItems,
+      addToWishlist,
+      removeFromWishlist,
+      toggleWishlist,
+      isInWishlist,
+      wishlistCount,
+      isLoggedIn,
+      currentUser,
+      login,
+      logout,
+    ]
+  );
+
   return (
-    <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        cartCount,
-        subtotal,
-        wishlistItems,
-        addToWishlist,
-        removeFromWishlist,
-        toggleWishlist,
-        isInWishlist,
-        wishlistCount,
-        isLoggedIn,
-        user: currentUser,
-        login,
-        logout,
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

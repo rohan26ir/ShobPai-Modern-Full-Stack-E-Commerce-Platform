@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import {
   FaCheckCircle,
   FaHeart,
@@ -21,7 +22,12 @@ import {
 import { Product } from "@/data/products";
 import { api } from "@/lib/api";
 import RelatedProductsSlider from "@/components/usable/RelatedProductsSlider";
-import ProductQuickViewModal from "@/components/usable/ProductQuickViewModal";
+
+// Performance Optimization: Dynamic import for modal to avoid loading into initial bundle
+const ProductQuickViewModal = dynamic(
+  () => import("@/components/usable/ProductQuickViewModal"),
+  { ssr: false }
+);
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -56,6 +62,14 @@ export default function ProductDetailsPage() {
   const [activeTab, setActiveTab] = useState<"desc" | "specs" | "reviews">("desc");
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [autoRotate, setAutoRotate] = useState(true);
+
+  const handleOpenQuickView = useCallback((p: Product) => {
+    setQuickViewProduct(p);
+  }, []);
+
+  const handleCloseQuickView = useCallback(() => {
+    setQuickViewProduct(null);
+  }, []);
 
   // Reviews section states - Real live API data with purchase verification
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -910,7 +924,7 @@ export default function ProductDetailsPage() {
         <section className="pt-6">
           <RelatedProductsSlider
             products={relatedProducts}
-            onQuickView={(p) => setQuickViewProduct(p)}
+            onQuickView={handleOpenQuickView}
           />
         </section>
 
@@ -918,7 +932,7 @@ export default function ProductDetailsPage() {
 
       <ProductQuickViewModal
         product={quickViewProduct}
-        onClose={() => setQuickViewProduct(null)}
+        onClose={handleCloseQuickView}
       />
     </div>
   );

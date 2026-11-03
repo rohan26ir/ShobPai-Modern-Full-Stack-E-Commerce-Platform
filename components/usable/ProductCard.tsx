@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { FaEye, FaHeart, FaShoppingBag, FaShoppingCart, FaStar } from "react-icons/fa";
 import { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
@@ -12,22 +12,22 @@ interface ProductCardProps {
   onQuickView?: (product: Product) => void;
 }
 
-export default function ProductCard({ product, onQuickView }: ProductCardProps) {
+function ProductCard({ product, onQuickView }: ProductCardProps) {
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const [isAdded, setIsAdded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const isWishlisted = isInWishlist(product.id);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product, 1);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1800);
-  };
+  }, [addToCart, product]);
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
+  const handleToggleWishlist = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (isWishlisted) {
@@ -35,19 +35,19 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
     } else {
       addToWishlist(product);
     }
-  };
+  }, [isWishlisted, removeFromWishlist, addToWishlist, product]);
 
-  const handleQuickViewClick = (e: React.MouseEvent) => {
+  const handleQuickViewClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (onQuickView) {
       onQuickView(product);
     }
-  };
+  }, [onQuickView, product]);
 
   return (
     <div 
-      className="group relative flex flex-col justify-between overflow-hidden border-0 border-black bg-white transition-all duration-300  "
+      className="group relative flex flex-col justify-between overflow-hidden border-0 border-black bg-white transition-all duration-300 max-w-sm sm:max-w-none mx-auto w-full"
     >
       {/* Top Discount / Status Badge */}
       <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
@@ -173,3 +173,5 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
     </div>
   );
 }
+
+export default memo(ProductCard);
