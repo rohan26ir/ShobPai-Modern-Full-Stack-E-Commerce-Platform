@@ -2,13 +2,12 @@
 
 import React from "react";
 import DashboardLayout from "../dashboard/layout";
-import ProductAddPage from "../dashboard/product-add/page";
+import ProductCreatePage from "../dashboard/products/create/page";
 
 export default function StandaloneProductAdd() {
   return (
     <DashboardLayout>
-      <ProductAddPage />
+      <ProductCreatePage />
     </DashboardLayout>
   );
 }
-

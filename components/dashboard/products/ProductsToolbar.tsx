@@ -51,7 +51,7 @@ export function ProductsToolbar({
 
         {/* + Add Product Button */}
         <Link
-          href="/product-add"
+          href="/dashboard/products/create"
           className="flex items-center gap-1.5 px-3.5 py-1.5 h-8 rounded-lg bg-[#ff6c2f] hover:bg-[#ea580c] text-white font-bold text-xs transition-colors cursor-pointer shadow-xs shadow-orange-500/20 shrink-0"
         >
           <Plus className="w-3.5 h-3.5" />

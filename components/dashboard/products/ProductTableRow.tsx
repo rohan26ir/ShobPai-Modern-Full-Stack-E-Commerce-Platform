@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { Eye, Pencil, Trash2, Star } from "lucide-react";
 import { TableProduct } from "./products.types";
 
@@ -130,14 +131,13 @@ export function ProductTableRow({
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
-          <button
-            type="button"
-            onClick={() => onEdit(p)}
+          <Link
+            href={`/dashboard/product/update?id=${p.id}`}
             title="Edit Product"
             className="h-8 w-8 rounded-lg bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/40 dark:hover:bg-orange-900/40 text-[#ff6c2f] flex items-center justify-center transition-colors cursor-pointer"
           >
             <Pencil className="w-3.5 h-3.5" />
-          </button>
+          </Link>
           <button
             type="button"
             onClick={() => onDelete(p)}

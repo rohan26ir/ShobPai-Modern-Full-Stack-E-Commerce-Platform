@@ -75,6 +75,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Determine if current route is an admin-only path
   const isAdminOnlyRoute = [
     "/dashboard/products",
+    "/dashboard/product",
+    "/dashboard/products/create",
     "/dashboard/product-add",
     "/product-add",
     "/dashboard/admin",
