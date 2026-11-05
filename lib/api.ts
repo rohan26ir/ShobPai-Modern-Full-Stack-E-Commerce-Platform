@@ -253,26 +253,38 @@ export const api = {
 
   // Products
   getProducts: async (params?: { category_slug?: string; search?: string; featured?: boolean; trending?: boolean }): Promise<Product[]> => {
-    const query = new URLSearchParams();
-    if (params?.category_slug) query.append("category_slug", params.category_slug);
-    if (params?.search) query.append("search", params.search);
-    if (params?.featured !== undefined) query.append("featured", String(params.featured));
-    if (params?.trending !== undefined) query.append("trending", String(params.trending));
+    try {
+      const query = new URLSearchParams();
+      if (params?.category_slug) query.append("category_slug", params.category_slug);
+      if (params?.search) query.append("search", params.search);
+      if (params?.featured !== undefined) query.append("featured", String(params.featured));
+      if (params?.trending !== undefined) query.append("trending", String(params.trending));
 
-    const res = await fetchWithAuth(`/products?${query.toString()}`, { method: "GET" });
-    const items = Array.isArray(res) ? res : (res?.data || []);
-    return items;
+      const res = await fetchWithAuth(`/products?${query.toString()}`, { method: "GET" });
+      const items = Array.isArray(res) ? res : (res?.data || []);
+      return items;
+    } catch {
+      return [];
+    }
   },
 
   getProduct: async (slugOrId: string): Promise<Product | null> => {
-    const product = await fetchWithAuth(`/products/${slugOrId}`, { method: "GET" });
-    return product || null;
+    try {
+      const product = await fetchWithAuth(`/products/${slugOrId}`, { method: "GET" });
+      return product || null;
+    } catch {
+      return null;
+    }
   },
 
   // Categories
   getCategories: async (): Promise<Category[]> => {
-    const data = await fetchWithAuth("/categories", { method: "GET" });
-    return Array.isArray(data) ? data : [];
+    try {
+      const data = await fetchWithAuth("/categories", { method: "GET" });
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   createCategory: async (categoryData: Partial<Category>, token?: string | null) => {

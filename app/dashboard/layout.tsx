@@ -1,73 +1,86 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { FaBars, FaShieldAlt, FaLock } from "react-icons/fa";
 import {
-  FaChartPie,
-  FaShoppingBag,
-  FaBox,
-  FaUserCircle,
-  FaStore,
-  FaBars,
-  FaTimes,
-  FaBell,
-  FaSearch,
-  FaSignOutAlt,
-  FaChevronRight,
-  FaEnvelope,
-  FaFolder,
-  FaUsers,
-  FaChartLine,
-  FaCog,
-  FaCreditCard,
-  FaStar,
-  FaHeart,
-  FaShieldAlt,
-  FaLock,
-  FaSpinner,
-  FaUserCheck,
-  FaTag,
-} from "react-icons/fa";
-import logoImg from "@/public/logo/logo_shobpai.webp";
+  Moon,
+  Sun,
+  Bell,
+  Settings,
+  PanelLeftClose,
+  PanelLeft,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import LoadingCredentials from "@/components/LoadingCredentials";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, role, isAdmin, loading, logout, setManualRole } = useAuth();
+  const { user, role, isAdmin, loading, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+  const [isPinned, setIsPinned] = useState(true); // By default show sidebar expanded
 
-  // Admin routes definition
-  const adminItems = [
-    { name: "Overview", href: "/dashboard", icon: FaChartPie },
-    { name: "Products", href: "/dashboard/admin", icon: FaShoppingBag },
-    { name: "Categories", href: "/dashboard/categories", icon: FaFolder },
-    { name: "Offers", href: "/dashboard/offers", icon: FaTag },
-    { name: "Customers", href: "/dashboard/customers", icon: FaUsers },
-    { name: "Analytics", href: "/dashboard/analytics", icon: FaChartLine },
-    { name: "Account Profile", href: "/dashboard/account", icon: FaUserCircle },
-  ];
+  // Sync dark mode class on initial mount & pin preference
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isDarkMode = document.documentElement.classList.contains("dark");
+      setIsDark(isDarkMode);
 
-  // Customer Portal routes definition
-  const userItems = [
-    { name: "My Orders", href: "/dashboard/orders", icon: FaBox },
-    { name: "My Wishlist", href: "/dashboard/wishlist", icon: FaHeart },
-    { name: "Shopping Cart", href: "/cart", icon: FaShoppingBag },
-    { name: "Saved Payments", href: "/dashboard/payments", icon: FaCreditCard },
-    { name: "My Reviews", href: "/dashboard/reviews", icon: FaStar },
-    { name: "Account Profile", href: "/dashboard/account", icon: FaUserCircle },
-  ];
+      const savedPin = localStorage.getItem("shobpai_sidebar_pinned");
+      if (savedPin !== null) {
+        setIsPinned(savedPin === "true");
+      } else {
+        // By default show sidebar expanded
+        setIsPinned(true);
+      }
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDark((prev) => {
+      const next = !prev;
+      if (typeof document !== "undefined") {
+        if (next) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleSetIsPinned = (pinned: boolean) => {
+    setIsPinned(pinned);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("shobpai_sidebar_pinned", String(pinned));
+    }
+  };
+
+  // Freeze body scrolling on mobile when sidebar drawer is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [sidebarOpen]);
 
   // Determine if current route is an admin-only path
   const isAdminOnlyRoute = [
+    "/dashboard/products",
+    "/dashboard/product-add",
+    "/product-add",
     "/dashboard/admin",
     "/dashboard/categories",
     "/dashboard/offers",
     "/dashboard/customers",
-    "/dashboard/analytics",
   ].some((route) => pathname.startsWith(route));
 
   // If loading authentication state
@@ -94,13 +107,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex gap-3">
             <Link
               href="/login"
-              className="flex-1 rounded-2xl bg-[#E5A842] py-3 text-xs font-black text-gray-950 shadow-md hover:bg-[#d49633] transition-colors"
+              className="flex-1 rounded-2xl bg-[#E5A842] py-3 text-xs font-black text-gray-950 shadow-md hover:bg-[#d49633] transition-colors text-center"
             >
               Sign In
             </Link>
             <Link
               href="/"
-              className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 py-3 text-xs font-bold text-gray-700 hover:bg-gray-100 transition-colors"
+              className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 py-3 text-xs font-bold text-gray-700 hover:bg-gray-100 transition-colors text-center"
             >
               Go to Store
             </Link>
@@ -114,293 +127,147 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const showAdminRestrictedWarning = !isAdmin && isAdminOnlyRoute;
 
   return (
-    <div className="min-h-screen bg-gray-50/80 flex flex-col md:flex-row">
-      {/* Sidebar Overlay for Mobile */}
+    <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950 transition-colors duration-200">
+      {/* Mobile Backdrop Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs md:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden transition-opacity"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar Panel */}
-      <aside
-        className={`fixed md:sticky top-0 z-50 h-screen w-64 bg-gray-900 text-white flex flex-col justify-between transition-transform duration-300 ease-in-out shrink-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-          }`}
+      {/* Floating Card Sidebar Component (with Mini Collapsed Rail, Hover Expansion & Tooltips) */}
+      <Sidebar
+        user={user}
+        isAdmin={isAdmin}
+        logout={logout}
+        mobileOpen={sidebarOpen}
+        setMobileOpen={setSidebarOpen}
+        isPinned={isPinned}
+        setIsPinned={handleSetIsPinned}
+      />
+
+      {/* Main Content Column with dynamic padding-left to smoothly pair with the Floating Sidebar */}
+      <div
+        className={`flex-1 min-w-0 flex flex-col min-h-screen transition-[padding] duration-300 ease-in-out ${
+          isPinned ? "md:pl-72" : "md:pl-28"
+        }`}
       >
-        <div className="flex flex-col h-full">
-          {/* Sidebar Top Logo */}
-          <div className="flex items-center justify-between p-5 border-b border-gray-800">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src={logoImg}
-                alt="ShobPai"
-                className="h-8 w-auto object-contain brightness-0 invert"
-              />
-              <span
-                className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${isAdmin
-                  ? "bg-[#E5A842] text-gray-950"
-                  : "bg-[#5FA800] text-white"
-                  }`}
-              >
-                {isAdmin ? "Admin" : "Customer"}
-              </span>
-            </Link>
-
+        {/* Sticky Top Header with Backdrop Blur */}
+        <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-slate-800 px-4 md:px-8 py-3 flex items-center justify-between shadow-2xs transition-colors duration-200">
+          {/* Mobile Sidebar Hamburger Toggle & Desktop Sidebar Toggle + Title */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Mobile Hamburger Button */}
             <button
-              onClick={() => setSidebarOpen(false)}
-              className="md:hidden text-gray-400 hover:text-white p-1 cursor-pointer"
-            >
-              <FaTimes className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Navigation Links */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-            {/* Admin Section (Shown for Admins) */}
-            {isAdmin && (
-              <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#E5A842] px-3 block mb-2">
-                  Admin Management
-                </span>
-                <ul className="space-y-1 text-xs font-bold">
-                  {adminItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
-                    return (
-                      <li key={item.name}>
-                        <Link
-                          href={item.href}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all min-h-[44px] ${isActive
-                            ? "bg-[#E5A842] text-gray-950 font-black shadow-md"
-                            : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                            }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon
-                              className={`h-4 w-4 ${isActive ? "text-gray-950" : "text-[#E5A842]"
-                                }`}
-                            />
-                            <span>{item.name}</span>
-                          </div>
-                          <FaChevronRight
-                            className={`h-2.5 w-2.5 opacity-60 ${isActive ? "text-gray-950" : "text-gray-500"
-                              }`}
-                          />
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-
-            {/* Customer Portal Section (Hidden for Admins) */}
-            {!isAdmin && (
-              <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#5FA800] px-3 block mb-2">
-                  Customer Portal
-                </span>
-                <ul className="space-y-1 text-xs font-bold">
-                  {userItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
-                    return (
-                      <li key={item.name}>
-                        <Link
-                          href={item.href}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all min-h-[44px] ${isActive
-                            ? "bg-[#5FA800] text-white font-black shadow-md"
-                            : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                            }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon
-                              className={`h-4 w-4 ${isActive ? "text-white" : "text-[#5FA800]"
-                                }`}
-                            />
-                            <span>{item.name}</span>
-                          </div>
-                          <FaChevronRight
-                            className={`h-2.5 w-2.5 opacity-60 ${isActive ? "text-white" : "text-gray-500"
-                              }`}
-                          />
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-
-            {/* Storefront Link */}
-            <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-500 px-3 block mb-2">
-                Online Store
-              </span>
-              <ul className="space-y-1 text-xs font-bold">
-                <li>
-                  <Link
-                    href="/"
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-all"
-                  >
-                    <FaStore className="h-4 w-4 text-[#5FA800]" />
-                    <span>Back to Store</span>
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* User Profile Pill at Sidebar Bottom */}
-          <div className="p-4 border-t border-gray-800 bg-gray-950/60 flex items-center justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <div
-                className={`h-9 w-9 rounded-full font-black text-xs flex items-center justify-center shrink-0 shadow-xs ${isAdmin
-                  ? "bg-[#E5A842] text-gray-950"
-                  : "bg-[#5FA800] text-white"
-                  }`}
-              >
-                {user?.displayName
-                  ? user.displayName.slice(0, 2).toUpperCase()
-                  : user?.email
-                    ? user.email.slice(0, 2).toUpperCase()
-                    : "US"}
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-bold text-white leading-tight truncate">
-                  {user?.displayName || (isAdmin ? "Admin User" : "Customer")}
-                </span>
-                <span className="text-[10px] font-medium text-gray-400 truncate">
-                  {user?.email || (user?.phoneNumber ? user.phoneNumber : "firebase-user")}
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={async () => {
-                await logout();
-                router.push("/login");
-              }}
-              className="text-gray-400 hover:text-red-400 p-2 transition-colors cursor-pointer shrink-0"
-              title="Sign Out"
-            >
-              <FaSignOutAlt className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Column */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Navbar / Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200/80 px-4 md:px-8 py-3.5 flex items-center justify-between shadow-2xs">
-          {/* Mobile Sidebar Toggle & Search Bar */}
-          <div className="flex items-center gap-4 flex-1 max-w-xl">
-            <button
+              type="button"
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer min-h-[44px] min-w-[44px]"
+              className="md:hidden flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 transition-colors cursor-pointer"
               aria-label="Open Sidebar"
             >
               <FaBars className="h-4 w-4" />
             </button>
 
-            {/* Search bar removed per user request */}
-          </div>
-
-          {/* Right Header Quick Actions */}
-          <div className="flex items-center gap-3">
-            {/* Status Pill */}
-            <div
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${isAdmin
-                ? "bg-amber-50 text-amber-900 border-amber-200"
-                : "bg-emerald-50 text-emerald-900 border-emerald-200"
-                }`}
-            >
-              <span
-                className={`h-2 w-2 rounded-full ${isAdmin ? "bg-[#E5A842]" : "bg-[#5FA800]"
-                  }`}
-              />
-              <span>{isAdmin ? "Admin Console" : "Customer Portal"}</span>
-            </div>
-
-            {/* Notification Bell */}
+            {/* Desktop Sidebar Toggle Button */}
             <button
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-600 hover:bg-amber-50 hover:text-[#E5A842] hover:border-[#E5A842]/40 transition-colors cursor-pointer"
-              title="Notifications"
+              type="button"
+              onClick={() => handleSetIsPinned(!isPinned)}
+              title={isPinned ? "Collapse sidebar" : "Expand sidebar"}
+              className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label={isPinned ? "Collapse sidebar" : "Expand sidebar"}
             >
-              <FaBell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-2xs">
-                3
-              </span>
+              {isPinned ? (
+                <PanelLeftClose className="w-4 h-4 text-[#ff6c2f]" />
+              ) : (
+                <PanelLeft className="w-4 h-4" />
+              )}
             </button>
 
-            {/* Divider */}
-            <div className="h-6 w-px bg-gray-200 mx-1 hidden sm:block" />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden sm:inline">
+              WELCOME!
+            </span>
+          </div>
 
-            {/* Avatar & User Profile */}
-            <div className="flex items-center gap-2.5">
-              <div
-                className={`relative h-9 w-9 rounded-full font-black text-xs flex items-center justify-center shadow-xs overflow-hidden shrink-0 ${isAdmin
-                  ? "bg-gradient-to-tr from-[#E5A842] to-amber-300 text-gray-950"
-                  : "bg-gradient-to-tr from-[#5FA800] to-emerald-300 text-white"
-                  }`}
+          {/* Right Header Quick Action Cluster */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            {/* Dark Mode Toggle */}
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              title="Toggle Dark Mode"
+              className="h-8 w-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            {/* Notification Bell with Badge */}
+            <div className="relative">
+              <button
+                type="button"
+                title="Notifications"
+                className="h-8 w-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
+                <Bell className="w-4 h-4" />
+              </button>
+              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center shadow-xs">
+                3
+              </span>
+            </div>
+
+            {/* Settings */}
+            <Link
+              href="/dashboard/account"
+              title="Dashboard Settings"
+              className="h-8 w-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <Settings className="w-4 h-4" />
+            </Link>
+
+            {/* User Profile Avatar with Initial & Green Dot */}
+            <div className="relative">
+              <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden">
                 {user?.photoURL ? (
-                  <Image
+                  <img
                     src={user.photoURL}
                     alt={user.displayName || "User"}
-                    fill
-                    className="rounded-full object-cover"
+                    className="h-full w-full object-cover"
                   />
-                ) : user?.displayName ? (
-                  user.displayName.slice(0, 2).toUpperCase()
-                ) : user?.email ? (
-                  user.email.slice(0, 2).toUpperCase()
                 ) : (
-                  "US"
+                  <span>
+                    {user?.displayName?.[0]?.toUpperCase() ||
+                      user?.email?.[0]?.toUpperCase() ||
+                      "A"}
+                  </span>
                 )}
               </div>
-              <div className="hidden lg:flex flex-col">
-                <span className="text-xs font-extrabold text-gray-900 leading-tight">
-                  {user?.displayName || (isAdmin ? "Admin User" : "Customer")}
-                </span>
-                <span
-                  className={`text-[10px] font-bold ${isAdmin ? "text-[#E5A842]" : "text-[#5FA800]"
-                    }`}
-                >
-                  {isAdmin ? "System Administrator" : "Verified Customer"}
-                </span>
-              </div>
+              <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white dark:ring-slate-900" />
             </div>
           </div>
         </header>
 
-        {/* Page Content Body or Access Denied Screen */}
-        <main className="flex-1 p-3 sm:p-4 md:p-8 min-w-0 max-w-full overflow-x-hidden">
+        {/* Page Content Body */}
+        <main className="flex-1 p-3 sm:p-4 md:p-8 min-w-0 max-w-full">
           {showAdminRestrictedWarning ? (
-            <div className="max-w-xl mx-auto my-12 p-8 bg-white rounded-3xl border border-red-100 shadow-xl text-center space-y-4">
-              <div className="h-16 w-16 rounded-2xl bg-red-50 text-red-500 border border-red-200 flex items-center justify-center mx-auto">
+            <div className="max-w-xl mx-auto my-12 p-8 bg-white dark:bg-slate-900 rounded-3xl border border-red-100 dark:border-red-950/40 shadow-xl text-center space-y-4">
+              <div className="h-16 w-16 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-500 border border-red-200 dark:border-red-800/40 flex items-center justify-center mx-auto">
                 <FaShieldAlt className="h-8 w-8" />
               </div>
-              <h2 className="text-2xl font-black text-gray-900">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">
                 Administrator Access Required
               </h2>
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                 The section you are attempting to view (<strong>{pathname}</strong>) requires administrative clearance. You are currently signed in with standard Customer privileges.
               </p>
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
                   href="/dashboard"
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#E5A842] text-gray-950 font-black text-xs hover:bg-[#d49633] transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#ff6c2f] hover:bg-[#ea580c] text-white font-bold text-xs transition-colors cursor-pointer text-center shadow-xs"
                 >
                   Return to Dashboard
                 </Link>
                 <Link
                   href="/dashboard/orders"
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-bold text-xs hover:bg-gray-200 transition-colors"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 font-bold text-xs hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors text-center"
                 >
                   Go to My Orders
                 </Link>

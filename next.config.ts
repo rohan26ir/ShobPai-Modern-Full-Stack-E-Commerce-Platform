@@ -39,6 +39,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "firebasestorage.googleapis.com",
       },
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com",
+      },
     ],
   },
   async redirects() {
@@ -46,6 +50,11 @@ const nextConfig: NextConfig = {
       {
         source: "/orders",
         destination: "/dashboard/orders",
+        permanent: false,
+      },
+      {
+        source: "/inventory",
+        destination: "/dashboard/inventory",
         permanent: false,
       },
     ];

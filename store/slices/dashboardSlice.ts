@@ -22,7 +22,12 @@ export interface DashboardCustomer {
   phone: string;
   role: "USER" | "ADMIN";
   ordersCount: number;
+  reviewsCount: number;
+  totalSpent: number;
   createdAt: string;
+  photoURL?: string;
+  avatar?: string;
+  image?: string;
 }
 
 export interface DashboardState {
@@ -179,8 +184,11 @@ export const fetchDashboardCustomers = createAsyncThunk(
           email: u.email || "No email",
           phone: u.phoneNumber || "N/A",
           role: u.role || "USER",
-          ordersCount: u._count?.orders || 0,
+          ordersCount: u._count?.orders ?? u.ordersCount ?? 0,
+          reviewsCount: u._count?.reviews ?? u.reviewsCount ?? 0,
+          totalSpent: u.totalSpent ?? (u.orders?.reduce?.((sum: number, o: any) => sum + (o.totalAmount || 0), 0) ?? 0),
           createdAt: u.createdAt,
+          photoURL: u.photoURL,
         }));
         return mapped;
       }

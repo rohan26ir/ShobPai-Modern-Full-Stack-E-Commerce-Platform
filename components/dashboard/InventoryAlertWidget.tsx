@@ -92,14 +92,14 @@ export const InventoryAlertWidget = React.memo(function InventoryAlertWidget({
         {isAdmin ? (
           <>
             <Link
-              href="/dashboard/admin"
-              className="font-bold text-[#E5A842] hover:text-[#d49633] transition-colors flex items-center gap-1.5"
+              href="/dashboard/products"
+              className="font-bold text-[#ff6c2f] hover:text-[#ea580c] transition-colors flex items-center gap-1.5"
             >
               <FaPlus className="h-3 w-3" /> Add / Restock Products
             </Link>
             <Link
-              href="/dashboard/admin"
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              href="/dashboard/products"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
             >
               Catalog Manager →
             </Link>

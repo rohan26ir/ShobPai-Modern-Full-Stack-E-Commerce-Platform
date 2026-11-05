@@ -1,0 +1,55 @@
+import { CouponData } from "./offers.types";
+
+export const DEFAULT_COUPONS: CouponData[] = [
+  {
+    id: "c1",
+    code: "FRESH2026",
+    discountPercentage: 20,
+    minSpend: 25,
+    description: "20% off on all organic vegetables and farm produce.",
+    isActive: true,
+    expiresAt: null,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+  },
+  {
+    id: "c2",
+    code: "ORGANIC15",
+    discountPercentage: 15,
+    minSpend: 40,
+    description: "Get 15% off your entire basket on fresh fruits and dairy products.",
+    isActive: true,
+    expiresAt: null,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(),
+  },
+  {
+    id: "c3",
+    code: "WELCOME10",
+    discountPercentage: 10,
+    minSpend: 15,
+    description: "First-time shopper welcome offer with no minimum items constraint.",
+    isActive: true,
+    expiresAt: null,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20).toISOString(),
+  },
+  {
+    id: "c4",
+    code: "MEGA25",
+    discountPercentage: 25,
+    minSpend: 80,
+    description: "Save big with 25% off when you stock up with orders over $80.",
+    isActive: true,
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString(),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+  },
+  {
+    id: "c5",
+    code: "SUPER50",
+    discountPercentage: 50,
+    minSpend: 120,
+    description: "Half price flash voucher on premium seasonal selections.",
+    isActive: false,
+    expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 35).toISOString(),
+  },
+];
+

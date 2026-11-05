@@ -4,6 +4,7 @@ export interface Product {
   slug: string;
   price: number;
   originalPrice?: number;
+  buyingPrice?: number; // Cost / buying price to measure profit margins
   discount?: number;
   images: string[];
   category: string;
