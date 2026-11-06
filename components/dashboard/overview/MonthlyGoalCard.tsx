@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
+import Link from "next/link";
+import { Sliders } from "lucide-react";
 
 interface MonthlyGoalCardProps {
   target?: number;
@@ -35,9 +37,18 @@ export function MonthlyGoalCard({
     <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col justify-between h-full min-h-[490px] sm:min-h-[520px]">
       {/* 1. Header: Title (Left) & Target amount (Right) */}
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-bold text-slate-800 dark:text-white">
-          Monthly Goal
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-bold text-slate-800 dark:text-white">
+            Monthly Goal
+          </h2>
+          <Link
+            href="/dashboard/setup"
+            className="p-1 rounded-md text-slate-400 hover:text-[#ff6c2f] hover:bg-orange-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Setup Monthly Goal"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+          </Link>
+        </div>
         <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-normal">
           ${target.toLocaleString()} target
         </span>

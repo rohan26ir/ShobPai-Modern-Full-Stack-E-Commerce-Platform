@@ -46,17 +46,32 @@ export function ProductsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50 dark:divide-slate-800/40">
-          {products.map((p) => (
-            <ProductTableRow
-              key={p.id}
-              product={p}
-              isSelected={selectedIds.includes(p.id)}
-              onToggleSelect={onToggleSelect}
-              onView={onView}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
+          {products.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="py-12 text-center text-slate-400">
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                    No products found
+                  </p>
+                  <p className="text-xs text-slate-400 max-w-sm">
+                    No products matched your search or filters. Click &quot;Add Product&quot; to create a new item.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          ) : (
+            products.map((p) => (
+              <ProductTableRow
+                key={p.id}
+                product={p}
+                isSelected={selectedIds.includes(p.id)}
+                onToggleSelect={onToggleSelect}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))
+          )}
         </tbody>
       </table>
     </div>

@@ -95,10 +95,10 @@ export function ProductTableRow({
       {/* Stock & Sold */}
       <td className="py-3 px-3">
         <p className="font-medium text-slate-700 dark:text-slate-300">
-          {p.stock > 0 ? `${p.stock} Item Left` : "Out of Stock"}
+          {typeof p.stock === "number" && p.stock > 0 ? `${p.stock} Item Left` : "Out of Stock"}
         </p>
         <p className="text-[11px] text-slate-400 font-normal">
-          {p.sold || Math.round(p.stock * 0.4)} Sold
+          {typeof p.sold === "number" ? p.sold : 0} Sold
         </p>
       </td>
 
@@ -112,10 +112,10 @@ export function ProductTableRow({
         <div className="flex items-center gap-1.5">
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold text-slate-700 dark:text-slate-200">
             <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-            <span>{(p.rating || 4.5).toFixed(1)}</span>
+            <span>{(typeof p.rating === "number" ? p.rating : 5.0).toFixed(1)}</span>
           </span>
           <span className="text-[11px] text-slate-400 font-normal">
-            {p.reviewsCount || 45} Review
+            {typeof p.reviewsCount === "number" ? p.reviewsCount : 0} Review
           </span>
         </div>
       </td>

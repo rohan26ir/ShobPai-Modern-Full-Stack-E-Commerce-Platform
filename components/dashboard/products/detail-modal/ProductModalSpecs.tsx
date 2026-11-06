@@ -45,13 +45,15 @@ export function ProductModalSpecs({
           <div className="flex items-center gap-1 text-amber-400">
             <Star className="w-3.5 h-3.5 fill-current" />
             <span className="font-bold text-slate-800 dark:text-slate-200">
-              {(product.rating || 4.5).toFixed(1)}
+              {(typeof product.rating === "number" ? product.rating : 5.0).toFixed(1)}
             </span>
           </div>
-          <span className="text-slate-400">• {product.reviewsCount || 45} reviews</span>
+          <span className="text-slate-400">
+            • {typeof product.reviewsCount === "number" ? product.reviewsCount : 0} reviews
+          </span>
           <span className="text-slate-400">•</span>
           <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-            {product.sold || 120} Sold
+            {typeof product.sold === "number" ? product.sold : 0} Sold
           </span>
         </div>
 
@@ -114,7 +116,7 @@ export function ProductModalSpecs({
               <span>Storage</span>
             </div>
             <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-              {product.storage || "Cool Dry Place"}
+              {product.storage || "Standard"}
             </p>
           </div>
 
@@ -124,7 +126,7 @@ export function ProductModalSpecs({
               <span>Shelf Life</span>
             </div>
             <p className="font-semibold text-slate-800 dark:text-slate-200">
-              {product.shelfLife || "5 - 7 Days"}
+              {product.shelfLife || "Standard"}
             </p>
           </div>
 
@@ -134,7 +136,7 @@ export function ProductModalSpecs({
               <span>Certifications</span>
             </div>
             <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-              {product.certifications || "100% Organic"}
+              {product.certifications || "Standard"}
             </p>
           </div>
         </div>

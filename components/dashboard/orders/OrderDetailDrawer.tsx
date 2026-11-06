@@ -22,6 +22,7 @@ export function OrderDetailDrawer({
 }: OrderDetailDrawerProps) {
   if (!order) return null;
 
+  const isGuest = !order.userId && !order.user;
   const customerName = order.user?.displayName || order.guestName || "Customer";
   const customerEmail = order.user?.email || order.guestEmail || "customer@example.com";
   const avatarUrl = getCustomerAvatar(order);
@@ -100,7 +101,14 @@ export function OrderDetailDrawer({
 
           {/* CUSTOMER */}
           <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">CUSTOMER</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">CUSTOMER</span>
+              {isGuest && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50">
+                  Guest User
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-1 ring-slate-100 dark:ring-slate-800 bg-slate-100 dark:bg-slate-800">
                 <img src={avatarUrl} alt={customerName} className="w-full h-full object-cover rounded-full" />
@@ -108,12 +116,15 @@ export function OrderDetailDrawer({
               <div className="min-w-0">
                 <span className="font-bold text-slate-900 dark:text-white block truncate">{customerName}</span>
                 <span className="text-slate-400 block truncate">{customerEmail}</span>
+                {order.guestPhone && (
+                  <span className="text-[11px] text-slate-500 block truncate">{order.guestPhone}</span>
+                )}
               </div>
             </div>
             <div className="pt-1.5">
               <span className="text-[11px] text-slate-400 block">Shipping address</span>
               <span className="text-slate-700 dark:text-slate-300 font-medium block mt-0.5">
-                {order.shippingAddress?.addressLine || (typeof order.shippingAddress === "string" ? order.shippingAddress : "12 Maple Avenue, New York, US")}
+                {order.shippingAddress?.addressLine || (typeof order.shippingAddress === "string" ? order.shippingAddress : (order.shippingAddress as any)?.address ? `${(order.shippingAddress as any).address}, ${(order.shippingAddress as any).city}` : "12 Maple Avenue, New York, US")}
               </span>
             </div>
           </div>

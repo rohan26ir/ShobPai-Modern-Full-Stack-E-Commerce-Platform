@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   ShoppingBag,
@@ -18,10 +18,13 @@ import {
   Truck,
   RotateCw,
   AlertCircle,
+  Star,
 } from "lucide-react";
 import { useCustomerData, CustomerOrder } from "@/hooks/useCustomerData";
 import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
+import { ReviewProductModal } from "./ReviewProductModal";
+import { api } from "@/lib/api";
 
 interface CustomerOrdersViewProps {
   user: any;
@@ -36,6 +39,31 @@ export function CustomerOrdersView({ user, token }: CustomerOrdersViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
+  const [reviewingItem, setReviewingItem] = useState<{
+    productId: string;
+    productName: string;
+    productImage?: string;
+    price?: number;
+    orderNumber?: string;
+  } | null>(null);
+  const [reviewedProductIds, setReviewedProductIds] = useState<Set<string>>(new Set());
+
+  // Pre-load user's submitted reviews so reviewed items display the "Reviewed" badge
+  useEffect(() => {
+    if (!token) return;
+    api.getMyReviews(token)
+      .then((res: any) => {
+        if (Array.isArray(res)) {
+          const ids = new Set<string>();
+          for (const r of res) {
+            if (r.productId) ids.add(r.productId);
+            if (r.product?.id) ids.add(r.product.id);
+          }
+          setReviewedProductIds(ids);
+        }
+      })
+      .catch(() => {});
+  }, [token]);
 
   // Filtered orders list strictly belonging to this authenticated user
   const filteredOrders = useMemo(() => {
@@ -448,7 +476,7 @@ export function CustomerOrdersView({ user, token }: CustomerOrdersViewProps) {
 
                 {/* Items Preview List */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {(order.items || []).slice(0, 2).map((item, idx) => {
+                  {(order.items || []).map((item, idx) => {
                     const title = item.product?.name || item.productName || item.name || "Item";
                     const img =
                       item.product?.images?.[0] ||
@@ -456,31 +484,59 @@ export function CustomerOrdersView({ user, token }: CustomerOrdersViewProps) {
                       "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=120&q=80";
                     const price = item.price || item.unitPrice || 50;
                     const qty = item.quantity || 1;
+                    const prodId = (item as any).productId || item.product?.id || item.id || "";
+                    const isReviewed = prodId ? reviewedProductIds.has(prodId) : false;
 
                     return (
                       <div
                         key={idx}
-                        className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex items-center gap-3"
+                        className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between gap-3"
                       >
-                        <div className="w-12 h-12 rounded-lg bg-white dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
-                          <img src={img} alt={title} className="w-full h-full object-cover" />
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-12 h-12 rounded-lg bg-white dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
+                            <img src={img} alt={title} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                              {title}
+                            </h4>
+                            <span className="text-[11px] text-slate-400 block mt-0.5">
+                              Qty: {qty} • ${price.toFixed(2)} each
+                            </span>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
-                            {title}
-                          </h4>
-                          <span className="text-[11px] text-slate-400 block mt-0.5">
-                            Qty: {qty} • ${price.toFixed(2)} each
-                          </span>
-                        </div>
+
+                        {/* Review Product Button (Available after Complete Delivery) */}
+                        {upperStatus === "DELIVERED" && prodId && (
+                          <div className="shrink-0 pl-1">
+                            {isReviewed ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>Reviewed</span>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setReviewingItem({
+                                    productId: prodId,
+                                    productName: title,
+                                    productImage: img,
+                                    price: price,
+                                    orderNumber: order.orderNumber || order.id.slice(0, 8),
+                                  })
+                                }
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-bold border border-amber-200 dark:border-amber-800/70 transition-all cursor-pointer shadow-2xs hover:scale-102"
+                              >
+                                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                                <span>Review Product</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
-                  {(order.items?.length || 0) > 2 && (
-                    <div className="p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs text-slate-400">
-                      +{(order.items?.length || 0) - 2} more items in this order
-                    </div>
-                  )}
                 </div>
 
                 {/* Order Footer: Total and Delivery Note */}
@@ -614,24 +670,64 @@ export function CustomerOrdersView({ user, token }: CustomerOrdersViewProps) {
                   Ordered Items ({selectedOrder.items?.length || 1})
                 </span>
                 <div className="space-y-2">
-                  {(selectedOrder.items || []).map((it, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60"
-                    >
-                      <div className="min-w-0 pr-3">
-                        <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">
-                          {it.product?.name || it.productName || it.name || "Product Item"}
-                        </span>
-                        <span className="text-[11px] text-slate-400">
-                          Qty: {it.quantity || 1}
-                        </span>
+                  {(selectedOrder.items || []).map((it, idx) => {
+                    const prodId = (it as any).productId || it.product?.id || it.id || "";
+                    const isReviewed = prodId ? reviewedProductIds.has(prodId) : false;
+                    const isDelivered = (selectedOrder.status || "").toUpperCase() === "DELIVERED";
+                    const title = it.product?.name || it.productName || it.name || "Product Item";
+                    const img = it.product?.images?.[0] || it.productImage;
+                    const price = it.price || it.unitPrice || 50;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 gap-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">
+                            {title}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            Qty: {it.quantity || 1} • ${price.toFixed(2)} each
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="font-extrabold text-slate-900 dark:text-white">
+                            ${(price * (it.quantity || 1)).toFixed(2)}
+                          </span>
+
+                          {isDelivered && prodId && (
+                            <div>
+                              {isReviewed ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800">
+                                  <CheckCircle2 className="w-2.5 h-2.5" />
+                                  <span>Reviewed</span>
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setReviewingItem({
+                                      productId: prodId,
+                                      productName: title,
+                                      productImage: img,
+                                      price: price,
+                                      orderNumber: selectedOrder.orderNumber || selectedOrder.id.slice(0, 8),
+                                    })
+                                  }
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-[11px] font-bold border border-amber-200 dark:border-amber-800 transition-all cursor-pointer"
+                                >
+                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                  <span>Review</span>
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <span className="font-extrabold text-slate-900 dark:text-white">
-                        ${((it.price || it.unitPrice || 50) * (it.quantity || 1)).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -680,6 +776,21 @@ export function CustomerOrdersView({ user, token }: CustomerOrdersViewProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 5. Review Delivered Product Modal */}
+      {reviewingItem && (
+        <ReviewProductModal
+          isOpen={!!reviewingItem}
+          onClose={() => setReviewingItem(null)}
+          token={token}
+          user={user}
+          orderNumber={reviewingItem.orderNumber}
+          item={reviewingItem}
+          onSuccess={(prodId) => {
+            setReviewedProductIds((prev) => new Set(prev).add(prodId));
+          }}
+        />
       )}
     </div>
   );

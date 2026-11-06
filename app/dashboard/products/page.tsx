@@ -3,6 +3,7 @@
 import React from "react";
 import { useProductsManagement } from "@/components/dashboard/products/useProductsManagement";
 import { ProductsHeader } from "@/components/dashboard/products/ProductsHeader";
+import { ProductsStatsCards } from "@/components/dashboard/products/ProductsStatsCards";
 import { ProductsToolbar } from "@/components/dashboard/products/ProductsToolbar";
 import { ProductsTable } from "@/components/dashboard/products/ProductsTable";
 import { ProductsPagination } from "@/components/dashboard/products/ProductsPagination";
@@ -22,6 +23,8 @@ export default function ProductsPage() {
     setCurrentPage,
     totalPages,
     paginatedProducts,
+    currentStats,
+    statsLoading,
     handleSelectAll,
     handleToggleSelect,
     handleDeleteProduct,
@@ -36,6 +39,14 @@ export default function ProductsPage() {
   return (
     <div className="space-y-5">
       <ProductsHeader />
+
+      {/* Real Performance Metrics Cards filtered by Timeframe */}
+      <ProductsStatsCards
+        stats={currentStats}
+        selectedTimeFilter={selectedTimeFilter}
+        onTimeFilterChange={setSelectedTimeFilter}
+        loading={statsLoading}
+      />
 
       <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-4 sm:p-6 shadow-xs">
         <ProductsToolbar

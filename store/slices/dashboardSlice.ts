@@ -12,6 +12,15 @@ export interface AdminOverviewData {
   pendingOrders: number;
   deliveredOrders: number;
   recentOrders: any[];
+  monthlyGoal?: {
+    target: number;
+    currentRevenue: number;
+    percentage: number;
+    currentOrders?: number;
+    targetOrders?: number;
+    month?: string;
+    status?: string;
+  };
 }
 
 export interface DashboardCustomer {
@@ -411,8 +420,40 @@ export const selectOrdersStats = createSelector(
     const shipped = items.filter((o) => o.status === "SHIPPED").length;
     const delivered = items.filter((o) => o.status === "DELIVERED").length;
     const cancelled = items.filter((o) => o.status === "CANCELLED").length;
+    const notComplete = items.filter(
+      (o) => o.status !== "DELIVERED" && o.status !== "CANCELLED"
+    ).length;
 
-    return { total, pending, processing, shipped, delivered, cancelled };
+    let calculatedProfit = 0;
+    for (const order of items) {
+      if (order.status === "CANCELLED") continue;
+      if (Array.isArray(order.items) && order.items.length > 0) {
+        for (const item of order.items) {
+          const qty = Number(item.quantity) || 1;
+          const price = Number(item.price || (item as any).unitPrice || 0);
+          const buyingPrice = Number((item as any).buyingPrice || (item as any).product?.buyingPrice);
+          if (buyingPrice && buyingPrice > 0) {
+            calculatedProfit += (price - buyingPrice) * qty;
+          } else {
+            calculatedProfit += price * qty * 0.28;
+          }
+        }
+      } else if (order.totalAmount) {
+        calculatedProfit += Number(order.totalAmount) * 0.28;
+      }
+    }
+
+    return {
+      total,
+      pending,
+      processing,
+      shipped,
+      delivered,
+      complete: delivered,
+      notComplete,
+      cancelled,
+      profit: Math.round(calculatedProfit * 100) / 100,
+    };
   }
 );
 

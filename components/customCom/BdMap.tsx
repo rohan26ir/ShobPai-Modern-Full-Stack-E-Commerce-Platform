@@ -20,7 +20,7 @@ export function BdMap({
   selectedDistrict,
   className = "",
   customData,
-  showTooltip = true,
+  showTooltip = false,
 }: BdMapProps) {
   const [hovered, setHovered] = useState<DistrictInfo | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -42,11 +42,15 @@ export function BdMap({
   const handleMouseEnter = (d: DistrictInfo, e: React.MouseEvent) => {
     setHovered(d);
     onHoverDistrict?.(d);
-    updateMouse(e);
+    if (showTooltip) {
+      updateMouse(e);
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    updateMouse(e);
+    if (showTooltip) {
+      updateMouse(e);
+    }
   };
 
   const updateMouse = (e: React.MouseEvent) => {
@@ -81,13 +85,13 @@ export function BdMap({
   return (
     <div
       ref={containerRef}
-      onMouseMove={handleMouseMove}
+      onMouseMove={showTooltip ? handleMouseMove : undefined}
       className={`relative w-full h-full flex items-center justify-center select-none overflow-hidden ${className}`}
     >
       <svg
         viewBox="-40 -20 1620 2260"
         preserveAspectRatio="xMidYMid meet"
-        className="w-full h-full max-h-full max-w-full drop-shadow-2xs select-none overflow-hidden"
+        className="w-full h-full max-h-full max-w-full select-none overflow-hidden"
       >
         <g transform="translate(10, 0)">
           {districts.map((d) => {
@@ -100,13 +104,15 @@ export function BdMap({
                 d={d.d}
                 fill={getDistrictFill(d)}
                 stroke={isHovered || isSelected ? "#ea580c" : "#ffffff"}
-                strokeWidth={isHovered || isSelected ? 3.5 : 1.2}
+                strokeWidth={1.5}
                 strokeLinejoin="round"
                 strokeLinecap="round"
-                className={`transition-all duration-150 cursor-pointer ${
-                  isHovered ? "brightness-105" : ""
-                } ${
-                  d.sessions <= 1000 ? "dark:fill-slate-800 dark:stroke-slate-900" : ""
+                className={`transition-colors duration-150 cursor-pointer ${
+                  isHovered || isSelected
+                    ? "!fill-[#ff6c2f] !stroke-[#ea580c] dark:!fill-[#ff6c2f] dark:!stroke-[#ea580c]"
+                    : d.sessions <= 1000
+                    ? "dark:fill-slate-800 dark:stroke-slate-900"
+                    : "dark:stroke-slate-800"
                 }`}
                 onMouseEnter={(e) => handleMouseEnter(d, e)}
                 onMouseLeave={handleMouseLeave}
@@ -117,12 +123,12 @@ export function BdMap({
         </g>
       </svg>
 
-      {/* Dynamic Floating Tooltip */}
+      {/* Dynamic Floating Tooltip (Only rendered if showTooltip is true) */}
       {showTooltip && hovered && (
         <div
           className={`absolute z-30 pointer-events-none -translate-x-1/2 ${
             mousePos.y < 75 ? "" : "-translate-y-full"
-          } bg-slate-900/95 dark:bg-slate-900/95 text-white rounded-xl px-3 py-2 text-xs shadow-xl backdrop-blur-md border border-slate-700/80 min-w-[145px] animate-in fade-in duration-100`}
+          } bg-slate-900/95 dark:bg-slate-900/95 text-white rounded-xl px-3 py-2 text-xs shadow-xl backdrop-blur-md border border-slate-700/80 min-w-[145px]`}
           style={{
             left: `${Math.min(Math.max(mousePos.x, 75), (containerRef.current?.clientWidth || 260) - 75)}px`,
             top: mousePos.y < 75 ? `${mousePos.y + 15}px` : `${mousePos.y - 8}px`,

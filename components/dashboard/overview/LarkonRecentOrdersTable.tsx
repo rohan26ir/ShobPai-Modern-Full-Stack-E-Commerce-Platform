@@ -103,6 +103,7 @@ export function LarkonRecentOrdersTable({
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
             {paginatedOrders.map((order) => {
               const isSelected = selectedIds.includes(order.id);
+              const isGuest = !order.userId && !order.user;
               const customerName =
                 order.user?.displayName || order.guestName || "Customer";
               const customerEmail =
@@ -180,9 +181,16 @@ export function LarkonRecentOrdersTable({
                         />
                       </div>
                       <div className="min-w-0">
-                        <span className="font-semibold text-slate-900 dark:text-white block truncate max-w-[160px]">
-                          {customerName}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-semibold text-slate-900 dark:text-white block truncate max-w-[130px]">
+                            {customerName}
+                          </span>
+                          {isGuest && (
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded-md text-[9px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50">
+                              Guest
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[11px] text-slate-400 block truncate max-w-[160px]">
                           {customerEmail}
                         </span>

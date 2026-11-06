@@ -62,6 +62,15 @@ export interface DashboardOverviewResponse {
   pendingOrders: number;
   deliveredOrders: number;
   recentOrders: OrderRecord[];
+  monthlyGoal?: {
+    target: number;
+    currentRevenue: number;
+    percentage: number;
+    currentOrders?: number;
+    targetOrders?: number;
+    month?: string;
+    status?: string;
+  };
 }
 
 export interface InventoryStat {

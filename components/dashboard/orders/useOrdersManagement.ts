@@ -101,6 +101,54 @@ export function useOrdersManagement() {
     cancelled: ordersPool.filter((o) => o.status === "CANCELLED").length,
   }), [ordersPool]);
 
+  // Derived KPI stats (Total, Complete, Pending, Profit)
+  const ordersStats = useMemo(() => {
+    const total = ordersPool.length;
+    const pending = ordersPool.filter((o) => o.status === "PENDING").length;
+    const processing = ordersPool.filter((o) => o.status === "PROCESSING").length;
+    const shipped = ordersPool.filter((o) => o.status === "SHIPPED").length;
+    const delivered = ordersPool.filter((o) => o.status === "DELIVERED").length;
+    const complete = delivered;
+    const cancelled = ordersPool.filter((o) => o.status === "CANCELLED").length;
+    const notComplete = ordersPool.filter(
+      (o) => o.status !== "DELIVERED" && o.status !== "CANCELLED"
+    ).length;
+
+    let calculatedProfit = 0;
+    for (const order of ordersPool) {
+      if (order.status === "CANCELLED") continue;
+      if (Array.isArray(order.items) && order.items.length > 0) {
+        for (const item of order.items) {
+          const qty = Number(item.quantity) || 1;
+          const price = Number(item.price || (item as any).unitPrice || 0);
+          const buyingPrice = Number(
+            (item as any).buyingPrice || (item as any).product?.buyingPrice
+          );
+          if (buyingPrice && buyingPrice > 0) {
+            calculatedProfit += (price - buyingPrice) * qty;
+          } else {
+            // Standard 28% gross margin estimate
+            calculatedProfit += price * qty * 0.28;
+          }
+        }
+      } else if (order.totalAmount) {
+        calculatedProfit += Number(order.totalAmount) * 0.28;
+      }
+    }
+
+    return {
+      total,
+      pending,
+      processing,
+      shipped,
+      delivered,
+      complete,
+      notComplete,
+      cancelled,
+      profit: Math.round(calculatedProfit * 100) / 100,
+    };
+  }, [ordersPool]);
+
   // Bulk selection
   const handleSelectAll = (checked: boolean) => {
     setSelectedIds(checked ? filteredOrders.map((o) => o.id) : []);
@@ -124,7 +172,7 @@ export function useOrdersManagement() {
     token,
     loading,
     updatingId,
-    stats,
+    stats: ordersStats,
     statusFilter,
     setStatusFilter: (status: StatusFilterType) => dispatch(setOrdersStatusFilter(status)),
     search,

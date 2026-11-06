@@ -3,21 +3,12 @@ import { Product } from "@/data/products";
 import { Category } from "@/data/categories";
 import { Coupon } from "@/data/coupons";
 
-export const DEPLOYED_API_URL = "https://shobpai-api.vercel.app/api";
-export const LOCAL_API_URL = "http://localhost:5000/api";
-
-// Determine preferred initial API URL from env or environment
+// Primary API URL driven exclusively by NEXT_PUBLIC_API_URL
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  (process.env.NODE_ENV === "production"
-    ? DEPLOYED_API_URL
-    : LOCAL_API_URL);
-
-// Dynamic active API URL that auto-switches to working server (deploy <-> local)
-let activeApiUrl = API_URL;
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export function getActiveApiUrl() {
-  return activeApiUrl;
+  return API_URL;
 }
 
 export const apiClient = axios.create({
@@ -112,61 +103,31 @@ export async function fetchWithAuth(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // Ordered candidate URLs: try current active first, then fallback to alternate
-  const candidateUrls = [
-    activeApiUrl,
-    activeApiUrl.includes("localhost") ? DEPLOYED_API_URL : LOCAL_API_URL,
-  ];
-
   const executeRequest = async () => {
-    let lastError: any = null;
+    try {
+      const res = await axios.request({
+        url: `${API_URL}${endpoint}`,
+        method,
+        data,
+        headers,
+        timeout: timeoutMs,
+      });
 
-    for (const candidateBase of candidateUrls) {
-      try {
-        const res = await axios.request({
-          url: `${candidateBase}${endpoint}`,
-          method,
-          data,
-          headers,
-          timeout: timeoutMs,
-        });
-
-        // Switch active URL if alternate candidate succeeded
-        if (candidateBase !== activeApiUrl) {
-          console.warn(`[API Failover] Switched active backend to: ${candidateBase}`);
-          activeApiUrl = candidateBase;
-        }
-
-        // Store into cache on successful GET
-        if (isCacheable) {
-          apiCache.set(cacheKey, { data: res.data, timestamp: Date.now() });
-        }
-
-        return res.data;
-      } catch (error: any) {
-        lastError = error;
-        const status = error.response?.status;
-        if (status && status < 500) {
-          const msg =
-            error.response?.data?.message ||
-            error.response?.data?.detail ||
-            error.message;
-          throw new Error(Array.isArray(msg) ? msg.join(", ") : msg);
-        }
-        console.warn(
-          `[API] Attempt on ${candidateBase}${endpoint} failed (${status || error.code || 'Network'}), checking fallback...`
-        );
+      // Store into cache on successful GET
+      if (isCacheable) {
+        apiCache.set(cacheKey, { data: res.data, timestamp: Date.now() });
       }
-    }
 
-    const message =
-      lastError?.response?.data?.message ||
-      lastError?.response?.data?.detail ||
-      lastError?.message ||
-      `Request failed (${endpoint})`;
-    const formatted = Array.isArray(message) ? message.join(", ") : message;
-    console.error(`[API Failover Exhausted] (${endpoint}):`, formatted);
-    throw new Error(formatted);
+      return res.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        error.message ||
+        `Request failed (${endpoint})`;
+      const formatted = Array.isArray(message) ? message.join(", ") : message;
+      throw new Error(formatted);
+    }
   };
 
   const requestPromise = executeRequest().finally(() => {
@@ -473,6 +434,28 @@ export const api = {
   // Admin APIs
   getAdminOverview: async (token?: string | null) => {
     return fetchWithAuth("/admin/overview", { method: "GET" }, token);
+  },
+
+  getAdminMonthlyGoal: async (token?: string | null) => {
+    return fetchWithAuth("/admin/monthly-goal", { method: "GET" }, token);
+  },
+
+  updateAdminMonthlyGoal: async (
+    data: { target: number; targetOrders?: number; month?: string },
+    token?: string | null
+  ) => {
+    return fetchWithAuth(
+      "/admin/monthly-goal",
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      },
+      token
+    );
+  },
+
+  getAdminProductStats: async (token?: string | null) => {
+    return fetchWithAuth("/admin/products/stats", { method: "GET" }, token);
   },
 
   getAdminUsers: async (token?: string | null) => {

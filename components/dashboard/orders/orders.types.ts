@@ -40,6 +40,7 @@ export interface OrderUser {
 export interface Order {
   id: string;
   orderNumber?: string;
+  userId?: string | null;
   user?: OrderUser;
   guestName?: string;
   guestEmail?: string;

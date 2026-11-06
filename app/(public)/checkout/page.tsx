@@ -22,7 +22,7 @@ import { api } from "@/lib/api";
 
 export default function CheckoutPage() {
   const { cartItems, clearCart, removeFromCart } = useCart();
-  const { token, user } = useAuth();
+  const { token, user, isAdmin } = useAuth();
 
   // Direct Buy Now state (when user clicks "Buy Now" on product details or modal)
   const [buyNowItem, setBuyNowItem] = useState<{ product: any; quantity: number } | null>(null);
@@ -61,15 +61,27 @@ export default function CheckoutPage() {
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
   const [formData, setFormData] = useState({
-    fullName: user?.displayName || "John Doe",
-    email: user?.email || "john.doe@example.com",
-    phone: user?.phoneNumber || "+880 1712 345678",
-    address: "West 14th Maria Road",
+    fullName: user?.displayName || "",
+    email: user?.email || "",
+    phone: user?.phoneNumber || "",
+    address: "",
     city: "Dhaka",
     zip: "1205",
     country: "Bangladesh",
-    notes: "Please call before delivery.",
+    notes: "",
   });
+
+  // When user auth loads, pre-fill form if fields are empty
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || user.displayName || "",
+        email: prev.email || user.email || "",
+        phone: prev.phone || user.phoneNumber || "",
+      }));
+    }
+  }, [user]);
 
   // Check if coupon was already applied in cart
   useEffect(() => {
@@ -140,30 +152,56 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.fullName.trim()) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+    if (!formData.email.trim()) {
+      toast.error("Please enter your email address.");
+      return;
+    }
+    if (!formData.phone.trim()) {
+      toast.error("Please enter your phone number.");
+      return;
+    }
+    if (!formData.address.trim()) {
+      toast.error("Please enter your street address.");
+      return;
+    }
+    if (!formData.city.trim()) {
+      toast.error("Please enter your city.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const orderPayload = {
-        guestName: formData.fullName,
-        guestEmail: formData.email,
-        guestPhone: formData.phone,
+        guestName: formData.fullName.trim(),
+        guestEmail: formData.email.trim(),
+        guestPhone: formData.phone.trim(),
         shippingAddress: {
-          address: formData.address,
-          city: formData.city,
-          zip: formData.zip,
-          country: formData.country,
+          fullName: formData.fullName.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          address: formData.address.trim(),
+          city: formData.city.trim(),
+          zip: formData.zip?.trim() || "1205",
+          country: formData.country?.trim() || "Bangladesh",
+          notes: formData.notes?.trim() || "",
         },
         paymentMethod: paymentMethod === "cod" ? "COD" : "GATEWAY",
-        subtotal,
-        shippingFee: shipping,
-        discountAmount,
-        totalAmount: total,
+        subtotal: Number(subtotal.toFixed(2)),
+        shippingFee: Number(shipping.toFixed(2)),
+        discountAmount: Number(discountAmount.toFixed(2)),
+        totalAmount: Number(total.toFixed(2)),
+        couponCode: appliedCoupon?.code || undefined,
         items: checkoutItems.map((item) => ({
-          productId: item.product.id,
+          productId: String(item.product.id || ""),
           productName: item.product.name,
-          productImage: item.product.images?.[0] || "",
-          price: item.product.price,
-          quantity: item.quantity,
+          productImage: item.product.images?.[0] || item.product.image || "",
+          price: Number(item.product.price),
+          quantity: Number(item.quantity),
           unit: item.product.unit || "1 kg",
         })),
         notes: appliedCoupon
@@ -171,9 +209,16 @@ export default function CheckoutPage() {
           : formData.notes,
       };
 
-      const order = await api.createOrder(orderPayload, token);
+      // Call orders API with token (if registered user) or null (if guest)
+      const order = await api.createOrder(orderPayload, token || null);
       const finalOrderNumber = order?.orderNumber || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
       setPlacedOrderNumber(finalOrderNumber);
+
+      toast.success(
+        user
+          ? `Order #${finalOrderNumber} placed successfully!`
+          : `Guest Order #${finalOrderNumber} placed successfully!`
+      );
 
       // Save order snapshot locally for immediate tracking / guest lookup
       try {
@@ -193,6 +238,7 @@ export default function CheckoutPage() {
           guestEmail: formData.email,
           guestPhone: formData.phone,
           shippingAddress: {
+            fullName: formData.fullName,
             address: formData.address,
             city: formData.city,
             zip: formData.zip,
@@ -226,61 +272,9 @@ export default function CheckoutPage() {
         sessionStorage.removeItem("shobpai_applied_coupon");
       } catch { }
       setIsOrderPlaced(true);
-    } catch (err) {
-      console.warn("Order placement notice:", err);
-      // Dual-mode fallback ensures order is always confirmed
-      const finalOrderNumber = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-      setPlacedOrderNumber(finalOrderNumber);
-
-      try {
-        const existing = JSON.parse(localStorage.getItem("shobpai_recent_orders") || "[]");
-        const orderSnapshot = {
-          id: finalOrderNumber,
-          orderNumber: finalOrderNumber,
-          createdAt: new Date().toISOString(),
-          status: "PENDING",
-          paymentMethod: paymentMethod === "cod" ? "COD" : "GATEWAY",
-          paymentStatus: "PENDING",
-          subtotal,
-          shippingFee: shipping,
-          discountAmount,
-          totalAmount: total,
-          guestName: formData.fullName,
-          guestEmail: formData.email,
-          guestPhone: formData.phone,
-          shippingAddress: {
-            address: formData.address,
-            city: formData.city,
-            zip: formData.zip,
-            country: formData.country,
-          },
-          items: checkoutItems.map((item) => ({
-            id: item.product.id,
-            productId: item.product.id,
-            productName: item.product.name,
-            productImage: item.product.images?.[0] || "",
-            price: item.product.price,
-            quantity: item.quantity,
-            unit: item.product.unit || "1 kg",
-          })),
-        };
-        const updated = [orderSnapshot, ...existing.filter((o: any) => o.orderNumber !== finalOrderNumber)].slice(0, 20);
-        localStorage.setItem("shobpai_recent_orders", JSON.stringify(updated));
-      } catch { }
-      if (isDirectBuy) {
-        try {
-          sessionStorage.removeItem("shobpai_buy_now_item");
-        } catch { }
-        if (buyNowItem?.product?.id) {
-          removeFromCart(buyNowItem.product.id);
-        }
-      } else {
-        clearCart();
-      }
-      try {
-        sessionStorage.removeItem("shobpai_applied_coupon");
-      } catch { }
-      setIsOrderPlaced(true);
+    } catch (err: any) {
+      console.error("Order placement error:", err);
+      toast.error(err?.message || "Failed to place order. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -318,12 +312,14 @@ export default function CheckoutPage() {
               >
                 Continue Shopping
               </Link>
-              <Link
-                href="/dashboard/orders"
-                className="rounded-2xl border border-gray-300 bg-white px-8 py-3.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                View Order History
-              </Link>
+              {user && (
+                <Link
+                  href={isAdmin ? "/dashboard/orders" : "/dashboard/user/orders"}
+                  className="rounded-2xl border border-gray-300 bg-white px-8 py-3.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  View Order History
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -362,6 +358,32 @@ export default function CheckoutPage() {
           <h1 className="text-3xl font-black text-gray-900 mt-1">
             Complete Your Order
           </h1>
+
+          {/* Guest Checkout Notice or Signed In info */}
+          {!user ? (
+            <div className="mt-3 p-3.5 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 rounded-2xl flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-200/80 dark:bg-amber-900 text-amber-800 dark:text-amber-300 font-bold text-[11px]">
+                  ✓
+                </span>
+                <span>
+                  <strong>Guest Checkout:</strong> You do not need to register or sign in to place an order.
+                </span>
+              </div>
+              <div className="text-[11px] text-amber-800 dark:text-amber-300">
+                Already have an account?{" "}
+                <Link href="/login?redirect=/checkout" className="font-bold underline hover:text-[#ff6c2f]">
+                  Log In
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-3 p-3 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 rounded-2xl flex items-center justify-between text-xs text-emerald-900 dark:text-emerald-200">
+              <span>
+                Ordering as <strong>{user.displayName || user.email}</strong>
+              </span>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -382,6 +404,7 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
+                    placeholder="e.g. John Doe"
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
@@ -393,6 +416,7 @@ export default function CheckoutPage() {
                   <input
                     type="email"
                     required
+                    placeholder="e.g. guest@example.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
@@ -404,6 +428,7 @@ export default function CheckoutPage() {
                   <input
                     type="tel"
                     required
+                    placeholder="e.g. 01712-345678"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
@@ -415,6 +440,7 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Dhaka"
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
@@ -426,6 +452,7 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
+                    placeholder="e.g. House 12, Road 4, Sector 7, Uttara"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs outline-hidden focus:border-emerald-500 min-h-[44px]"
@@ -619,9 +646,17 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold text-white shadow-md hover:bg-emerald-700 transition-colors min-h-[48px] cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold text-white shadow-md hover:bg-emerald-700 transition-colors min-h-[48px] cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                Place Order Now
+                {isSubmitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Placing Order...</span>
+                  </>
+                ) : (
+                  <span>Place Order Now</span>
+                )}
               </button>
 
               <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400">

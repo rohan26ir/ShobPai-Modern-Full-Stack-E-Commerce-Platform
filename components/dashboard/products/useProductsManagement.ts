@@ -1,36 +1,36 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useShopData } from "@/context/ShopDataContext";
 import { useAppDispatch } from "@/store/hooks";
 import { deleteProduct } from "@/store/slices/shopSlice";
 import { api } from "@/lib/api";
-import { TableProduct, ProductTimeFilter } from "./products.types";
-import { DEFAULT_SCREENSHOT_PRODUCTS } from "./products.constants";
+import {
+  TableProduct,
+  ProductTimeFilter,
+  AggregatedProductStats,
+  ProductTimeframeStat,
+} from "./products.types";
 
 export function useProductsManagement() {
   const dispatch = useAppDispatch();
-  const { token } = useAuth();
+  const { token, isAdmin } = useAuth();
   const { products: storeProducts, categories, refreshProducts } = useShopData();
 
-  // Combine database products with default screenshot catalog
+  // ONLY real database products - zero fake mockup fallback
   const allProducts: TableProduct[] = useMemo(() => {
     if (!storeProducts || storeProducts.length === 0) {
-      return DEFAULT_SCREENSHOT_PRODUCTS;
+      return [];
     }
-    const mappedStore: TableProduct[] = storeProducts.map((p) => ({
+    return storeProducts.map((p) => ({
       ...p,
       categoryName: p.categoryName || p.category || "General",
-      sizesDisplay: p.unit ? `Size : ${p.unit}` : "Size : S , M , L",
-      stock: p.stock || 45,
-      sold: p.sold || Math.max(12, Math.round((p.stock || 45) * 0.4)),
-      rating: p.rating || 4.5,
-      reviewsCount: p.reviewsCount || 48,
+      sizesDisplay: p.unit ? `Size : ${p.unit}` : "Size : Standard",
+      stock: typeof p.stock === "number" ? p.stock : 0,
+      sold: typeof p.sold === "number" ? p.sold : 0,
+      rating: typeof p.rating === "number" ? p.rating : 5.0,
+      reviewsCount: typeof p.reviewsCount === "number" ? p.reviewsCount : 0,
     }));
-
-    const existingSlugs = new Set(mappedStore.map((p) => p.slug));
-    const extraDefaults = DEFAULT_SCREENSHOT_PRODUCTS.filter((p) => !existingSlugs.has(p.slug));
-    return [...mappedStore, ...extraDefaults];
   }, [storeProducts]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,6 +39,93 @@ export function useProductsManagement() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  // Real API Stats state
+  const [apiStats, setApiStats] = useState<AggregatedProductStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  // Fetch real aggregated product stats from backend
+  const fetchStats = useCallback(async () => {
+    if (!token) return;
+    try {
+      setStatsLoading(true);
+      const res = await api.getAdminProductStats(token);
+      if (res && res.allTime) {
+        setApiStats(res);
+      }
+    } catch (err) {
+      console.error("Failed to load real product stats:", err);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (isAdmin && token) {
+      fetchStats();
+    }
+  }, [isAdmin, token, fetchStats]);
+
+  // Active timeframe statistics (backend aggregated with dynamic fallback)
+  const currentStats: ProductTimeframeStat = useMemo(() => {
+    const totalCatalogProducts = allProducts.length;
+    const totalInventoryStock = allProducts.reduce((sum, p) => sum + (p.stock || 0), 0);
+    const totalCatalogSold = allProducts.reduce((sum, p) => sum + (p.sold || 0), 0);
+    const totalCatalogRevenue = allProducts.reduce(
+      (sum, p) => sum + (p.sold || 0) * (p.price || 0),
+      0
+    );
+
+    if (apiStats) {
+      switch (selectedTimeFilter) {
+        case "Today":
+          return (
+            apiStats.today || {
+              totalProducts: totalCatalogProducts,
+              productLeft: totalInventoryStock,
+              productSold: 0,
+              soldAmount: 0,
+            }
+          );
+        case "This Week":
+          return (
+            apiStats.thisWeek || {
+              totalProducts: totalCatalogProducts,
+              productLeft: totalInventoryStock,
+              productSold: 0,
+              soldAmount: 0,
+            }
+          );
+        case "This Month":
+          return (
+            apiStats.thisMonth || {
+              totalProducts: totalCatalogProducts,
+              productLeft: totalInventoryStock,
+              productSold: totalCatalogSold,
+              soldAmount: totalCatalogRevenue,
+            }
+          );
+        case "All Time":
+        default:
+          return (
+            apiStats.allTime || {
+              totalProducts: totalCatalogProducts,
+              productLeft: totalInventoryStock,
+              productSold: totalCatalogSold,
+              soldAmount: totalCatalogRevenue,
+            }
+          );
+      }
+    }
+
+    // Dynamic local fallback while waiting for API
+    return {
+      totalProducts: totalCatalogProducts,
+      productLeft: totalInventoryStock,
+      productSold: totalCatalogSold,
+      soldAmount: totalCatalogRevenue,
+    };
+  }, [allProducts, apiStats, selectedTimeFilter]);
 
   // Modals state
   const [viewingProduct, setViewingProduct] = useState<TableProduct | null>(null);
@@ -84,7 +171,8 @@ export function useProductsManagement() {
         await api.adminDeleteProduct(product.id, token);
       }
       dispatch(deleteProduct(product.id));
-      refreshProducts?.();
+      await refreshProducts?.();
+      await fetchStats();
       toast.success(`"${product.name}" removed successfully!`, { id: toastId });
     } catch {
       dispatch(deleteProduct(product.id));
@@ -96,6 +184,7 @@ export function useProductsManagement() {
     token,
     categories,
     refreshProducts,
+    fetchStats,
     searchTerm,
     setSearchTerm,
     selectedTimeFilter,
@@ -109,6 +198,9 @@ export function useProductsManagement() {
     itemsPerPage,
     paginatedProducts,
     filteredProducts,
+    allProductsCount: allProducts.length,
+    currentStats,
+    statsLoading,
     handleSelectAll,
     handleToggleSelect,
     handleDeleteProduct,
@@ -120,4 +212,3 @@ export function useProductsManagement() {
     setIsAddingProduct,
   };
 }
-

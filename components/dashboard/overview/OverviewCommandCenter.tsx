@@ -127,8 +127,15 @@ export function OverviewCommandCenter({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-4 gap-4 sm:gap-5 items-stretch">
         <ConversionsGaugeCard />
         <MonthlyGoalCard
-          current={overview?.totalRevenue ? Math.round(overview.totalRevenue) : 43200}
-          target={60000}
+          current={
+            typeof overview?.monthlyGoal?.currentRevenue === "number"
+              ? Math.round(overview.monthlyGoal.currentRevenue)
+              : overview?.totalRevenue
+              ? Math.round(overview.totalRevenue)
+              : 43200
+          }
+          target={overview?.monthlyGoal?.target || 60000}
+          percentage={overview?.monthlyGoal?.percentage}
         />
         <SessionsByCityCard />
         <TopPagesCard />

@@ -26,6 +26,7 @@ export function OrderTableRow({
   isGeneratingPdf,
   customDeliveryOverride,
 }: OrderTableRowProps) {
+  const isGuest = !order.userId && !order.user;
   const customerName = order.user?.displayName || order.guestName || "Guest Customer";
   const customerEmail = order.user?.email || order.guestEmail || "No email";
   const avatarUrl =
@@ -87,7 +88,7 @@ export function OrderTableRow({
         </div>
       </td>
 
-      {/* Customer Info with Full Rounded Avatar */}
+      {/* Customer Info with Full Rounded Avatar & Guest User Badge */}
       <td className="py-3.5 px-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 ring-1 ring-slate-100 dark:ring-slate-800 bg-slate-100 dark:bg-slate-800">
@@ -103,9 +104,16 @@ export function OrderTableRow({
             />
           </div>
           <div className="min-w-0">
-            <span className="font-semibold text-slate-900 dark:text-white block truncate max-w-[160px]">
-              {customerName}
-            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-semibold text-slate-900 dark:text-white block truncate max-w-[140px]">
+                {customerName}
+              </span>
+              {isGuest && (
+                <span className="inline-flex items-center px-1.5 py-0.2 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50">
+                  Guest User
+                </span>
+              )}
+            </div>
             <span className="text-[11px] text-slate-400 block truncate max-w-[160px]">
               {customerEmail}
             </span>
